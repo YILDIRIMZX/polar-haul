@@ -29,17 +29,14 @@ body {
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
-/* In a home-screen app on iPhone with a see-through status bar, the page starts at the very top
-   of the screen but its height is still "screen minus status bar", so a strip as tall as the
-   status bar is left at the bottom. Adding the top safe area back makes the game reach the bottom.
-   Everywhere else the top safe area is 0 and this is plain 100vh. */
+/* The page sits below an opaque status bar (see index.html), so 100% reaches the bottom of the screen. */
 #game {
   display: block;
   position: fixed;
   top: 0;
   left: 50%;
   width: var(--game-w);
-  height: calc(100vh + env(safe-area-inset-top, 0px));
+  height: 100%;
   transform: translateX(-50%);
 }
 

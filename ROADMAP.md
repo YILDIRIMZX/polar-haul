@@ -133,17 +133,22 @@ Yol haritası, README (EN/TR), CHANGELOG, lisans ve resmi olmama uyarısı.
 
 ✅ **Bitti kriteri:** Model ve süsleme olmadan bile 3 dakika oynamak keyifli olmalı.
 
-### 0.4.0 — Hissiyat ve görseller (≈1 hafta)
-- [ ] Yığın fiziği: sallanma, squash/stretch, pop sesi
-- [ ] Vuruş ve kan efektleri, uçan hasar sayıları, para fışkırması, ekran sarsıntısı
-- [ ] CC0 modeller, kendi renk paletimiz, müzik ve sesler
+### 0.3.1 — İlk iPhone testinden sonra ✅
+- [x] Ayılar kapının önünde ve daha yoğun
+- [x] Orman sınırı, eve dönüş işareti
+- [x] Geniş Savuruş başta kilitli ($100 + 20 ayı)
 
-### 0.5.0 – 0.9.x — İlk harita (≈2–3 hafta)
-- [ ] ~8 unlock pedi: kapasite, hasar, 2. makine, **taşıyıcı işçi**, hız, 2. bölge (daha güçlü ayılar), kapı açma
-- [ ] **Boss ayı** (bölge sonu, büyük HP barı)
-- [ ] İlk 60 saniye için ok ve yön göstergesi
-- [ ] Kayıt sistemi ve yedek
-- [ ] Ekonomi ayarı: haritayı bitirmek **15–25 dakika** sürmeli
+### 0.4.0 – 0.9.0 — Mekanikler, sonra görseller
+İlk iPhone testinden sonra plan değişti: önce bütün mekanikler belli bir seviyeye gelecek, görseller ve animasyonlar en sona kalacak. Ayrıntılı plan [TASARIM.md](TASARIM.md) dosyasında:
+
+| Sürüm | İçerik |
+|---|---|
+| 0.4.0 | Üretim zinciri (elle): ocak girişi ve yuvaları, tezgâh, müşteriler, sabır ve bahşiş, kasa |
+| 0.5.0 | Otomasyon: Taşıyıcı ve Et Deposu, Kasiyer, Konveyör |
+| 0.6.0 | Av seviyesi, acil müşteriler, mini boss ve kart seçimi |
+| 0.7.0 | Ana boss, benzersiz yetenekler, ikinci av bölgesi |
+| 0.8.0 | Kayıt sistemi, ekonomi simülasyonu, denge |
+| 0.9.0 | Görseller ve animasyonlar: modeller, efektler, sesler |
 
 ### 1.0.0 — İlk tam sürüm
 İlk harita baştan sona oynanabilir ve iPhone'da günlük kullanımda sorunsuz.

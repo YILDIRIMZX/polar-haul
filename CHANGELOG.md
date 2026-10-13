@@ -6,6 +6,16 @@ Her güncelleme, neyin neden değiştiğiyle birlikte burada listelenir. En yeni
 
 ---
 
+## 0.3.2 (2026-10-13)
+
+**EN.**
+- **iPhone bottom strip, fixed at the cause.** With a see-through status bar, iOS kept the home-screen app's viewport one status bar short and painted nothing below it, so stretching the game did not help. The status bar is now opaque and snow-coloured: the page starts below it and reaches the bottom of the screen. To pick this up on iPhone, remove the app from the home screen and add it again from Safari, because iOS stores the status bar style when the app is added.
+- **Game design document.** [TASARIM.md](TASARIM.md) (Turkish) plans the next versions: a cooking and selling chain with customers instead of meat turning straight into cash, step-by-step automation (hauler and storage, cashier, conveyor), customer patience with tips, a hunt level that grows the herd on its own, mini bosses with two random upgrade cards, and main bosses with two unique perks. Visuals and animations move to the end, after the mechanics.
+
+**TR.**
+- **iPhone alt şeridi, kökünden düzeltildi.** Durum çubuğu şeffafken iOS ana ekran uygulamasının görüntü alanını bir durum çubuğu kadar kısa tutuyor ve altına hiçbir şey çizmiyordu; bu yüzden oyunu uzatmak işe yaramadı. Durum çubuğu artık opak ve kar renginde: sayfa onun altından başlıyor ve ekranın en altına ulaşıyor. iPhone'da bunu görmek için uygulamayı ana ekrandan silip Safari'den yeniden ekle, çünkü iOS durum çubuğu ayarını uygulama eklenirken kaydediyor.
+- **Oyun tasarım belgesi.** [TASARIM.md](TASARIM.md) sonraki sürümleri planlıyor: etin doğrudan paraya dönüşmesi yerine müşterilerle pişirme ve satış zinciri, adım adım otomasyon (taşıyıcı ve depo, kasiyer, konveyör), bahşişli müşteri sabrı, sürüyü kendiliğinden büyüten av seviyesi, iki rastgele yükseltme kartı veren mini bosslar ve iki benzersiz yetenek sunan ana bosslar. Görseller ve animasyonlar mekaniklerden sonraya, en sona alındı.
+
 ## 0.3.1 (2026-10-13)
 
 **EN.** Changes from the first playtest on iPhone.
