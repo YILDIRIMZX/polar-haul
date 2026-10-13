@@ -138,17 +138,19 @@ Yol haritası, README (EN/TR), CHANGELOG, lisans ve resmi olmama uyarısı.
 - [x] Orman sınırı, eve dönüş işareti
 - [x] Geniş Savuruş başta kilitli ($100 + 20 ayı)
 
-### 0.4.0 – 0.9.0 — Mekanikler, sonra görseller
+### 0.4.0 – 0.10.0 — Mekanikler, sonra görseller
 İlk iPhone testinden sonra plan değişti: önce bütün mekanikler belli bir seviyeye gelecek, görseller ve animasyonlar en sona kalacak. Ayrıntılı plan [TASARIM.md](TASARIM.md) dosyasında:
 
 | Sürüm | İçerik |
 |---|---|
-| 0.4.0 ✅ | Üretim zinciri (elle): ocak girişi ve yuvaları, tezgâh, müşteriler, sabır ve bahşiş, kasa |
-| 0.5.0 | Otomasyon: Taşıyıcı ve Et Deposu, Kasiyer, Konveyör |
-| 0.6.0 | Av seviyesi, acil müşteriler, mini boss ve kart seçimi |
-| 0.7.0 | Ana boss, benzersiz yetenekler, ikinci av bölgesi |
-| 0.8.0 | Kayıt sistemi, ekonomi simülasyonu, denge |
-| 0.9.0 | Görseller ve animasyonlar: modeller, efektler, sesler |
+| 0.4.0 ✅ | Üretim zinciri (elle): ocak, tezgâh, müşteriler, bahşiş, kasa |
+| 0.4.1 ✅ | Pişmiş eti elle taşıma, sesler, uçan ödeme yazıları, kızgın müşteri, ped beklemesi |
+| 0.5.0 | Yükseltme düzeni ve üs: Karakter menüsü, istasyon pedleri, inşa pedleri, Büyük Ocak ve üs seviyeleri 1–3 |
+| 0.6.0 | İşçiler: Kapı Deposu ve Taşıyıcı, Garson, Kasiyer, Avcı Kulübesi ve avcılar |
+| 0.7.0 | Av seviyesi, mini boss ve kartlar, 1. ana boss ve Üçlü Vuruş, acil müşteriler |
+| 0.8.0 | Konveyörler, üs seviyeleri 4–6, 2. ana boss ve final, benzersiz yetenekler, ikinci av bölgesi |
+| 0.9.0 | Kayıt sistemi, ekonomi simülasyonu, denge |
+| 0.10.0 | Görseller, animasyonlar, kayıtlı (CC0) sesler ve müzik |
 
 ### 1.0.0 — İlk tam sürüm
 İlk harita baştan sona oynanabilir ve iPhone'da günlük kullanımda sorunsuz.
