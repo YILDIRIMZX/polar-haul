@@ -22,8 +22,9 @@ export function pickTargets(from: Vector3, bears: readonly Bear[], max: number):
 // Swings every PLAYER.attackCooldown seconds with no button, like the ads' auto-attack,
 // hitting every bear pickTargets returns.
 export class AutoAttack {
-  // Raised by the sweep upgrade pad.
-  maxTargets: number = PLAYER.startTargets
+  // Both come from Stats every frame, so upgrades and boss cards change them.
+  maxTargets = 1
+  damage = 10
   private cooldown = 0
 
   update(dt: number, player: Player, herd: BearHerd): void {
@@ -37,6 +38,6 @@ export class AutoAttack {
     if (this.cooldown > 0) return
     this.cooldown = PLAYER.attackCooldown
     player.swing()
-    for (const bear of targets.slice(0, this.maxTargets)) herd.hit(bear, PLAYER.attackDamage)
+    for (const bear of targets.slice(0, this.maxTargets)) herd.hit(bear, this.damage)
   }
 }

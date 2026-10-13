@@ -1,5 +1,4 @@
 import { MathUtils, Vector3, type Group, type Scene } from 'three'
-import { PLAYER } from '../config/balance.ts'
 import { createMeat } from '../entities/Meat.ts'
 import type { Player } from '../entities/Player.ts'
 import { flatDistance } from '../game/math.ts'
@@ -36,7 +35,7 @@ export class Loot {
     }
   }
 
-  update(dt: number, player: Player, stack: Stack): void {
+  update(dt: number, player: Player, stack: Stack, pickupRadius: number): void {
     for (let i = this.drops.length - 1; i >= 0; i--) {
       const d = this.drops[i]
       const p = d.mesh.position
@@ -50,7 +49,7 @@ export class Loot {
         }
         continue
       }
-      if (!stack.hasRoom || flatDistance(player.position, p) > PLAYER.pickupRadius) continue
+      if (!stack.hasRoom || flatDistance(player.position, p) > pickupRadius) continue
       this.drops.splice(i, 1)
       stack.receive(d.mesh)
     }

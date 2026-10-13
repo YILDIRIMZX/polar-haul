@@ -3,6 +3,7 @@ export interface Progress {
   bearsKilled: number
   totalEarned: number // all cash ever collected, including what was already spent
   capacityLevel: number // how many times the Capacity pad was bought
+  customersServed: number // customers who got their whole order and paid
 }
 
 // Decides when the Wide sweep pad appears in the base. Once it returns true, the pad stays for good.

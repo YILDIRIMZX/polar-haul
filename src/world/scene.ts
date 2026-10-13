@@ -153,19 +153,20 @@ function addBase(scene: Scene): void {
   scene.add(base)
 }
 
-// Posts around the base with rails between them, leaving a gate open toward -z (the bears).
+// Posts around the base with rails between them, leaving two gates open:
+// the front one toward -z (the bears) and the back one toward +z (the customers).
 function addFence(scene: Scene): void {
   const r = WORLD.baseRadius
   const count = Math.floor((2 * Math.PI * r) / WORLD.fencePostSpacing)
   const step = (2 * Math.PI) / count
   const gateHalfAngle = WORLD.gateWidth / 2 / r
-  const gateAngle = -Math.PI / 2 // direction of -z
+  const gateAngles = [-Math.PI / 2, Math.PI / 2]
 
   const angles: number[] = []
   for (let i = 0; i < count; i++) {
     const a = i * step
-    const fromGate = Math.abs(Math.atan2(Math.sin(a - gateAngle), Math.cos(a - gateAngle)))
-    if (fromGate > gateHalfAngle) angles.push(a)
+    const inGate = gateAngles.some((g) => Math.abs(Math.atan2(Math.sin(a - g), Math.cos(a - g))) <= gateHalfAngle)
+    if (!inGate) angles.push(a)
   }
 
   const wood = new MeshLambertMaterial({ color: COLORS.fenceWood })

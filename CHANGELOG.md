@@ -6,6 +6,24 @@ Her güncelleme, neyin neden değiştiğiyle birlikte burada listelenir. En yeni
 
 ---
 
+## 0.4.0 (2026-10-13)
+
+**EN.** Meat no longer turns straight into cash: it is cooked and sold to customers, like in the ads. This is the "by hand" stage of the production chain; workers and machines that automate it come in 0.5.0.
+- **Furnace.** Walk into the dashed circle next to the furnace and the whole stack pours onto its tray in about a second; no more waiting piece by piece. The furnace cooks one piece at a time (more with upgrades), shows a progress bar for each slot and glows while it works. If the counter is full, cooked pieces wait inside.
+- **Counter and customers.** Cooked meat goes to the counter. Cold survivors come in through a new back gate and queue up. A bubble above each one shows how many pieces they want (1 to 3, equally likely) and a patience bar. Stand in the circle in front of the counter to hand them their order; a served customer pays and walks away, and the queue moves up.
+- **Bigger and faster orders pay more.** On top of the order price, a customer adds a bonus for a bigger order (12.5% for 1 piece, 25% for 2, 50% for 3) and a tip for fast service (up to 100% of the order, in 10% steps as patience runs down). A customer whose patience ran out pays the order only and starts to shiver.
+- **Till.** Payments pile up as green bundles on the till next to the counter; walk past it to collect.
+- **New upgrade pads** appear as the shop grows: Furnace slot (after 3 customers), Counter (after 6), Meat price (after 10), alongside Capacity and Wide sweep.
+- **Under the hood.** Every changeable value now goes through one stats system, and every upgrade pad is a single entry in a list. Boss cards and perks planned for later versions will change values the same way.
+
+**TR.** Et artık doğrudan paraya dönüşmüyor: reklamlardaki gibi pişirilip müşterilere satılıyor. Bu, üretim zincirinin "elle" aşaması; onu otomatikleştiren işçiler ve makineler 0.5.0'da gelecek.
+- **Ocak.** Ocağın yanındaki kesik çizgili daireye girince bütün yığın yaklaşık bir saniyede tepsiye dökülüyor; artık parça parça beklemek yok. Ocak aynı anda bir parça pişiriyor (yükseltmeyle daha fazla), her yuva için bir ilerleme barı gösteriyor ve çalışırken parlıyor. Tezgâh doluysa pişen parçalar içeride bekliyor.
+- **Tezgâh ve müşteriler.** Pişmiş et tezgâha geçiyor. Üşüyen hayatta kalanlar yeni arka kapıdan girip sıraya diziliyor. Her birinin üstündeki baloncuk kaç parça istediğini (1 ile 3 arası, eşit olasılıkla) ve sabır barını gösteriyor. Siparişlerini vermek için tezgâhın önündeki dairede dur; servis edilen müşteri ödüyor ve ayrılıyor, sıra ilerliyor.
+- **Büyük ve hızlı siparişler daha çok kazandırıyor.** Müşteri sipariş tutarının üstüne büyük sipariş için bir bonus (1 parçada %12,5, 2 parçada %25, 3 parçada %50) ve hızlı servis için bir bahşiş (siparişin %100'üne kadar, sabır azaldıkça %10'luk basamaklarla) ekliyor. Sabrı biten müşteri sadece sipariş tutarını ödüyor ve titremeye başlıyor.
+- **Kasa.** Ödemeler tezgâhın yanındaki kasada yeşil desteler halinde birikiyor; yanından geçince toplanıyor.
+- **Yeni yükseltme pedleri** dükkân büyüdükçe beliriyor: Ocak yuvası (3 müşteriden sonra), Tezgâh (6'dan sonra), Et fiyatı (10'dan sonra); Kapasite ve Geniş savuruş'un yanında.
+- **Altyapı.** Değişebilen bütün değerler artık tek bir istatistik sisteminden geçiyor ve her yükseltme pedi bir listedeki tek bir kayıt. Sonraki sürümlerde gelecek boss kartları ve yetenekler değerleri aynı yoldan değiştirecek.
+
 ## 0.3.2 (2026-10-13)
 
 **EN.**

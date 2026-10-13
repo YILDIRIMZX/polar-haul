@@ -1,0 +1,213 @@
+import { BoxGeometry, Mesh, MeshLambertMaterial, Vector3, type Object3D, type Scene } from 'three'
+import { SHOP } from '../config/balance.ts'
+import { COLORS, LAYOUT } from '../config/world.ts'
+import { Customer } from '../entities/Customer.ts'
+import type { Player } from '../entities/Player.ts'
+import { Flights } from '../fx/Flights.ts'
+import { dashedRing } from '../fx/markers.ts'
+import { flatDistance } from '../game/math.ts'
+import type { Stats } from '../game/Stats.ts'
+import { orderSize, tipFor } from './orders.ts'
+import type { Progress } from './progression.ts'
+import type { Wallet } from './Wallet.ts'
+
+const COUNTER_TOP = 0.85
+const TILL_TOP = 0.7
+const PIECE_HEIGHT = 0.26
+const PER_LAYER = 4 // cooked pieces lie in a row of 4 on each layer of the counter
+const cashGeo = new BoxGeometry(0.55, 0.14, 0.32)
+const cashMat = new MeshLambertMaterial({ color: COLORS.cash })
+
+// The counter, the queue of customers and the till.
+// Cooked meat waits on the counter; the player stands at the service spot to hand it to the first
+// customer; a served customer pays into the till; the player walks past the till to collect.
+export class Shop {
+  private scene: Scene
+  private flights = new Flights()
+  private counter: Object3D[] = []
+  private reserved = 0 // cooked pieces flying from the furnace to the counter
+  private queue: Customer[] = [] // in queue order; queue[0] stands at the counter
+  private leaving: Customer[] = []
+  private spawnTimer = 1
+  private serveTimer = 0
+  private till = 0 // cash waiting to be collected
+  private cashMeshes: Mesh[] = []
+  private cashTimer = 0
+  private playerChest = new Vector3()
+
+  constructor(scene: Scene) {
+    this.scene = scene
+    this.build()
+  }
+
+  counterHasRoom(stats: Stats): boolean {
+    return this.counter.length + this.reserved < stats.count('counterCapacity')
+  }
+
+  // The mesh must already be in the scene; it flies onto the counter.
+  receiveCooked(mesh: Object3D): void {
+    const target = this.counterPosition(this.counter.length + this.reserved)
+    this.reserved++
+    this.flights.add(mesh, () => target, 0.35, 0.9, () => {
+      this.reserved--
+      this.counter.push(mesh)
+      this.layoutCounter()
+    })
+  }
+
+  update(dt: number, player: Player, stats: Stats, wallet: Wallet, progress: Progress, time: number): void {
+    this.playerChest.set(player.position.x, 1.2, player.position.z)
+    this.spawnCustomers(dt, stats, progress)
+    this.moveQueue(dt)
+    this.serve(dt, player, stats)
+    this.finishOrder(stats, progress)
+    this.moveLeaving(dt)
+    for (const c of this.queue) c.updateLook(time)
+    for (const c of this.leaving) c.updateLook(time)
+    this.collectCash(dt, player, wallet)
+    this.flights.update(dt)
+  }
+
+  private spawnCustomers(dt: number, stats: Stats, progress: Progress): void {
+    this.spawnTimer -= dt
+    if (this.spawnTimer > 0 || this.queue.length >= stats.count('queueLength')) return
+    const customer = new Customer(orderSize(progress, Math.random), stats.get('patienceSeconds'))
+    customer.position.set(LAYOUT.customerSpawn.x, 0, LAYOUT.customerSpawn.z)
+    customer.slot = this.queue.length
+    this.queue.push(customer)
+    this.scene.add(customer.root)
+    this.spawnTimer = stats.get('customerInterval')
+  }
+
+  private moveQueue(dt: number): void {
+    for (const c of this.queue) {
+      const arrived = c.walkTo(this.queuePosition(c.slot), SHOP.walkSpeed, dt)
+      if (!arrived) continue
+      c.state = 'waiting'
+      c.faceCounter(dt)
+      c.patience = Math.max(0, c.patience - dt)
+    }
+  }
+
+  // While the player stands at the service spot, hands pieces from the counter to the first customer.
+  private serve(dt: number, player: Player, stats: Stats): void {
+    const front = this.queue[0]
+    const canServe =
+      front !== undefined &&
+      front.state === 'waiting' &&
+      front.slot === 0 &&
+      flatDistance(player.position, LAYOUT.serviceSpot) <= SHOP.serviceRadius
+    if (!canServe) {
+      this.serveTimer = 0
+      return
+    }
+    this.serveTimer -= dt
+    while (this.serveTimer <= 0 && front.waitingFor > 0) {
+      const piece = this.counter.pop()
+      if (!piece) break
+      front.incoming++
+      const head = front.position.clone().setY(1.6)
+      this.flights.add(piece, () => head, 0.25, 0.6, () => {
+        piece.removeFromParent()
+        front.incoming--
+        front.got++
+      })
+      this.serveTimer += stats.get('serveInterval')
+    }
+  }
+
+  // The first customer has everything: pay into the till and walk away; the queue moves up.
+  private finishOrder(stats: Stats, progress: Progress): void {
+    const front = this.queue[0]
+    if (!front || front.got < front.want) return
+    const price = stats.get('meatPrice')
+    const tip = front.cold ? 0 : tipFor(front.want, price, front.patience / front.patienceMax)
+    this.till += front.want * price + Math.max(0, tip)
+    this.layoutCash()
+    progress.customersServed++
+
+    front.state = 'leaving'
+    this.queue.shift()
+    this.queue.forEach((c, i) => (c.slot = i))
+    this.leaving.push(front)
+  }
+
+  private moveLeaving(dt: number): void {
+    for (let i = this.leaving.length - 1; i >= 0; i--) {
+      const c = this.leaving[i]
+      if (!c.walkTo(LAYOUT.customerSpawn, SHOP.walkSpeed * 1.2, dt)) continue
+      c.root.removeFromParent()
+      c.dispose()
+      this.leaving.splice(i, 1)
+    }
+  }
+
+  private collectCash(dt: number, player: Player, wallet: Wallet): void {
+    if (this.till <= 0 || flatDistance(player.position, LAYOUT.till) > SHOP.cashPickupRadius) {
+      this.cashTimer = 0
+      return
+    }
+    this.cashTimer -= dt
+    while (this.cashTimer <= 0 && this.till > 0) {
+      this.cashTimer += SHOP.cashPickupInterval
+      const amount = Math.min(SHOP.cashPerBundle, this.till)
+      this.till -= amount
+      wallet.add(amount)
+      if (this.cashMeshes.length > this.visibleBundles()) {
+        const m = this.cashMeshes.pop()
+        if (m) this.flights.add(m, () => this.playerChest, 0.2, 0.6, () => m.removeFromParent())
+      }
+    }
+  }
+
+  private visibleBundles(): number {
+    return Math.min(Math.ceil(this.till / SHOP.cashPerBundle - 1e-9), SHOP.maxVisibleCash)
+  }
+
+  // Stacks green bundles on the till, 2 × 3 per layer.
+  private layoutCash(): void {
+    while (this.cashMeshes.length < this.visibleBundles()) {
+      const i = this.cashMeshes.length
+      const m = new Mesh(cashGeo, cashMat)
+      m.castShadow = true
+      m.position.set(
+        LAYOUT.till.x - 0.3 + (i % 2) * 0.6,
+        TILL_TOP + 0.07 + Math.floor(i / 6) * 0.14,
+        LAYOUT.till.z - 0.36 + (Math.floor(i / 2) % 3) * 0.36,
+      )
+      this.scene.add(m)
+      this.cashMeshes.push(m)
+    }
+  }
+
+  private counterPosition(index: number): Vector3 {
+    return new Vector3(
+      LAYOUT.counter.x - 1.05 + (index % PER_LAYER) * 0.7,
+      COUNTER_TOP + 0.13 + Math.floor(index / PER_LAYER) * PIECE_HEIGHT,
+      LAYOUT.counter.z,
+    )
+  }
+
+  private layoutCounter(): void {
+    this.counter.forEach((item, i) => item.position.copy(this.counterPosition(i)))
+  }
+
+  private queuePosition(slot: number): { x: number; z: number } {
+    return { x: LAYOUT.queueFront.x, z: LAYOUT.queueFront.z + slot * SHOP.queueSpacing }
+  }
+
+  private build(): void {
+    const wood = new MeshLambertMaterial({ color: COLORS.counter })
+    const counter = new Mesh(new BoxGeometry(3.2, COUNTER_TOP, 1.0), wood)
+    counter.position.set(LAYOUT.counter.x, COUNTER_TOP / 2, LAYOUT.counter.z)
+    counter.castShadow = true
+    counter.receiveShadow = true
+
+    const till = new Mesh(new BoxGeometry(1.4, TILL_TOP, 1.2), new MeshLambertMaterial({ color: COLORS.machine }))
+    till.position.set(LAYOUT.till.x, TILL_TOP / 2, LAYOUT.till.z)
+    till.castShadow = true
+    till.receiveShadow = true
+
+    this.scene.add(counter, till, dashedRing(LAYOUT.serviceSpot.x, LAYOUT.serviceSpot.z, SHOP.serviceRadius, 10))
+  }
+}

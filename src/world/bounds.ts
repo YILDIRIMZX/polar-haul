@@ -8,8 +8,9 @@ export function isInsideBase(x: number, z: number): boolean {
   return Math.hypot(x, z) < R
 }
 
-function inGate(x: number, z: number, radius: number): boolean {
-  return z < 0 && Math.abs(x) < WORLD.gateWidth / 2 - radius
+// Both gates sit on the z axis: the front one toward the bears, the back one toward the customers.
+function inGate(x: number, _z: number, radius: number): boolean {
+  return Math.abs(x) < WORLD.gateWidth / 2 - radius
 }
 
 // Keeps a circle on the side of the fence it came from, unless it is passing through the gate.

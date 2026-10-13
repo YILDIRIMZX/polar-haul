@@ -143,7 +143,7 @@ Yol haritası, README (EN/TR), CHANGELOG, lisans ve resmi olmama uyarısı.
 
 | Sürüm | İçerik |
 |---|---|
-| 0.4.0 | Üretim zinciri (elle): ocak girişi ve yuvaları, tezgâh, müşteriler, sabır ve bahşiş, kasa |
+| 0.4.0 ✅ | Üretim zinciri (elle): ocak girişi ve yuvaları, tezgâh, müşteriler, sabır ve bahşiş, kasa |
 | 0.5.0 | Otomasyon: Taşıyıcı ve Et Deposu, Kasiyer, Konveyör |
 | 0.6.0 | Av seviyesi, acil müşteriler, mini boss ve kart seçimi |
 | 0.7.0 | Ana boss, benzersiz yetenekler, ikinci av bölgesi |

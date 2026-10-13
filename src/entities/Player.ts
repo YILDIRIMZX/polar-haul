@@ -43,12 +43,12 @@ export class Player {
     return isInsideBase(this.position.x, this.position.z)
   }
 
-  update(dt: number, input: Joystick): void {
+  update(dt: number, input: Joystick, speed: number): void {
     const p = this.position
     const prevX = p.x
     const prevZ = p.z
-    p.x += input.x * PLAYER.speed * dt
-    p.z += input.z * PLAYER.speed * dt
+    p.x += input.x * speed * dt
+    p.z += input.z * speed * dt
     constrainToFence(prevX, prevZ, p, PLAYER.radius)
     clampToWorld(p)
     // The real velocity after collisions, so the stack only sways when the player actually moves.

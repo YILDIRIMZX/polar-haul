@@ -1,5 +1,5 @@
 import { Group, Vector3, type Object3D, type Scene } from 'three'
-import { PLAYER, STACK } from '../config/balance.ts'
+import { BASE_STATS, STACK } from '../config/balance.ts'
 import type { Player } from '../entities/Player.ts'
 
 interface Incoming {
@@ -13,7 +13,7 @@ const top = new Vector3()
 // The tower of meat carried above the player's head: the visual star of the ads.
 export class Stack {
   readonly root = new Group()
-  capacity: number = PLAYER.startCapacity
+  capacity: number = BASE_STATS.carryCapacity // kept in step with Stats every frame
   private items: Object3D[] = []
   private incoming: Incoming[] = []
   private sway = new Vector3()
