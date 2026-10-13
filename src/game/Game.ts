@@ -8,9 +8,11 @@ import { BearHerd } from '../systems/BearHerd.ts'
 import { AutoAttack } from '../systems/combat.ts'
 import { Loot } from '../systems/Loot.ts'
 import { Processor } from '../systems/Processor.ts'
+import { isSweepUnlocked, type Progress } from '../systems/progression.ts'
 import { Stack } from '../systems/Stack.ts'
 import { UnlockPad } from '../systems/UnlockPad.ts'
 import { Wallet } from '../systems/Wallet.ts'
+import { HomeMarker } from '../ui/HomeMarker.ts'
 import { Hud } from '../ui/Hud.ts'
 import { createCamera, placeCamera } from '../world/camera.ts'
 import { createScene } from '../world/scene.ts'
@@ -32,6 +34,8 @@ export class Game {
   private wallet = new Wallet()
   private attack = new AutoAttack()
   private hud = new Hud()
+  private homeMarker = new HomeMarker()
+  private progress: Progress = { bearsKilled: 0, totalEarned: 0, capacityLevel: 0 }
   private stack: Stack
   private loot: Loot
   private herd: BearHerd
@@ -50,24 +54,27 @@ export class Game {
     this.scene.add(this.player.root, this.playerBar.root)
     this.stack = new Stack(this.scene)
     this.loot = new Loot(this.scene)
-    this.herd = new BearHerd(this.scene, (at) => this.loot.spawn(at, MathUtils.randInt(BEAR.meatMin, BEAR.meatMax)))
+    this.herd = new BearHerd(this.scene, (at) => {
+      this.progress.bearsKilled++
+      this.loot.spawn(at, MathUtils.randInt(BEAR.meatMin, BEAR.meatMax))
+    })
     this.processor = new Processor(this.scene)
-    this.capacityPad = new UnlockPad(
-      this.scene,
-      LAYOUT.capacityPad,
-      'KAPASİTE',
-      `+${CAPACITY_UPGRADE.step}`,
-      CAPACITY_UPGRADE,
-      () => (this.stack.capacity += CAPACITY_UPGRADE.step),
-    )
-    this.sweepPad = new UnlockPad(
-      this.scene,
-      LAYOUT.sweepPad,
-      'GENİŞ SAVURUŞ',
-      `+${SWEEP_UPGRADE.step} AYI`,
-      SWEEP_UPGRADE,
-      () => (this.attack.maxTargets += SWEEP_UPGRADE.step),
-    )
+    this.capacityPad = new UnlockPad(this.scene, {
+      at: LAYOUT.capacityPad,
+      title: 'KAPASİTE',
+      reward: () => `+${CAPACITY_UPGRADE.step}`,
+      pricing: CAPACITY_UPGRADE,
+      apply: () => (this.stack.capacity += CAPACITY_UPGRADE.step),
+    })
+    // Hidden until isSweepUnlocked says so. The first purchase gives 3 bears per swing, then +1 per level.
+    this.sweepPad = new UnlockPad(this.scene, {
+      at: LAYOUT.sweepPad,
+      title: 'GENİŞ SAVURUŞ',
+      reward: (level) => (level === 0 ? `${SWEEP_UPGRADE.firstTargets} AYI` : `+${SWEEP_UPGRADE.step} AYI`),
+      pricing: SWEEP_UPGRADE,
+      apply: (level) => (this.attack.maxTargets = SWEEP_UPGRADE.firstTargets + (level - 1) * SWEEP_UPGRADE.step),
+      hidden: true,
+    })
     this.joystick = new Joystick(canvas)
 
     this.resize()
@@ -95,6 +102,7 @@ export class Game {
 
     placeCamera(this.camera, this.player.position)
     this.playerBar.update(this.player.hp / PLAYER.maxHp, this.player.position, 1.75, this.camera)
+    this.homeMarker.update(this.camera, this.canvas, LAYOUT.home)
     this.renderer.render(this.scene, this.camera)
     if (this.frame++ === 0) this.onFirstFrame()
   }
@@ -109,6 +117,11 @@ export class Game {
     this.processor.update(dt, this.player, this.stack, this.wallet, this.timer.getElapsed())
     this.capacityPad.update(dt, this.player, this.wallet)
     this.sweepPad.update(dt, this.player, this.wallet)
+
+    // New features appear once the player has made enough progress.
+    this.progress.totalEarned = this.wallet.totalEarned
+    this.progress.capacityLevel = this.capacityPad.level
+    if (!this.sweepPad.shown && isSweepUnlocked(this.progress)) this.sweepPad.show()
 
     // Knocked out: the carried meat is lost and the player wakes up back at the base.
     if (this.player.hp <= 0) {

@@ -6,6 +6,22 @@ Her güncelleme, neyin neden değiştiğiyle birlikte burada listelenir. En yeni
 
 ---
 
+## 0.3.1 (2026-10-13)
+
+**EN.** Changes from the first playtest on iPhone.
+- **Bears are close.** The herd now roams right outside the gate (30 bears in a smaller field), so the hunt starts a few steps from the base instead of a long walk away.
+- **The world has an edge.** Rows of snowy pines surround the play area. The player and the bears cannot walk past them, so you can no longer get lost in an endless snowfield.
+- **Way home.** When the base is off screen, a house badge appears on the edge of the screen with an arrow pointing toward it.
+- **Wide sweep is earned.** The player now hits one bear per swing at first. The Wide sweep pad stays hidden until $100 has been earned and 20 bears have been killed, then pops up in the base. Its first purchase hits 3 bears per swing, each next level adds one, up to 6.
+- **iPhone bottom strip, second try.** In a home-screen app with a see-through status bar, iOS sizes the page as "screen minus status bar" while starting it at the very top, which left a strip as tall as the status bar at the bottom. The game now adds that height back, and the page behind it is snow-coloured in case any gap remains.
+
+**TR.** iPhone'daki ilk denemeden sonraki değişiklikler.
+- **Ayılar yakında.** Sürü artık kapının hemen önünde dolaşıyor (daha dar bir alanda 30 ayı). Av, uzun bir yürüyüş yerine üssün birkaç adım ötesinde başlıyor.
+- **Dünyanın bir sınırı var.** Oyun alanını sıra sıra karlı çam ağaçları çeviriyor. Karakter ve ayılar ağaçların ötesine geçemiyor, böylece sonsuz bir kar alanında kaybolmak mümkün değil.
+- **Eve dönüş yolu.** Üs ekrandan çıkınca ekranın kenarında ev simgeli bir rozet beliriyor ve oku üssün yönünü gösteriyor.
+- **Geniş savuruş kazanılıyor.** Karakter artık başta tek ayıya vuruyor. Geniş savuruş pedi, $100 kazanılıp 20 ayı öldürülene kadar gizli kalıyor, sonra üste zıplayarak beliriyor. İlk satın alma bir vuruşta 3 ayıya vurduruyor, sonraki her seviye bir ayı ekliyor, en fazla 6'ya kadar.
+- **iPhone alt şeridi, ikinci deneme.** Durum çubuğu şeffaf olan ana ekran uygulamalarında iOS sayfayı ekranın en üstünden başlatıyor ama yüksekliğini "ekran eksi durum çubuğu" olarak hesaplıyor. Bu da altta durum çubuğu yüksekliğinde bir şerit bırakıyordu. Oyun artık bu yüksekliği geri ekliyor. Bir boşluk kalırsa diye arkadaki sayfa da kar renginde.
+
 ## 0.3.0 (2026-10-13)
 
 **EN.** The core loop from the ads is playable: hunt bears, carry a tower of meat, process it, collect cash, buy upgrades. Everything is still made of simple shapes; models and effects come in 0.4.0.

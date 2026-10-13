@@ -33,8 +33,9 @@ export function keepOutsideBase(pos: Vector3, radius: number): void {
   }
 }
 
+// Keeps everything inside the play area, a little short of the first row of trees.
 export function clampToWorld(pos: Vector3): void {
-  const l = LAYOUT.worldLimit
-  pos.x = clamp(pos.x, -l, l)
-  pos.z = clamp(pos.z, -l, l)
+  const a = LAYOUT.playArea
+  pos.x = clamp(pos.x, a.minX, a.maxX)
+  pos.z = clamp(pos.z, a.minZ, a.maxZ)
 }

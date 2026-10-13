@@ -7,6 +7,8 @@ export const WORLD = {
   fencePostSpacing: 1.6,
   fenceHeight: 1.1,
   snowMounds: 140,
+  treeSpacing: 2.3, // distance between pines along the forest edge
+  treeRows: 3, // rows of pines outside the play area
 } as const
 
 // Where things stand. The base is centred on (0, 0); the gate and the bears are toward -z.
@@ -20,8 +22,11 @@ export const LAYOUT = {
   cashPile: { x: -3.9, z: 9.3 },
   capacityPad: { x: 4.4, z: 0 },
   sweepPad: { x: -4.4, z: 0 },
-  bearField: { minX: -48, maxX: 48, minZ: -80, maxZ: -16 },
-  worldLimit: 95,
+  // Bears roam just outside the gate, so the hunt starts a few steps from the base.
+  bearField: { minX: -26, maxX: 26, minZ: -46, maxZ: -15 },
+  // Nothing walks past this rectangle; a forest edge marks it.
+  playArea: { minX: -32, maxX: 32, minZ: -56, maxZ: 22 },
+  home: { x: 0, z: 0 },
 } as const
 
 export const CAMERA = {
@@ -52,4 +57,7 @@ export const COLORS = {
   cash: 0x3cb371,
   hpBear: 0xe0453a,
   hpPlayer: 0x4cd964,
+  pine: 0x2f5d50,
+  pineSnow: 0xf4f8fa,
+  trunk: 0x6b4a36,
 } as const

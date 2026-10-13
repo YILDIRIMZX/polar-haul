@@ -2,6 +2,8 @@ import {
   BoxGeometry,
   CircleGeometry,
   Color,
+  ConeGeometry,
+  CylinderGeometry,
   DirectionalLight,
   Fog,
   HemisphereLight,
@@ -13,9 +15,9 @@ import {
   Scene,
   SphereGeometry,
 } from 'three'
-import { COLORS, WORLD } from '../config/world.ts'
+import { COLORS, LAYOUT, WORLD } from '../config/world.ts'
 
-// The static world: sky, ground, snow, the base and its fence.
+// The static world: sky, ground, snow, the forest edge, the base and its fence.
 export function createScene(): Scene {
   const scene = new Scene()
   scene.background = new Color(COLORS.sky)
@@ -24,10 +26,65 @@ export function createScene(): Scene {
   addLights(scene)
   addGround(scene)
   addSnowMounds(scene)
+  addForestEdge(scene)
   addBase(scene)
   addFence(scene)
 
   return scene
+}
+
+// Rows of snowy pines just outside the play area: a natural wall that shows where the world ends.
+function addForestEdge(scene: Scene): void {
+  const a = LAYOUT.playArea
+  const rand = seededRandom(21)
+  const spots: { x: number; z: number; size: number }[] = []
+  for (let row = 0; row < WORLD.treeRows; row++) {
+    const out = 2.4 + row * 2.4 // how far outside the play area this row stands
+    const minX = a.minX - out
+    const maxX = a.maxX + out
+    const minZ = a.minZ - out
+    const maxZ = a.maxZ + out
+    const sides = [
+      { x0: minX, z0: minZ, x1: maxX, z1: minZ },
+      { x0: maxX, z0: minZ, x1: maxX, z1: maxZ },
+      { x0: maxX, z0: maxZ, x1: minX, z1: maxZ },
+      { x0: minX, z0: maxZ, x1: minX, z1: minZ },
+    ]
+    for (const s of sides) {
+      const length = Math.hypot(s.x1 - s.x0, s.z1 - s.z0)
+      const count = Math.ceil(length / WORLD.treeSpacing)
+      for (let i = 0; i < count; i++) {
+        const t = (i + rand() * 0.6) / count
+        spots.push({
+          x: s.x0 + (s.x1 - s.x0) * t + (rand() - 0.5) * 1.4,
+          z: s.z0 + (s.z1 - s.z0) * t + (rand() - 0.5) * 1.4,
+          size: 0.6 + rand() * 0.4 + row * 0.12,
+        })
+      }
+    }
+  }
+
+  const trunks = new InstancedMesh(new CylinderGeometry(0.22, 0.3, 1, 6), new MeshLambertMaterial({ color: COLORS.trunk }), spots.length)
+  const crowns = new InstancedMesh(new ConeGeometry(1.2, 3.6, 7), new MeshLambertMaterial({ color: COLORS.pine }), spots.length)
+  const caps = new InstancedMesh(new ConeGeometry(0.75, 1.3, 7), new MeshLambertMaterial({ color: COLORS.pineSnow }), spots.length)
+  const dummy = new Object3D()
+  spots.forEach((p, i) => {
+    dummy.rotation.set(0, rand() * Math.PI, 0)
+    dummy.scale.setScalar(p.size)
+    dummy.position.set(p.x, 0.5 * p.size, p.z)
+    dummy.updateMatrix()
+    trunks.setMatrixAt(i, dummy.matrix)
+    dummy.position.set(p.x, 2.6 * p.size, p.z)
+    dummy.updateMatrix()
+    crowns.setMatrixAt(i, dummy.matrix)
+    dummy.position.set(p.x, 4.1 * p.size, p.z)
+    dummy.updateMatrix()
+    caps.setMatrixAt(i, dummy.matrix)
+  })
+  for (const m of [trunks, crowns, caps]) {
+    m.castShadow = true
+    scene.add(m)
+  }
 }
 
 function addLights(scene: Scene): void {
@@ -69,6 +126,11 @@ function addSnowMounds(scene: Scene): void {
     const x = (rand() - 0.5) * WORLD.groundSize * 0.8
     const z = (rand() - 0.5) * WORLD.groundSize * 0.8
     if (Math.hypot(x, z) < WORLD.baseRadius + 3) continue
+    // Keep mounds off the forest edge, so they never poke through a tree trunk.
+    const a = LAYOUT.playArea
+    const nearEdgeX = x > a.minX - 10 && x < a.maxX + 10 && (x < a.minX + 1 || x > a.maxX - 1)
+    const nearEdgeZ = z > a.minZ - 10 && z < a.maxZ + 10 && (z < a.minZ + 1 || z > a.maxZ - 1)
+    if (nearEdgeX || nearEdgeZ) continue
     const size = 0.6 + rand() * 1.8
     dummy.position.set(x, 0, z)
     dummy.scale.set(size * 1.6, size * 0.35, size)

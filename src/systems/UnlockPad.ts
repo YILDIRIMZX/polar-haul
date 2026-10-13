@@ -11,36 +11,31 @@ export interface PadPricing {
   maxLevel?: number // no limit when left out
 }
 
+export interface PadOptions {
+  at: { x: number; z: number }
+  title: string
+  reward: (level: number) => string // the text for the next purchase; `level` is how many were bought so far
+  pricing: PadPricing
+  apply: (level: number) => void // called with the new level after each purchase
+  hidden?: boolean // starts out of sight until show() is called
+}
+
 const TEX = 256
+const APPEAR_SECONDS = 0.35
 
 // A square on the ground: stand on it and cash flows in until the price is paid, then the reward applies.
 export class UnlockPad {
   level = 0
   private paid = 0
   private drawnPaid = -1
-  private x: number
-  private z: number
-  private title: string
-  private reward: string
-  private pricing: PadPricing
-  private apply: () => void
+  private appear = 1 // 0 → 1 while the pad pops into view
+  private options: PadOptions
+  private plane: Mesh
   private ctx: CanvasRenderingContext2D
   private texture: CanvasTexture
 
-  constructor(
-    scene: Scene,
-    at: { x: number; z: number },
-    title: string,
-    reward: string,
-    pricing: PadPricing,
-    apply: () => void,
-  ) {
-    this.x = at.x
-    this.z = at.z
-    this.title = title
-    this.reward = reward
-    this.pricing = pricing
-    this.apply = apply
+  constructor(scene: Scene, options: PadOptions) {
+    this.options = options
 
     const canvas = document.createElement('canvas')
     canvas.width = TEX
@@ -51,37 +46,62 @@ export class UnlockPad {
     this.texture = new CanvasTexture(canvas)
     this.texture.colorSpace = SRGBColorSpace
 
-    const plane = new Mesh(
-      new PlaneGeometry(pricing.size, pricing.size).rotateX(-Math.PI / 2),
+    const size = options.pricing.size
+    this.plane = new Mesh(
+      new PlaneGeometry(size, size).rotateX(-Math.PI / 2),
       new MeshBasicMaterial({ map: this.texture, transparent: true, depthWrite: false }),
     )
-    plane.position.set(at.x, 0.04, at.z)
-    scene.add(plane)
+    this.plane.position.set(options.at.x, 0.04, options.at.z)
+    this.plane.visible = !options.hidden
+    scene.add(this.plane)
     this.draw()
   }
 
   get price(): number {
-    return Math.round(this.pricing.baseCost * this.pricing.costGrowth ** this.level)
+    const p = this.options.pricing
+    return Math.round(p.baseCost * p.costGrowth ** this.level)
   }
 
   get maxed(): boolean {
-    return this.pricing.maxLevel !== undefined && this.level >= this.pricing.maxLevel
+    const max = this.options.pricing.maxLevel
+    return max !== undefined && this.level >= max
+  }
+
+  get shown(): boolean {
+    return this.plane.visible
+  }
+
+  // Brings a hidden pad into the base with a short pop.
+  show(): void {
+    if (this.plane.visible) return
+    this.plane.visible = true
+    this.appear = 0
   }
 
   update(dt: number, player: Player, wallet: Wallet): void {
+    if (!this.plane.visible) return
+    if (this.appear < 1) {
+      this.appear = Math.min(1, this.appear + dt / APPEAR_SECONDS)
+      // easeOutBack: grows past full size a little before settling, so the new pad catches the eye.
+      const u = this.appear - 1
+      this.plane.scale.setScalar(1 + 2.70158 * u * u * u + 1.70158 * u * u)
+    }
     if (this.maxed) return
-    const half = this.pricing.size / 2
+
+    const half = this.options.pricing.size / 2
     const p = player.position
-    const onPad = Math.abs(p.x - this.x) < half && Math.abs(p.z - this.z) < half
+    const { x, z } = this.options.at
+    const onPad = Math.abs(p.x - x) < half && Math.abs(p.z - z) < half
     if (onPad && wallet.amount > 0) {
-      const rate = Math.max(this.price / this.pricing.drainSeconds, this.pricing.minDrainPerSec)
+      const pricing = this.options.pricing
+      const rate = Math.max(this.price / pricing.drainSeconds, pricing.minDrainPerSec)
       const amount = Math.min(wallet.amount, this.price - this.paid, rate * dt)
       wallet.spend(amount)
       this.paid += amount
       if (this.paid >= this.price - 1e-6) {
         this.paid = 0
         this.level++
-        this.apply()
+        this.options.apply(this.level)
         // Redraw now: once maxed, update() returns early and would never show MAKS.
         this.draw()
       }
@@ -116,11 +136,11 @@ export class UnlockPad {
     c.fillStyle = '#ffffff'
     c.textAlign = 'center'
     c.textBaseline = 'middle'
-    fitText(c, this.title, 62, 34)
+    fitText(c, this.options.title, 62, 34)
     if (this.maxed) {
       fitText(c, 'MAKS', 150, 64)
     } else {
-      fitText(c, this.reward, 130, 64)
+      fitText(c, this.options.reward(this.level), 130, 64)
       fitText(c, `$${price - Math.floor(this.paid)}`, 200, 40)
     }
     this.texture.needsUpdate = true

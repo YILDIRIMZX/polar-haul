@@ -9,13 +9,13 @@ export const PLAYER = {
   attackRange: 3,
   attackDamage: 10,
   attackCooldown: 0.4,
-  startTargets: 3, // bears hit by one swing at the start; the sweep pad raises it
+  startTargets: 1, // bears hit by one swing until Wide sweep is bought
   pickupRadius: 2.4,
   startCapacity: 10,
 } as const
 
 export const BEAR = {
-  count: 28,
+  count: 30,
   maxHp: 30,
   radius: 1.1,
   wanderSpeed: 1.6,
@@ -28,8 +28,8 @@ export const BEAR = {
   meatMin: 2,
   meatMax: 3,
   respawnSeconds: 4,
-  spawnMinDistance: 18,
-  wanderReach: 8,
+  spawnMinDistance: 14,
+  wanderReach: 6,
   goalSecondsMin: 2,
   goalSecondsMax: 5,
 } as const
@@ -64,12 +64,13 @@ export const CAPACITY_UPGRADE = {
   size: 2.4,
 } as const
 
-// "Wide sweep": one more bear per swing for each level.
+// "Wide sweep": locked at first. The first purchase hits 3 bears per swing, each next one adds a bear.
 export const SWEEP_UPGRADE = {
+  firstTargets: 3,
   step: 1,
-  maxLevel: 3, // 3 → 6 bears
+  maxLevel: 4, // 3 → 4 → 5 → 6 bears
   baseCost: 120,
-  costGrowth: 1.8,
+  costGrowth: 1.6,
   drainSeconds: 1.5,
   minDrainPerSec: 25,
   size: 2.4,
