@@ -6,8 +6,8 @@
 
 [English](README.md) · **Türkçe**
 
-![Sürüm](https://img.shields.io/badge/sürüm-0.1.0-3b6e8f)
-![Durum](https://img.shields.io/badge/durum-planlama-8aa4b5)
+![Sürüm](https://img.shields.io/badge/sürüm-0.2.0-3b6e8f)
+![Durum](https://img.shields.io/badge/durum-geliştiriliyor-8aa4b5)
 ![Three.js](https://img.shields.io/badge/Three.js-3D-1f2933)
 ![PWA](https://img.shields.io/badge/PWA-kurulabilir-3b6e8f)
 ![Lisans](https://img.shields.io/badge/Lisans-MIT-3b6e8f)

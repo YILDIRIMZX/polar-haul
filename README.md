@@ -6,8 +6,8 @@
 
 **English** · [Türkçe](README.tr.md)
 
-![Version](https://img.shields.io/badge/version-0.1.0-3b6e8f)
-![Status](https://img.shields.io/badge/status-planning-8aa4b5)
+![Version](https://img.shields.io/badge/version-0.2.0-3b6e8f)
+![Status](https://img.shields.io/badge/status-in_development-8aa4b5)
 ![Three.js](https://img.shields.io/badge/Three.js-3D-1f2933)
 ![PWA](https://img.shields.io/badge/PWA-installable-3b6e8f)
 ![License](https://img.shields.io/badge/License-MIT-3b6e8f)

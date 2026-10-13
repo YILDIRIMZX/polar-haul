@@ -1,0 +1,183 @@
+import {
+  CapsuleGeometry,
+  CircleGeometry,
+  Color,
+  DirectionalLight,
+  Fog,
+  Group,
+  HemisphereLight,
+  InstancedMesh,
+  Mesh,
+  MeshLambertMaterial,
+  Object3D,
+  PlaneGeometry,
+  RingGeometry,
+  Scene,
+  SphereGeometry,
+  BoxGeometry,
+  MeshBasicMaterial,
+} from 'three'
+import { COLORS, WORLD } from '../config/world.ts'
+
+export interface World {
+  scene: Scene
+  player: Group
+}
+
+export function createWorld(): World {
+  const scene = new Scene()
+  scene.background = new Color(COLORS.sky)
+  scene.fog = new Fog(COLORS.sky, 45, 110)
+
+  addLights(scene)
+  addGround(scene)
+  addSnowMounds(scene)
+  addBase(scene)
+  addFence(scene)
+
+  const player = createPlayer()
+  scene.add(player)
+
+  return { scene, player }
+}
+
+function addLights(scene: Scene): void {
+  scene.add(new HemisphereLight(0xffffff, 0xb8c7d3, 1.6))
+
+  const sun = new DirectionalLight(0xffffff, 1.8)
+  sun.position.set(-18, 30, 12)
+  sun.castShadow = true
+  sun.shadow.mapSize.set(1024, 1024)
+  const s = sun.shadow.camera
+  s.left = -30
+  s.right = 30
+  s.top = 30
+  s.bottom = -30
+  scene.add(sun)
+}
+
+function addGround(scene: Scene): void {
+  const ground = new Mesh(
+    new PlaneGeometry(WORLD.groundSize, WORLD.groundSize),
+    new MeshLambertMaterial({ color: COLORS.snow }),
+  )
+  ground.rotation.x = -Math.PI / 2
+  ground.receiveShadow = true
+  scene.add(ground)
+}
+
+// Flattened spheres scattered outside the base give the snow some depth.
+function addSnowMounds(scene: Scene): void {
+  const mounds = new InstancedMesh(
+    new SphereGeometry(1, 10, 6),
+    new MeshLambertMaterial({ color: COLORS.snowShade }),
+    WORLD.snowMounds,
+  )
+  const dummy = new Object3D()
+  const rand = seededRandom(7)
+  let placed = 0
+  while (placed < WORLD.snowMounds) {
+    const x = (rand() - 0.5) * WORLD.groundSize * 0.8
+    const z = (rand() - 0.5) * WORLD.groundSize * 0.8
+    if (Math.hypot(x, z) < WORLD.baseRadius + 3) continue
+    const size = 0.6 + rand() * 1.8
+    dummy.position.set(x, 0, z)
+    dummy.scale.set(size * 1.6, size * 0.35, size)
+    dummy.rotation.y = rand() * Math.PI
+    dummy.updateMatrix()
+    mounds.setMatrixAt(placed++, dummy.matrix)
+  }
+  mounds.receiveShadow = true
+  scene.add(mounds)
+}
+
+function addBase(scene: Scene): void {
+  const base = new Mesh(
+    new CircleGeometry(WORLD.baseRadius, 48),
+    new MeshLambertMaterial({ color: COLORS.baseGround }),
+  )
+  base.rotation.x = -Math.PI / 2
+  base.position.y = 0.01
+  base.receiveShadow = true
+  scene.add(base)
+}
+
+// Posts around the base with rails between them, leaving a gate open toward -z (the bears).
+function addFence(scene: Scene): void {
+  const r = WORLD.baseRadius
+  const count = Math.floor((2 * Math.PI * r) / WORLD.fencePostSpacing)
+  const step = (2 * Math.PI) / count
+  const gateHalfAngle = WORLD.gateWidth / 2 / r
+  const gateAngle = -Math.PI / 2 // direction of -z
+
+  const angles: number[] = []
+  for (let i = 0; i < count; i++) {
+    const a = i * step
+    const fromGate = Math.abs(Math.atan2(Math.sin(a - gateAngle), Math.cos(a - gateAngle)))
+    if (fromGate > gateHalfAngle) angles.push(a)
+  }
+
+  const wood = new MeshLambertMaterial({ color: COLORS.fenceWood })
+  const h = WORLD.fenceHeight
+  const posts = new InstancedMesh(new BoxGeometry(0.28, h, 0.28), wood, angles.length)
+  const rails = new InstancedMesh(new BoxGeometry(1, 0.14, 0.12), wood, angles.length * 2)
+  const dummy = new Object3D()
+  let railCount = 0
+
+  angles.forEach((a, i) => {
+    dummy.position.set(Math.cos(a) * r, h / 2, Math.sin(a) * r)
+    dummy.rotation.set(0, 0, 0)
+    dummy.scale.set(1, 1, 1)
+    dummy.updateMatrix()
+    posts.setMatrixAt(i, dummy.matrix)
+
+    // A rail only joins neighbouring posts, so the gate gap stays open.
+    const next = angles[(i + 1) % angles.length]
+    const gap = (next - a + 2 * Math.PI) % (2 * Math.PI)
+    if (Math.abs(gap - step) > 1e-6) return
+    const mid = a + step / 2
+    const length = 2 * r * Math.sin(step / 2)
+    for (const y of [h * 0.4, h * 0.8]) {
+      dummy.position.set(Math.cos(mid) * r, y, Math.sin(mid) * r)
+      dummy.rotation.set(0, -mid + Math.PI / 2, 0)
+      dummy.scale.set(length, 1, 1)
+      dummy.updateMatrix()
+      rails.setMatrixAt(railCount++, dummy.matrix)
+    }
+  })
+  rails.count = railCount
+
+  for (const m of [posts, rails]) {
+    m.castShadow = true
+    scene.add(m)
+  }
+}
+
+// Placeholder until a real character model arrives in 0.4.0.
+function createPlayer(): Group {
+  const player = new Group()
+
+  const body = new Mesh(new CapsuleGeometry(0.45, 0.8, 4, 12), new MeshLambertMaterial({ color: COLORS.player }))
+  body.position.y = 0.85
+  body.castShadow = true
+  player.add(body)
+
+  const ring = new Mesh(
+    new RingGeometry(0.75, 0.9, 32),
+    new MeshBasicMaterial({ color: COLORS.playerRing, transparent: true, opacity: 0.85 }),
+  )
+  ring.rotation.x = -Math.PI / 2
+  ring.position.y = 0.03
+  player.add(ring)
+
+  return player
+}
+
+// Same layout on every launch, so the world looks the same each time the app opens.
+function seededRandom(seed: number): () => number {
+  let s = seed
+  return () => {
+    s = (s * 1664525 + 1013904223) % 4294967296
+    return s / 4294967296
+  }
+}
