@@ -23,7 +23,7 @@ export const UPGRADES: UpgradeDef[] = [
   {
     id: 'capacity',
     title: 'KAPASİTE',
-    at: { x: 4.4, z: -1 },
+    at: { x: 4.4, z: -3.2 },
     reward: () => '+5',
     pricing: pricing(50, 1.25),
     apply: (s) => s.add('carryCapacity', 5),
@@ -32,7 +32,7 @@ export const UPGRADES: UpgradeDef[] = [
   {
     id: 'sweep',
     title: 'GENİŞ SAVURUŞ',
-    at: { x: -4.4, z: -1 },
+    at: { x: -4.4, z: -3.2 },
     // The first purchase jumps from 1 to 3 bears per swing; each next one adds a bear, up to 6.
     reward: (level) => (level === 0 ? '3 AYI' : '+1 AYI'),
     pricing: pricing(120, 1.6, 4),
@@ -42,7 +42,7 @@ export const UPGRADES: UpgradeDef[] = [
   {
     id: 'furnaceSlots',
     title: 'OCAK YUVASI',
-    at: { x: -4.4, z: -4.6 },
+    at: { x: -4.4, z: -6.8 },
     reward: () => '+1 YUVA',
     pricing: pricing(80, 2.0, 3),
     apply: (s) => s.add('furnaceSlots', 1),
@@ -51,7 +51,7 @@ export const UPGRADES: UpgradeDef[] = [
   {
     id: 'counter',
     title: 'TEZGÂH',
-    at: { x: 4.4, z: -4.6 },
+    at: { x: 4.4, z: -6.8 },
     reward: () => '+4',
     pricing: pricing(60, 1.5, 5),
     apply: (s) => s.add('counterCapacity', 4),

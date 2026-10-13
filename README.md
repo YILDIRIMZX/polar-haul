@@ -6,7 +6,7 @@
 
 **English** · [Türkçe](README.tr.md)
 
-![Version](https://img.shields.io/badge/version-0.4.0-3b6e8f)
+![Version](https://img.shields.io/badge/version-0.4.1-3b6e8f)
 ![Status](https://img.shields.io/badge/status-in_development-8aa4b5)
 ![Three.js](https://img.shields.io/badge/Three.js-3D-1f2933)
 ![PWA](https://img.shields.io/badge/PWA-installable-3b6e8f)
@@ -60,4 +60,4 @@ Every version, with what changed and why, is listed in [CHANGELOG.md](CHANGELOG.
 
 ## License
 
-Code is released under the [MIT License](LICENSE). Third-party assets keep their own licenses (CC0 only), listed in the asset credits as they are added.
+Code is released under the [MIT License](LICENSE). Third-party code and assets keep their own licenses and are listed in [CREDITS.md](CREDITS.md); recorded sounds and art will be CC0 only.

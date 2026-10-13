@@ -1,4 +1,5 @@
 import { MathUtils, Vector3, type Camera, type Scene } from 'three'
+import { audio } from '../audio/Audio.ts'
 import { BEAR } from '../config/balance.ts'
 import { LAYOUT } from '../config/world.ts'
 import { Bear } from '../entities/Bear.ts'
@@ -27,7 +28,9 @@ export class BearHerd {
 
   hit(bear: Bear, damage: number): void {
     if (bear.dead) return
-    if (bear.hit(damage)) this.onKilled(bear.position.clone())
+    if (!bear.hit(damage)) return
+    audio.play('bearDie')
+    this.onKilled(bear.position.clone())
   }
 
   update(dt: number, player: Player, camera: Camera): void {
@@ -71,6 +74,7 @@ export class BearHerd {
     if (bear.attackTimer <= 0) {
       bear.attackTimer = BEAR.attackCooldown
       player.damage(BEAR.attackDamage)
+      audio.play('hurt')
     }
   }
 

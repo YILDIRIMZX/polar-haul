@@ -11,10 +11,11 @@ export const BASE_STATS = {
   rackCapacity: 30, // raw meat the furnace's input tray holds
   furnaceSlots: 1, // pieces cooked at the same time
   cookSeconds: 1.6,
+  shelfCapacity: 12, // cooked pieces waiting next to the furnace
   counterCapacity: 8, // cooked pieces the counter holds
   meatPrice: 5,
-  queueLength: 3, // customers waiting at once
-  customerInterval: 3.5, // seconds between new customers
+  queueLength: 6, // customers waiting at once
+  customerInterval: 2, // seconds between new customers
   patienceSeconds: 20,
   serveInterval: 0.25, // seconds per piece handed over while serving
 } as const
@@ -59,14 +60,17 @@ export const STACK = {
   pickupSeconds: 0.22,
 } as const
 
+// The station around the furnace: one circle where raw meat goes in and cooked meat comes out.
 export const FURNACE = {
-  dropZoneRadius: 1.4,
-  unloadInterval: 0.03, // the whole stack pours onto the tray quickly
+  zoneRadius: 1.4,
+  unloadInterval: 0.03, // the raw part of the stack pours onto the tray quickly
+  pickupInterval: 0.06, // cooked pieces jump from the shelf onto the stack
   flightSeconds: 0.16,
 } as const
 
 export const SHOP = {
   serviceRadius: 1.1,
+  counterDropInterval: 0.05, // cooked pieces the player carries move onto the counter
   cashPickupRadius: 1.7,
   cashPickupInterval: 0.03,
   cashPerBundle: 10, // one green bundle on the till stands for this much
@@ -80,4 +84,6 @@ export const PAD = {
   size: 2.4,
   drainSeconds: 1.3,
   minDrainPerSec: 25,
+  delay: 0.7, // seconds on a pad before cash starts to flow, again after every purchase
+  tickInterval: 0.08, // how often the rising tick sounds while cash flows
 } as const

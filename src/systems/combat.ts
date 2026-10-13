@@ -1,4 +1,5 @@
 import type { Vector3 } from 'three'
+import { audio } from '../audio/Audio.ts'
 import { PLAYER } from '../config/balance.ts'
 import type { Bear } from '../entities/Bear.ts'
 import type { Player } from '../entities/Player.ts'
@@ -38,6 +39,7 @@ export class AutoAttack {
     if (this.cooldown > 0) return
     this.cooldown = PLAYER.attackCooldown
     player.swing()
+    audio.play('hit') // one sound per swing, however many bears it hits
     for (const bear of targets.slice(0, this.maxTargets)) herd.hit(bear, this.damage)
   }
 }

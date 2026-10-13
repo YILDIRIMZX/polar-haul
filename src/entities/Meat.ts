@@ -1,4 +1,4 @@
-import { CapsuleGeometry, CylinderGeometry, Group, Mesh, MeshLambertMaterial } from 'three'
+import { CapsuleGeometry, CylinderGeometry, Group, Mesh, MeshLambertMaterial, type Object3D } from 'three'
 import { COLORS } from '../config/world.ts'
 
 // A flat piece of meat with a bone through it, like in the ads. Flat so it stacks into a tower.
@@ -15,5 +15,10 @@ export function createMeat(kind: MeatKind = 'raw'): Group {
   meat.castShadow = true
   const group = new Group()
   group.add(meat, new Mesh(boneGeo, boneMat))
+  group.userData.kind = kind
   return group
+}
+
+export function meatKind(object: Object3D): MeatKind {
+  return object.userData.kind === 'cooked' ? 'cooked' : 'raw'
 }

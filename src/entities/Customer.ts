@@ -20,6 +20,7 @@ const coatMats = COLORS.coats.map((color) => new MeshLambertMaterial({ color }))
 
 const BUBBLE_W = 128
 const BUBBLE_H = 72
+const ANGRY_TURN = 0.7 // radians an angry customer turns away from the counter
 const toTarget = new Vector3()
 
 export type CustomerState = 'arriving' | 'waiting' | 'leaving'
@@ -93,15 +94,14 @@ export class Customer {
     return dist - step < 0.05
   }
 
-  // Faces the counter (toward -z) while waiting.
+  // Faces the counter (toward -z) while waiting; an angry customer turns half away in a huff.
   faceCounter(dt: number): void {
-    this.facing = turnTowards(this.facing, Math.PI, 10 * dt)
+    const target = this.cold ? Math.PI + ANGRY_TURN : Math.PI
+    this.facing = turnTowards(this.facing, target, (this.cold ? 3 : 10) * dt)
   }
 
-  updateLook(time: number): void {
+  updateLook(): void {
     this.body.rotation.y = this.facing
-    // A cold customer shivers.
-    this.body.position.x = this.cold && this.state === 'waiting' ? Math.sin(time * 70) * 0.04 : 0
     this.bubble.visible = this.state !== 'leaving'
     this.drawBubble()
   }
@@ -121,7 +121,7 @@ export class Customer {
 
     const c = this.ctx
     c.clearRect(0, 0, BUBBLE_W, BUBBLE_H)
-    c.fillStyle = 'rgba(255, 255, 255, 0.92)'
+    c.fillStyle = this.cold ? 'rgba(255, 205, 198, 0.95)' : 'rgba(255, 255, 255, 0.92)'
     c.beginPath()
     c.roundRect(4, 4, BUBBLE_W - 8, BUBBLE_H - 8, 16)
     c.fill()
@@ -137,11 +137,41 @@ export class Customer {
     c.textBaseline = 'middle'
     c.fillText(`×${left}`, 60, 31)
 
-    // Patience: green → orange → red; empty and grey once it has run out.
-    c.fillStyle = '#d5dde3'
-    c.fillRect(14, 52, BUBBLE_W - 28, 8)
-    c.fillStyle = ratio > 0.5 ? '#4cd964' : ratio > 0.2 ? '#ffb347' : '#e0453a'
-    c.fillRect(14, 52, (BUBBLE_W - 28) * ratio, 8)
+    if (this.cold) {
+      drawAngryFace(c, BUBBLE_W - 26, 31)
+    }
+    // Patience: green → orange → red. Once it runs out the bar is gone and the bubble turns red.
+    if (!this.cold) {
+      c.fillStyle = '#d5dde3'
+      c.fillRect(14, 52, BUBBLE_W - 28, 8)
+      c.fillStyle = ratio > 0.5 ? '#4cd964' : ratio > 0.2 ? '#ffb347' : '#e0453a'
+      c.fillRect(14, 52, (BUBBLE_W - 28) * ratio, 8)
+    }
     this.texture.needsUpdate = true
   }
+}
+
+// A small round face with slanted brows and a frown.
+function drawAngryFace(c: CanvasRenderingContext2D, x: number, y: number): void {
+  c.fillStyle = '#ff7b5c'
+  c.beginPath()
+  c.arc(x, y, 16, 0, Math.PI * 2)
+  c.fill()
+  c.strokeStyle = '#5a1d12'
+  c.lineWidth = 3
+  c.lineCap = 'round'
+  c.beginPath()
+  c.moveTo(x - 10, y - 9)
+  c.lineTo(x - 3, y - 5)
+  c.moveTo(x + 10, y - 9)
+  c.lineTo(x + 3, y - 5)
+  c.stroke()
+  c.fillStyle = '#5a1d12'
+  c.beginPath()
+  c.arc(x - 5, y, 2, 0, Math.PI * 2)
+  c.arc(x + 5, y, 2, 0, Math.PI * 2)
+  c.fill()
+  c.beginPath()
+  c.arc(x, y + 11, 6, Math.PI * 1.15, Math.PI * 1.85)
+  c.stroke()
 }

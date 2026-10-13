@@ -1,5 +1,7 @@
 import { Group, Vector3, type Object3D, type Scene } from 'three'
+import { audio } from '../audio/Audio.ts'
 import { BASE_STATS, STACK } from '../config/balance.ts'
+import { meatKind, type MeatKind } from '../entities/Meat.ts'
 import type { Player } from '../entities/Player.ts'
 
 interface Incoming {
@@ -17,6 +19,7 @@ export class Stack {
   private items: Object3D[] = []
   private incoming: Incoming[] = []
   private sway = new Vector3()
+  private wasFull = false
   private scene: Scene
 
   constructor(scene: Scene) {
@@ -37,12 +40,16 @@ export class Stack {
     this.incoming.push({ mesh, from: mesh.position.clone(), t: 0 })
   }
 
-  // Removes the top item and hands it back as a free object in the scene, at the same world position.
-  takeTop(): Object3D | null {
-    const item = this.items.pop()
-    if (!item) return null
-    this.scene.attach(item)
-    return item
+  // Removes the highest item of the given kind and hands it back as a free object in the scene,
+  // at the same world position. The items above it drop down to fill the gap.
+  takeTop(kind: MeatKind): Object3D | null {
+    for (let i = this.items.length - 1; i >= 0; i--) {
+      if (meatKind(this.items[i]) !== kind) continue
+      const [item] = this.items.splice(i, 1)
+      this.scene.attach(item)
+      return item
+    }
+    return null
   }
 
   clear(): void {
@@ -64,6 +71,7 @@ export class Stack {
         this.incoming.splice(i, 1)
         this.root.add(f.mesh)
         this.items.push(f.mesh)
+        audio.play('pickup', { rising: true })
         continue
       }
       top.copy(this.root.position)
@@ -72,6 +80,11 @@ export class Stack {
       f.mesh.position.lerpVectors(f.from, top, eased)
       f.mesh.position.y += Math.sin(Math.PI * f.t) * 1.5
     }
+
+    // One warning tone when the stack fills up; silent again until there is room.
+    const full = !this.hasRoom
+    if (full && !this.wasFull) audio.play('full')
+    this.wasFull = full
 
     // The tower bends against the direction of travel, more at the top, and springs back when the player stops.
     this.sway.lerp(player.velocity, 1 - Math.exp(-STACK.swayFollow * dt))

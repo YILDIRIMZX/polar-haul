@@ -1,4 +1,5 @@
 import { registerSW } from 'virtual:pwa-register'
+import { audio } from './audio/Audio.ts'
 import { Game } from './game/Game.ts'
 import './style.css'
 
@@ -6,6 +7,9 @@ registerSW({ immediate: true })
 
 // iOS Safari still allows pinch zoom on a standalone app unless the gesture is cancelled.
 document.addEventListener('gesturestart', (e) => e.preventDefault())
+
+// iOS only lets a page start sound from a touch; every touch wakes the audio up if it is asleep.
+window.addEventListener('pointerdown', () => audio.unlock())
 
 const canvas = document.getElementById('game') as HTMLCanvasElement
 const splash = document.getElementById('splash')

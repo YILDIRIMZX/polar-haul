@@ -16,8 +16,9 @@ export const WORLD = {
 export const LAYOUT = {
   playerSpawn: { x: 1.5, z: 1.5 },
   furnace: { x: -4, z: 2.6 },
-  rack: { x: -4, z: 4.9 }, // the furnace's input tray, where raw meat waits
-  dropZone: { x: -1.7, z: 3.6 },
+  rack: { x: -4, z: 4.8 }, // the furnace's input tray, where raw meat waits
+  shelf: { x: -4, z: 0.4 }, // cooked meat waits here until the player picks it up
+  furnaceZone: { x: -1.7, z: 2.6 }, // standing here pours raw meat in and picks cooked meat up
   counter: { x: 0, z: 7.4 },
   serviceSpot: { x: 0, z: 5.9 },
   till: { x: 3.1, z: 7.4 },

@@ -1,4 +1,5 @@
 import { MathUtils, Vector3, type Group, type Scene } from 'three'
+import { audio } from '../audio/Audio.ts'
 import { createMeat } from '../entities/Meat.ts'
 import type { Player } from '../entities/Player.ts'
 import { flatDistance } from '../game/math.ts'
@@ -24,6 +25,7 @@ export class Loot {
   }
 
   spawn(at: Vector3, count: number): void {
+    audio.play('meatPop')
     for (let i = 0; i < count; i++) {
       const mesh = createMeat()
       mesh.position.set(at.x, 1.2, at.z)

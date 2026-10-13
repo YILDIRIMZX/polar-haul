@@ -1,14 +1,17 @@
 import { BoxGeometry, Mesh, MeshLambertMaterial, Vector3, type Object3D, type Scene } from 'three'
+import { audio } from '../audio/Audio.ts'
 import { SHOP } from '../config/balance.ts'
 import { COLORS, LAYOUT } from '../config/world.ts'
 import { Customer } from '../entities/Customer.ts'
 import type { Player } from '../entities/Player.ts'
 import { Flights } from '../fx/Flights.ts'
+import { floatingText } from '../fx/FloatingText.ts'
 import { dashedRing } from '../fx/markers.ts'
 import { flatDistance } from '../game/math.ts'
 import type { Stats } from '../game/Stats.ts'
 import { orderSize, tipFor } from './orders.ts'
 import type { Progress } from './progression.ts'
+import type { Stack } from './Stack.ts'
 import type { Wallet } from './Wallet.ts'
 
 const COUNTER_TOP = 0.85
@@ -19,16 +22,17 @@ const cashGeo = new BoxGeometry(0.55, 0.14, 0.32)
 const cashMat = new MeshLambertMaterial({ color: COLORS.cash })
 
 // The counter, the queue of customers and the till.
-// Cooked meat waits on the counter; the player stands at the service spot to hand it to the first
-// customer; a served customer pays into the till; the player walks past the till to collect.
+// At the service spot the player puts the cooked meat they carry onto the counter and hands it to
+// the first customer; a served customer pays into the till; the player walks past the till to collect.
 export class Shop {
   private scene: Scene
   private flights = new Flights()
   private counter: Object3D[] = []
-  private reserved = 0 // cooked pieces flying from the furnace to the counter
+  private reserved = 0 // cooked pieces flying onto the counter
   private queue: Customer[] = [] // in queue order; queue[0] stands at the counter
   private leaving: Customer[] = []
   private spawnTimer = 1
+  private dropTimer = 0
   private serveTimer = 0
   private till = 0 // cash waiting to be collected
   private cashMeshes: Mesh[] = []
@@ -55,15 +59,17 @@ export class Shop {
     })
   }
 
-  update(dt: number, player: Player, stats: Stats, wallet: Wallet, progress: Progress, time: number): void {
+  update(dt: number, player: Player, stack: Stack, stats: Stats, wallet: Wallet, progress: Progress): void {
     this.playerChest.set(player.position.x, 1.2, player.position.z)
+    const atService = flatDistance(player.position, LAYOUT.serviceSpot) <= SHOP.serviceRadius
     this.spawnCustomers(dt, stats, progress)
     this.moveQueue(dt)
-    this.serve(dt, player, stats)
+    this.dropOnCounter(dt, atService, stack, stats)
+    this.serve(dt, atService, stats)
     this.finishOrder(stats, progress)
     this.moveLeaving(dt)
-    for (const c of this.queue) c.updateLook(time)
-    for (const c of this.leaving) c.updateLook(time)
+    for (const c of this.queue) c.updateLook()
+    for (const c of this.leaving) c.updateLook()
     this.collectCash(dt, player, wallet)
     this.flights.update(dt)
   }
@@ -77,6 +83,7 @@ export class Shop {
     this.queue.push(customer)
     this.scene.add(customer.root)
     this.spawnTimer = stats.get('customerInterval')
+    audio.play('bell')
   }
 
   private moveQueue(dt: number): void {
@@ -85,18 +92,32 @@ export class Shop {
       if (!arrived) continue
       c.state = 'waiting'
       c.faceCounter(dt)
+      const wasPatient = !c.cold
       c.patience = Math.max(0, c.patience - dt)
+      if (wasPatient && c.cold) audio.play('angry')
+    }
+  }
+
+  // The cooked meat the player carries moves onto the counter while there is room.
+  private dropOnCounter(dt: number, atService: boolean, stack: Stack, stats: Stats): void {
+    if (!atService) {
+      this.dropTimer = 0
+      return
+    }
+    this.dropTimer -= dt
+    while (this.dropTimer <= 0 && this.counterHasRoom(stats)) {
+      const piece = stack.takeTop('cooked')
+      if (!piece) break
+      this.receiveCooked(piece)
+      audio.play('place')
+      this.dropTimer += SHOP.counterDropInterval
     }
   }
 
   // While the player stands at the service spot, hands pieces from the counter to the first customer.
-  private serve(dt: number, player: Player, stats: Stats): void {
+  private serve(dt: number, atService: boolean, stats: Stats): void {
     const front = this.queue[0]
-    const canServe =
-      front !== undefined &&
-      front.state === 'waiting' &&
-      front.slot === 0 &&
-      flatDistance(player.position, LAYOUT.serviceSpot) <= SHOP.serviceRadius
+    const canServe = front !== undefined && front.state === 'waiting' && front.slot === 0 && atService
     if (!canServe) {
       this.serveTimer = 0
       return
@@ -121,10 +142,18 @@ export class Shop {
     const front = this.queue[0]
     if (!front || front.got < front.want) return
     const price = stats.get('meatPrice')
-    const tip = front.cold ? 0 : tipFor(front.want, price, front.patience / front.patienceMax)
-    this.till += front.want * price + Math.max(0, tip)
+    const tip = front.cold ? 0 : Math.max(0, tipFor(front.want, price, front.patience / front.patienceMax))
+    const paid = front.want * price + tip
+    this.till += paid
     this.layoutCash()
     progress.customersServed++
+
+    // "+$25" floats up over the customer's head; a cold customer also shows the tip they kept.
+    const head = front.position.clone().setY(2.6)
+    floatingText.spawn(`+$${Math.floor(paid)}`, head)
+    audio.play('pay')
+    if (tip > 0) audio.play('tip', { volume: Math.min(1, 0.4 + tip / (front.want * price)) })
+    if (front.cold) floatingText.spawn('bahşiş yok', head.setY(3.2), 'bad')
 
     front.state = 'leaving'
     this.queue.shift()
@@ -153,6 +182,7 @@ export class Shop {
       const amount = Math.min(SHOP.cashPerBundle, this.till)
       this.till -= amount
       wallet.add(amount)
+      audio.play('coin', { rising: true })
       if (this.cashMeshes.length > this.visibleBundles()) {
         const m = this.cashMeshes.pop()
         if (m) this.flights.add(m, () => this.playerChest, 0.2, 0.6, () => m.removeFromParent())

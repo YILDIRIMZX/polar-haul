@@ -1,8 +1,10 @@
 import { MathUtils, PCFSoftShadowMap, Timer, WebGLRenderer } from 'three'
+import { audio } from '../audio/Audio.ts'
 import { BEAR, PLAYER } from '../config/balance.ts'
 import { UPGRADES, type UpgradeDef } from '../config/upgrades.ts'
 import { CAMERA, COLORS, LAYOUT } from '../config/world.ts'
 import { Player } from '../entities/Player.ts'
+import { floatingText } from '../fx/FloatingText.ts'
 import { HpBar } from '../fx/HpBar.ts'
 import { Joystick } from '../input/Joystick.ts'
 import { BearHerd } from '../systems/BearHerd.ts'
@@ -99,6 +101,7 @@ export class Game {
   stop(): void {
     this.running = false
     this.renderer.setAnimationLoop(null)
+    audio.pause()
   }
 
   private tick(time: number): void {
@@ -109,6 +112,7 @@ export class Game {
     placeCamera(this.camera, this.player.position)
     this.playerBar.update(this.player.hp / PLAYER.maxHp, this.player.position, 1.75, this.camera)
     this.homeMarker.update(this.camera, this.canvas, LAYOUT.home)
+    floatingText.update(dt, this.camera, this.canvas)
     this.renderer.render(this.scene, this.camera)
     if (this.frame++ === 0) this.onFirstFrame()
   }
@@ -126,8 +130,8 @@ export class Game {
     this.attack.update(dt, this.player, this.herd)
     this.loot.update(dt, this.player, this.stack, s.get('pickupRadius'))
     this.stack.update(dt, this.player)
-    this.furnace.update(dt, this.player, this.stack, s, this.shop, this.camera, time)
-    this.shop.update(dt, this.player, s, this.wallet, this.progress, time)
+    this.furnace.update(dt, this.player, this.stack, s, this.camera, time)
+    this.shop.update(dt, this.player, this.stack, s, this.wallet, this.progress)
     for (const { pad } of this.pads) pad.update(dt, this.player, this.wallet)
 
     // New pads appear once the player has made enough progress.
@@ -141,6 +145,7 @@ export class Game {
     if (this.player.hp <= 0) {
       this.stack.clear()
       this.player.respawn()
+      audio.play('knockout')
     }
 
     this.hud.update(this.wallet.amount, this.stack.count, this.stack.capacity)

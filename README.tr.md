@@ -6,7 +6,7 @@
 
 [English](README.md) · **Türkçe**
 
-![Sürüm](https://img.shields.io/badge/sürüm-0.4.0-3b6e8f)
+![Sürüm](https://img.shields.io/badge/sürüm-0.4.1-3b6e8f)
 ![Durum](https://img.shields.io/badge/durum-geliştiriliyor-8aa4b5)
 ![Three.js](https://img.shields.io/badge/Three.js-3D-1f2933)
 ![PWA](https://img.shields.io/badge/PWA-kurulabilir-3b6e8f)
@@ -60,4 +60,4 @@ Her sürüm, neyin neden değiştiğiyle birlikte İngilizce ve Türkçe olarak 
 
 ## Lisans
 
-Kod [MIT Lisansı](LICENSE) ile yayınlanır. Üçüncü taraf içerikler kendi lisanslarını korur (yalnızca CC0). Eklendikçe içerik kaynakçasında listelenir.
+Kod [MIT Lisansı](LICENSE) ile yayınlanır. Üçüncü taraf kod ve içerikler kendi lisanslarını korur ve [CREDITS.md](CREDITS.md) dosyasında listelenir; kayıtlı sesler ve görseller yalnızca CC0 olacak.

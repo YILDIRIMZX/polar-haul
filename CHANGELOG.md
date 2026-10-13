@@ -6,6 +6,26 @@ Her güncelleme, neyin neden değiştiğiyle birlikte burada listelenir. En yeni
 
 ---
 
+## 0.4.1 (2026-10-13)
+
+**EN.** Changes from playing 0.4.0 on iPhone.
+- **Cooked meat is carried by hand.** The furnace no longer sends cooked meat to the counter by itself. It waits on a shelf next to the furnace. One dashed circle by the furnace now does both jobs: standing in it pours the raw meat in and picks the cooked meat up. The stack can hold raw and cooked meat together; at the counter only the cooked pieces go down. A waiter and a conveyor will take over this job in 0.5.0.
+- **Sound.** Short effects for every action: hits, a bear going down, meat popping out, a pickup whose pitch climbs as the stack grows, the furnace ding, the door bell, the till, tips, an angry huff, coins and pads. They are generated in code with ZzFX (MIT), so there are no sound files. A mute button sits at the top of the screen and remembers its setting.
+- **Paying customers show what they paid.** "+$25" floats up over the customer's head; a customer whose patience ran out also shows "no tip".
+- **An angry customer no longer shivers.** The bubble turns red, an angry face replaces the patience bar, the customer turns half away from the counter and huffs once.
+- **Pads wait before taking cash.** Cash starts to flow after 0.7 s on a pad, and the wait starts over after every purchase, so walking across a pad or finishing a level never spends money by accident. A thin line on the pad fills during the wait.
+- **Busier shop.** Up to 6 customers queue at once (was 3) and a new one arrives every 2 s (was 3.5 s).
+- **Credits.** [CREDITS.md](CREDITS.md) lists the libraries the app includes and their licenses.
+
+**TR.** 0.4.0'ı iPhone'da oynadıktan sonraki değişiklikler.
+- **Pişmiş et elle taşınıyor.** Ocak pişmiş eti artık tezgâha kendisi göndermiyor; et ocağın yanındaki rafta bekliyor. Ocağın yanındaki tek kesik çizgili daire artık iki işi birden yapıyor: içinde durunca çiğ et ocağa dökülüyor ve pişmiş et alınıyor. Yığında çiğ ve pişmiş et birlikte durabiliyor; tezgâhta sadece pişmiş parçalar bırakılıyor. Bu işi 0.5.0'da bir garson ve bir konveyör devralacak.
+- **Ses.** Her eylem için kısa efektler: vuruşlar, düşen ayı, fırlayan et, yığın büyüdükçe perdesi yükselen toplama sesi, ocak zili, kapı zili, yazar kasa, bahşiş, kızgın homurtu, paralar ve pedler. Hepsi ZzFX (MIT) ile kodla üretiliyor, ses dosyası yok. Ekranın üstünde bir sessiz düğmesi var ve ayarı hatırlıyor.
+- **Ödeyen müşteri ne kadar ödediğini gösteriyor.** Müşterinin kafasının üstünde "+$25" yükselip kayboluyor; sabrı biten müşteride ayrıca "bahşiş yok" yazıyor.
+- **Kızgın müşteri artık titremiyor.** Baloncuk kırmızıya dönüyor, sabır barının yerine kızgın bir yüz çıkıyor, müşteri tezgâha yarı arkasını dönüyor ve bir kez homurdanıyor.
+- **Pedler para almadan önce bekliyor.** Para bir pedde 0,7 saniye durduktan sonra akmaya başlıyor ve her satın almadan sonra bekleme yeniden başlıyor. Böylece pedin üstünden geçmek ya da bir seviyeyi bitirmek yanlışlıkla para harcatmıyor. Bekleme sırasında pedin üstünde ince bir çizgi doluyor.
+- **Daha kalabalık dükkân.** Aynı anda 6 müşteri sıraya girebiliyor (önceden 3) ve 2 saniyede bir yeni müşteri geliyor (önceden 3,5).
+- **Kaynakça.** [CREDITS.md](CREDITS.md) uygulamaya dahil edilen kütüphaneleri ve lisanslarını listeliyor.
+
 ## 0.4.0 (2026-10-13)
 
 **EN.** Meat no longer turns straight into cash: it is cooked and sold to customers, like in the ads. This is the "by hand" stage of the production chain; workers and machines that automate it come in 0.5.0.

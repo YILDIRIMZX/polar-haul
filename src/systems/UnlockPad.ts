@@ -1,4 +1,6 @@
 import { CanvasTexture, Mesh, MeshBasicMaterial, PlaneGeometry, SRGBColorSpace, type Scene } from 'three'
+import { audio } from '../audio/Audio.ts'
+import { PAD } from '../config/balance.ts'
 import type { Player } from '../entities/Player.ts'
 import type { Wallet } from './Wallet.ts'
 
@@ -24,10 +26,14 @@ const TEX = 256
 const APPEAR_SECONDS = 0.35
 
 // A square on the ground: stand on it and cash flows in until the price is paid, then the reward applies.
+// Cash only starts to flow after a short wait on the pad, and the wait starts over after every purchase,
+// so walking across a pad or finishing one level never spends money by accident.
 export class UnlockPad {
   level = 0
   private paid = 0
-  private drawnPaid = -1
+  private dwell = 0 // seconds the player has stood on the pad since stepping on or since the last purchase
+  private tickTimer = 0
+  private drawnKey = ''
   private appear = 1 // 0 → 1 while the pad pops into view
   private options: PadOptions
   private plane: Mesh
@@ -76,6 +82,7 @@ export class UnlockPad {
     if (this.plane.visible) return
     this.plane.visible = true
     this.appear = 0
+    audio.play('appear')
   }
 
   update(dt: number, player: Player, wallet: Wallet): void {
@@ -92,27 +99,42 @@ export class UnlockPad {
     const p = player.position
     const { x, z } = this.options.at
     const onPad = Math.abs(p.x - x) < half && Math.abs(p.z - z) < half
-    if (onPad && wallet.amount > 0) {
+    this.dwell = onPad ? this.dwell + dt : 0
+
+    if (onPad && this.dwell >= PAD.delay && wallet.amount > 0) {
       const pricing = this.options.pricing
       const rate = Math.max(this.price / pricing.drainSeconds, pricing.minDrainPerSec)
       const amount = Math.min(wallet.amount, this.price - this.paid, rate * dt)
       wallet.spend(amount)
       this.paid += amount
+      this.tickTimer -= dt
+      if (this.tickTimer <= 0) {
+        audio.play('padTick', { rising: true })
+        this.tickTimer = PAD.tickInterval
+      }
       if (this.paid >= this.price - 1e-6) {
         this.paid = 0
         this.level++
+        this.dwell = 0 // the wait starts over before the next level
         this.options.apply(this.level)
+        audio.play('purchase')
         // Redraw now: once maxed, update() returns early and would never show MAKS.
         this.draw()
       }
     }
-    if (Math.floor(this.paid) !== this.drawnPaid) this.draw()
+    if (this.drawKey() !== this.drawnKey) this.draw()
+  }
+
+  // What the texture currently shows; it is redrawn only when this changes.
+  private drawKey(): string {
+    const waiting = this.dwell > 0 && this.dwell < PAD.delay ? Math.ceil((this.dwell / PAD.delay) * 12) : 0
+    return `${this.level}:${Math.floor(this.paid)}:${waiting}`
   }
 
   private draw(): void {
     const c = this.ctx
     const price = this.price
-    this.drawnPaid = Math.floor(this.paid)
+    this.drawnKey = this.drawKey()
     c.clearRect(0, 0, TEX, TEX)
 
     c.fillStyle = 'rgba(31, 58, 77, 0.55)'
@@ -132,6 +154,12 @@ export class UnlockPad {
     c.strokeStyle = 'rgba(255, 255, 255, 0.9)'
     roundRect(c, 8, 8, TEX - 16, TEX - 16, 28)
     c.stroke()
+
+    // While the player waits on the pad, a thin line fills along the bottom: cash is about to flow.
+    if (!this.maxed && this.dwell > 0 && this.dwell < PAD.delay) {
+      c.fillStyle = 'rgba(255, 255, 255, 0.95)'
+      c.fillRect(36, TEX - 30, (TEX - 72) * (this.dwell / PAD.delay), 8)
+    }
 
     c.fillStyle = '#ffffff'
     c.textAlign = 'center'

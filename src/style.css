@@ -110,6 +110,49 @@ body {
   background: var(--full);
 }
 
+.pill.sound {
+  pointer-events: auto;
+  border: 0;
+  padding: 0;
+  width: 40px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.pill.sound svg {
+  width: 22px;
+  height: 22px;
+  fill: #fff;
+}
+
+.pill.sound:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* "+$25" over a paying customer: floats up and fades (moved by FloatingText.ts). */
+.float-text {
+  position: fixed;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  font-weight: 800;
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: #7dffa8;
+  text-shadow:
+    0 2px 0 #1f3a4d,
+    0 0 6px rgba(31, 58, 77, 0.6);
+}
+
+.float-text.bad {
+  font-size: 16px;
+  color: #ffb4a8;
+}
+
 .home-marker {
   position: fixed;
   left: 0;

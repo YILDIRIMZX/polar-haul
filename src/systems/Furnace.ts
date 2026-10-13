@@ -1,4 +1,5 @@
 import { BoxGeometry, Mesh, MeshLambertMaterial, Vector3, type Camera, type Object3D, type Scene } from 'three'
+import { audio } from '../audio/Audio.ts'
 import { FURNACE } from '../config/balance.ts'
 import { COLORS, LAYOUT } from '../config/world.ts'
 import { createMeat } from '../entities/Meat.ts'
@@ -8,27 +9,30 @@ import { HpBar } from '../fx/HpBar.ts'
 import { dashedRing } from '../fx/markers.ts'
 import { flatDistance } from '../game/math.ts'
 import type { Stats } from '../game/Stats.ts'
-import type { Shop } from './Shop.ts'
 import type { Stack } from './Stack.ts'
 
 const PALLET_TOP = 0.3
 const PIECE_HEIGHT = 0.26
-const PER_LAYER = 4 // raw pieces lie 2 × 2 on each layer of the tray
+const PER_LAYER = 4 // pieces lie 2 × 2 on each layer of the tray and the shelf
 
 interface Slot {
   cooking: boolean
-  t: number // 0 → 1 while cooking; stays at 1 while the counter is full
+  t: number // 0 → 1 while cooking; stays at 1 while the shelf is full
   bar: HpBar
 }
 
-// The furnace: the player pours the raw stack onto its tray, it cooks a piece in every slot at once
-// and sends each cooked piece to the counter.
+// The furnace station. One dashed circle does both jobs: standing in it pours the raw meat from the
+// stack onto the tray and picks the cooked meat up from the shelf. Carrying it to the counter is the
+// player's job until a waiter is hired.
 export class Furnace {
   private scene: Scene
   private flights = new Flights()
-  private rack: Object3D[] = [] // raw pieces waiting on the tray; the last one is on top
-  private landing = 0
+  private tray: Object3D[] = [] // raw pieces waiting; the last one is on top
+  private shelf: Object3D[] = [] // cooked pieces waiting to be picked up
+  private toTray = 0 // pieces flying onto the tray
+  private toShelf = 0 // pieces flying onto the shelf
   private unloadTimer = 0
+  private pickupTimer = 0
   private slots: Slot[] = []
   private body: Mesh
   private fireMat: MeshLambertMaterial
@@ -41,11 +45,13 @@ export class Furnace {
     this.body = this.build()
   }
 
-  update(dt: number, player: Player, stack: Stack, stats: Stats, shop: Shop, camera: Camera, time: number): void {
-    this.unload(dt, player, stack, stats)
-    this.cook(dt, stats, shop)
+  update(dt: number, player: Player, stack: Stack, stats: Stats, camera: Camera, time: number): void {
+    const inZone = flatDistance(player.position, LAYOUT.furnaceZone) <= FURNACE.zoneRadius
+    this.unload(dt, inZone, stack, stats)
+    this.pickUp(dt, inZone, stack)
+    this.cook(dt, stats)
 
-    const busy = this.slots.some((s) => s.cooking)
+    const busy = this.slots.some((s) => s.cooking && s.t < 1)
     this.body.position.x = LAYOUT.furnace.x + (busy ? Math.sin(time * 50) * 0.025 : 0)
     this.fireMat.emissiveIntensity = busy ? 0.9 + Math.sin(time * 12) * 0.2 : 0.2
     this.slots.forEach((s, i) => {
@@ -55,29 +61,45 @@ export class Furnace {
     this.flights.update(dt)
   }
 
-  // Pours the player's stack onto the tray, one piece every few hundredths of a second, until the tray is full.
-  private unload(dt: number, player: Player, stack: Stack, stats: Stats): void {
-    if (flatDistance(player.position, LAYOUT.dropZone) > FURNACE.dropZoneRadius) {
+  // Pours the raw part of the stack onto the tray, one piece every few hundredths of a second.
+  private unload(dt: number, inZone: boolean, stack: Stack, stats: Stats): void {
+    if (!inZone) {
       this.unloadTimer = 0
       return
     }
     this.unloadTimer -= dt
     while (this.unloadTimer <= 0) {
-      if (this.rack.length + this.landing >= stats.count('rackCapacity')) break
-      const item = stack.takeTop()
+      if (this.tray.length + this.toTray >= stats.count('rackCapacity')) break
+      const item = stack.takeTop('raw')
       if (!item) break
-      const target = this.rackPosition(this.rack.length + this.landing)
-      this.landing++
+      const target = pilePosition(LAYOUT.rack, this.tray.length + this.toTray)
+      this.toTray++
       this.flights.add(item, () => target, FURNACE.flightSeconds, 0.7, () => {
-        this.landing--
-        this.rack.push(item)
-        this.layoutRack()
+        this.toTray--
+        this.tray.push(item)
+        layoutPile(this.tray, LAYOUT.rack)
       })
+      audio.play('pour')
       this.unloadTimer += FURNACE.unloadInterval
     }
   }
 
-  private cook(dt: number, stats: Stats, shop: Shop): void {
+  // Cooked pieces jump from the shelf onto the stack while there is room on it.
+  private pickUp(dt: number, inZone: boolean, stack: Stack): void {
+    if (!inZone) {
+      this.pickupTimer = 0
+      return
+    }
+    this.pickupTimer -= dt
+    while (this.pickupTimer <= 0 && stack.hasRoom) {
+      const item = this.shelf.pop()
+      if (!item) break
+      stack.receive(item)
+      this.pickupTimer += FURNACE.pickupInterval
+    }
+  }
+
+  private cook(dt: number, stats: Stats): void {
     const want = stats.count('furnaceSlots')
     while (this.slots.length < want) {
       const bar = new HpBar(COLORS.progress, 0.45)
@@ -87,7 +109,7 @@ export class Furnace {
 
     for (const slot of this.slots) {
       if (!slot.cooking) {
-        const raw = this.rack.pop()
+        const raw = this.tray.pop()
         if (!raw) continue
         raw.removeFromParent()
         slot.cooking = true
@@ -95,27 +117,21 @@ export class Furnace {
         continue
       }
       slot.t = Math.min(1, slot.t + dt / stats.get('cookSeconds'))
-      // Done, but it waits inside while the counter is full.
-      if (slot.t < 1 || !shop.counterHasRoom(stats)) continue
+      // Done, but it waits inside while the shelf is full.
+      if (slot.t < 1 || this.shelf.length + this.toShelf >= stats.count('shelfCapacity')) continue
       const cooked = createMeat('cooked')
       cooked.position.copy(this.out)
       this.scene.add(cooked)
-      shop.receiveCooked(cooked)
+      const target = pilePosition(LAYOUT.shelf, this.shelf.length + this.toShelf)
+      this.toShelf++
+      this.flights.add(cooked, () => target, 0.3, 0.8, () => {
+        this.toShelf--
+        this.shelf.push(cooked)
+        layoutPile(this.shelf, LAYOUT.shelf)
+      })
+      audio.play('cooked')
       slot.cooking = false
     }
-  }
-
-  private rackPosition(index: number): Vector3 {
-    const inLayer = index % PER_LAYER
-    return new Vector3(
-      LAYOUT.rack.x - 0.32 + (inLayer % 2) * 0.64,
-      PALLET_TOP + 0.13 + Math.floor(index / PER_LAYER) * PIECE_HEIGHT,
-      LAYOUT.rack.z - 0.3 + Math.floor(inLayer / 2) * 0.6,
-    )
-  }
-
-  private layoutRack(): void {
-    this.rack.forEach((item, i) => item.position.copy(this.rackPosition(i)))
   }
 
   private build(): Mesh {
@@ -130,11 +146,29 @@ export class Furnace {
     chimney.position.set(0.55, 1.2, -0.45)
     body.add(mouth, chimney)
 
-    const pallet = new Mesh(new BoxGeometry(1.5, PALLET_TOP, 1.4), new MeshLambertMaterial({ color: COLORS.counter }))
-    pallet.position.set(LAYOUT.rack.x, PALLET_TOP / 2, LAYOUT.rack.z)
-    pallet.receiveShadow = true
+    const wood = new MeshLambertMaterial({ color: COLORS.counter })
+    for (const at of [LAYOUT.rack, LAYOUT.shelf]) {
+      const pallet = new Mesh(new BoxGeometry(1.5, PALLET_TOP, 1.4), wood)
+      pallet.position.set(at.x, PALLET_TOP / 2, at.z)
+      pallet.receiveShadow = true
+      this.scene.add(pallet)
+    }
 
-    this.scene.add(body, pallet, dashedRing(LAYOUT.dropZone.x, LAYOUT.dropZone.z, FURNACE.dropZoneRadius))
+    this.scene.add(body, dashedRing(LAYOUT.furnaceZone.x, LAYOUT.furnaceZone.z, FURNACE.zoneRadius))
     return body
   }
+}
+
+// Where the n-th piece of a pile sits on a pallet: 2 × 2 per layer, layers stacking up.
+function pilePosition(at: { x: number; z: number }, index: number): Vector3 {
+  const inLayer = index % PER_LAYER
+  return new Vector3(
+    at.x - 0.32 + (inLayer % 2) * 0.64,
+    PALLET_TOP + 0.13 + Math.floor(index / PER_LAYER) * PIECE_HEIGHT,
+    at.z - 0.3 + Math.floor(inLayer / 2) * 0.6,
+  )
+}
+
+function layoutPile(items: Object3D[], at: { x: number; z: number }): void {
+  items.forEach((item, i) => item.position.copy(pilePosition(at, i)))
 }

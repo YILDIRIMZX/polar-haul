@@ -21,10 +21,17 @@ Reklamlardaki gibi: ayı avla, eti pişir, **müşterilere sat**. Et doğrudan p
         [   OCAK    ]  yuva: 1 → 4, pişirme süresi: 2,0 sn → ×0,85/seviye
               │
               ▼
+        [ ÇIKIŞ RAFI ] pişmiş et ocağın yanında birikir; raf doluysa ocak durur
+              │
+   ┌─ 1. aşama: elle ─────────────── oyuncu raftan alır, kafasındaki yığınla tezgâha taşır
+   ├─ 2. aşama: Garson ───────────── işçi raftan tezgâha taşır
+   └─ 3. aşama: Tezgâh bandı ─────── raftan tezgâha kesintisiz bant
+              │
+              ▼
         [  TEZGÂH   ]  pişmiş et rafı, kapasite: 8 → +4/seviye
               │  oyuncu servis yapar → sonra Kasiyer
               ▼
-        [ MÜŞTERİLER ] sıra: 3 → 8 kişi, her biri 1–3 parça ister
+        [ MÜŞTERİLER ] sıra: 6 → 10 kişi, 2 sn'de bir gelir, her biri 1–3 parça ister
               │  öder (+ hızlı serviste bahşiş)
               ▼
         [   KASA    ]  para destesi → oyuncu toplar
@@ -37,6 +44,7 @@ Her istasyon önce **elle** çalışır, sonra adım adım otomatikleşir. Rekla
 | İş | Elle | 1. otomasyon | 2. otomasyon |
 |---|---|---|---|
 | Eti ocağa koymak | Oyuncu ocağın girişine boşaltır | **Taşıyıcı** işe alınır, **Et Deposu** açılır: oyuncu depoya boşaltır, işçi depodan ocağa taşır | **Konveyör** taşıyıcının yerini alır; taşıyıcı başka işe geçer |
+| Pişmiş eti tezgâha koymak | Oyuncu ocağın çıkış rafından alır, tezgâhın önündeki dairede bırakır | **Garson** işe alınır, raftan tezgâha taşır | **Tezgâh bandı** garsonun yerini alır |
 | Müşteriye satmak | Oyuncu tezgâhın servis noktasında durur | **Kasiyer** işe alınır | Kasiyer hızı ve ikinci kasa |
 | Parayı toplamak | Oyuncu kasadan toplar | (ileride) Kasadaki para otomatik cüzdana akar | — |
 
@@ -46,7 +54,8 @@ Her istasyon önce **elle** çalışır, sonra adım adım otomatikleşir. Rekla
 |---|---|---|
 | **Ocak girişi** | Oyuncu yanına gelince yığın hızla (parça başına 0,03 sn) giriş rafına boşalır. Artık her parçayı tek tek beklemek yok. | Giriş rafı kapasitesi |
 | **Et Deposu** | Taşıyıcıyla birlikte açılır. Büyük bir ara stok. | Kapasite: 20 → +10/seviye |
-| **Ocak** | Girişten et alır, aynı anda yuva sayısı kadar pişirir. Pişen et tezgâha geçer, tezgâh doluysa durur. | Yuva sayısı, pişirme hızı |
+| **Ocak** | Girişten et alır, aynı anda yuva sayısı kadar pişirir. Pişen et çıkış rafına geçer, raf doluysa durur. | Yuva sayısı, pişirme hızı |
+| **Çıkış rafı** | Pişmiş etin ocağın yanında beklediği yer. Oyuncu yanından geçince pişmiş eti yığınına alır. | Kapasite |
 | **Tezgâh** | Pişmiş etin beklediği raf. Müşteriler buradan alır. | Kapasite |
 | **Kasa** | Ödenen para burada birikir, oyuncu yanından geçince toplanır. | — |
 
@@ -63,10 +72,17 @@ Her istasyon önce **elle** çalışır, sonra adım adım otomatikleşir. Rekla
 
 | Müşteri | Ne zaman | Sabır bitince |
 |---|---|---|
-| **Normal** | Baştan | Gitmez, ama **bahşiş kaybolur** ve titremeye başlar. Hızlı servis edilirse fiyatın %30'u kadar bahşiş bırakır. |
+| **Normal** | Baştan | Gitmez, ama **bahşişi kaybolur** ve **kızar**. Hızlı servis edilirse büyük sipariş bonusu ve hız bahşişi bırakır (`tipFor`). |
 | **Acil** | Av seviyesi 3'ten sonra, arada bir | Çok para öder (×2,5) ama sabrı biterse **ödemeden gider**. |
 
 Hızlı oynamak ödüllendirilir, yavaş oynamak cezalandırılmaz. Gerçek risk oyunun ileri aşamasında acil müşterilerle gelir.
+
+### Sabrı biten müşteri nasıl görünür?
+Titreme kaldırılıyor: hareket hatası gibi görünüyordu. Bunun yerine kızgınlık **okunabilir işaretlerle** gösterilir:
+- Baloncuk kırmızıya döner ve sabır barının yerinde **kızgın yüz** simgesi çıkar.
+- Müşteri tezgâha arkasını hafifçe döner (kollarını kavuşturmuş gibi).
+- Kızgınlık anında bir kez **homurdanma** sesi çalar.
+- Ödeme sırasında kasanın üstünde "bahşiş yok" yazısı belirir. Oyuncu neyi kaybettiğini görür.
 
 ### Servis
 - Başta oyuncu **tezgâhın servis noktasında durarak** satar: 0,25 saniyede bir parça.
@@ -87,6 +103,11 @@ değer = (temel + Σ eklemeler) × Π (1 + çarpanlar)
 - **Temel:** ayar dosyasındaki başlangıç değeri
 - **Pedler:** satın alınan seviyeler (ekleme)
 - **Kartlar ve özel yetenekler:** boss ödülleri (ekleme ya da çarpan)
+
+### Pede para verme
+- Oyuncu pede basınca para **hemen akmaz**: yaklaşık 0,7 saniyelik bir bekleme olur. Pedin üstünden geçen oyuncu yanlışlıkla para harcamaz.
+- Her satın almadan sonra bu bekleme **yeniden başlar**. Oyuncu "bir seviye daha alayım mı?" diye düşünebilir, almak istemiyorsa pedden çıkar.
+- Bekleme sırasında pedin kenarında dolan ince bir çizgi, paranın akmak üzere olduğunu gösterir.
 
 Böylece pedler, mini boss kartları ve ana boss yetenekleri **aynı değerleri aynı yoldan** değiştirir. Yeni bir yükseltme eklemek tek bir tanım yazmak demek.
 
@@ -176,7 +197,8 @@ Bu tempo bir **ekonomi simülasyonu** ile doğrulanacak: oyunu saniye saniye oyn
 | Sürüm | İçerik |
 |---|---|
 | 0.3.2 | iPhone alt şerit düzeltmesi (opak durum çubuğu), bu tasarım belgesi |
-| **0.4.0** | **Üretim zinciri, elle:** İstatistik sistemi, çiğ ve pişmiş et, ocak girişi ve yuvaları, tezgâh, müşteriler (sabır ve bahşiş), elle servis, kasa, yeni pedler |
+| 0.4.0 ✅ | **Üretim zinciri, elle:** İstatistik sistemi, çiğ ve pişmiş et, ocak girişi ve yuvaları, tezgâh, müşteriler (sabır ve bahşiş), elle servis, kasa, yeni pedler |
+| 0.4.1 ✅ | Pişmiş eti elle taşıma (çıkış rafı → tezgâh), kızgın müşteri gösterimi, pedde bekleme süresi, ödemede uçan "+$" yazıları, **ses sistemi ve ilk sesler** |
 | 0.5.0 | **Otomasyon:** Taşıyıcı ve Et Deposu, Kasiyer, Konveyör |
 | 0.6.0 | Av seviyesi (otomatik zorluk), acil müşteriler, mini boss, kart seçim ekranı |
 | 0.7.0 | Ana boss, benzersiz yetenekler, ikinci av bölgesi |
@@ -200,3 +222,65 @@ Bu sistemlerin hepsi aynı birkaç temel parçaya dayanacak. Bu parçalar 0.4.0'
 | `Worker` | Durum makinesi: al → taşı → bırak (taşıyıcı), servis et (kasiyer) |
 | `Events` | "Ayı öldü", "müşteri memnun", "boss yenildi" gibi olayları sistemler arasında taşır |
 | `Progress` | İlerleme sayaçları (şimdiden var) |
+| `FloatingText` | Bir 3D noktanın üstünde yukarı süzülüp kaybolan yazı: ödemede "+$25", vuruşta hasar, "bahşiş yok" |
+| `Audio` | Bütün sesleri çalan tek servis; oyun sistemleri sadece "şu olay oldu" der, hangi sesin nasıl çalacağını o bilir |
+
+---
+
+## 9. Ses tasarımı
+
+Hiper-casual oyunlarda ses, görüntü kadar önemli. Her eylemin kısa ve tatmin edici bir karşılığı olmalı.
+
+### Teknik
+- **Web Audio API:** tarayıcının yerleşik ses motoru. iOS'ta ses ancak **ilk dokunuştan sonra** açılabiliyor; oyun ilk dokunuşta sesi uyandırır.
+- **Tek ses servisi (`Audio`):** oyun sistemleri sadece olay adını bildirir (`audio.play('meatPickup')`). Ses dosyası, ses seviyesi ve varyasyon tek yerde tanımlanır.
+- **Varyasyon:** her çalmada perde %5–10 rastgele değişir. Aynı ses 50 kez çalsa bile tekrar eden, robotik bir his vermez.
+- **Yığılma koruması:** aynı ses aynı anda en fazla 3–4 kez çalar, fazlası atlanır. 30 et aynı anda toplansa da kulak tırmalamaz.
+- **Artan perde:** art arda gelen toplama seslerinin perdesi kademeli yükselir (do-re-mi gibi). Yığın büyüdükçe ses de "büyür". Reklamlardaki tatminin gizli sırrı bu.
+- **Seviyeler:** genel ses, efektler, müzik ayrı ayrı. Ekranın köşesinde bir **sessiz** düğmesi.
+- **Arka plan:** uygulama arka plana geçince ses durur.
+
+### Kaynaklar
+| Tür | Kaynak | Lisans |
+|---|---|---|
+| Kısa efektler (pop, tık, para, ding) | **ZzFX**: kodla ses üreten ~1 KB'lık küçük bir kütüphane; dosya gerektirmez, her ses birkaç sayıyla tanımlanır | MIT |
+| Organik sesler (ayı kükremesi, müşteri homurdanması, cızırtı) | Kenney, OpenGameArt ve Freesound'daki **yalnızca CC0** kayıtlar | CC0 |
+| Müzik | CC0 sakin döngüler, boss sırasında daha hızlı bir parça | CC0 |
+
+Kullanılan her ses dosyası, kaynağı ve lisansıyla birlikte bir kaynakça dosyasında listelenir.
+
+### Ses listesi
+
+| Olay | Ses | Not |
+|---|---|---|
+| **Av** | | |
+| Vuruş | Kısa, tok "tak" | Her vuruşta, hedef sayısından bağımsız tek ses |
+| Ayı yaralandı | Kısa homurtu | Her ayı için değil, vuruş başına bir kez |
+| Ayı öfkelendi | Kükreme | Sadece saldırıya geçtiği anda |
+| Ayı öldü | Derin homurtu + yere düşme | |
+| Et fırladı | Hafif "pop" | |
+| Et toplandı | "Pop", **perdesi yığınla birlikte artar** | En sık duyulan ses; en çok emek buna |
+| Yığın doldu | Kısa uyarı tonu | Bir kez, tekrar boşalana kadar susar |
+| Karakter hasar aldı | Kısa "of" | |
+| Bayılma | Düşüş sesi | |
+| **Üretim** | | |
+| Tepsiye boşaltma | Hızlı tık dizisi | Parça başına değil, kısa bir akış sesi |
+| Ocak çalışıyor | Cızırtı, döngü | Ocak çalıştıkça kısık sesle döner |
+| Et pişti | Küçük "ding" | |
+| Tezgâha koyma | Tok "tak" | |
+| **Müşteriler** | | |
+| Müşteri geldi | Kapı çanı | |
+| Sipariş tamam | Memnun "mm!" | |
+| Ödeme | Yazar kasa "çın" | Uçan "+$" yazısıyla aynı anda |
+| Bahşiş | Ekstra parıltı | Bahşiş büyüdükçe daha parlak |
+| Sabır bitti | Homurdanma / iç çekme | Kızgın yüz belirdiği anda, bir kez |
+| Acil müşteri gitti | Kızgın "hıh!" + kapı çarpması | |
+| **Para ve yükseltmeler** | | |
+| Para toplama | Madeni para şıngırtısı, perdesi artan | |
+| Ped dolarken | Yükselen ton | Dolum çubuğuyla birlikte |
+| Ped satın alındı | Kısa fanfar | |
+| Yeni ped belirdi | "Pop" + parıltı | |
+| **Boss** | | |
+| Boss geliyor | Davul vuruşları | Ekrandaki uyarıyla birlikte |
+| Kart seçimi | Hışırtı (whoosh) | |
+| Ödül alındı | Fanfar | |
