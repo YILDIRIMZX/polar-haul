@@ -6,6 +6,12 @@ Her güncelleme, neyin neden değiştiğiyle birlikte burada listelenir. En yeni
 
 ---
 
+## 0.5.1 (2026-10-13)
+
+**EN.** The character button moved from the top of the screen to the bottom-right corner and grew to 60 px, where the thumb rests while holding the phone in one hand. The mute button stays at the top, since it is rarely used.
+
+**TR.** Karakter düğmesi ekranın üstünden sağ alt köşeye taşındı ve 60 piksele büyüdü; telefon tek elle tutulurken başparmağın durduğu yer burası. Ses düğmesi seyrek kullanıldığı için üstte kaldı.
+
 ## 0.5.0 (2026-10-13)
 
 **EN.** Where upgrades live, and a base that grows.

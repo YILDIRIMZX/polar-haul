@@ -4,8 +4,8 @@ const SOUND_ON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l
 const SOUND_OFF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zm16.6 1.4-1.4-1.4L17 11.2 14.8 9l-1.4 1.4 2.2 2.2-2.2 2.2 1.4 1.4 2.2-2.2 2.2 2.2 1.4-1.4-2.2-2.2z"/></svg>'
 const PERSON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="4"/><path d="M4 21c0-4.4 3.6-7.5 8-7.5s8 3.1 8 7.5z"/></svg>'
 
-// The on-screen numbers and buttons: carried meat on the left, cash on the right,
-// the character menu and mute buttons between them.
+// The on-screen numbers and buttons: carried meat on the left, cash on the right and the mute button
+// between them at the top. The character button sits in the bottom-right corner, where the thumb rests.
 export class Hud {
   private load = document.createElement('div')
   private cash = document.createElement('div')
@@ -20,7 +20,7 @@ export class Hud {
     this.load.className = 'pill'
     this.cash.className = 'pill cash'
 
-    this.character.className = 'pill icon'
+    this.character.className = 'char-button'
     this.character.type = 'button'
     this.character.innerHTML = PERSON
     this.character.setAttribute('aria-label', 'Karakter')
@@ -36,11 +36,8 @@ export class Hud {
       this.showSound()
     })
 
-    const middle = document.createElement('div')
-    middle.className = 'hud-buttons'
-    middle.append(this.character, this.sound)
-    hud.append(this.load, middle, this.cash)
-    document.body.append(hud)
+    hud.append(this.load, this.sound, this.cash)
+    document.body.append(hud, this.character)
   }
 
   update(cash: number, carried: number, capacity: number): void {
