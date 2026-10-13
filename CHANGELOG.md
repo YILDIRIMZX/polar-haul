@@ -6,6 +6,28 @@ Her güncelleme, neyin neden değiştiğiyle birlikte burada listelenir. En yeni
 
 ---
 
+## 0.3.0 (2026-10-13)
+
+**EN.** The core loop from the ads is playable: hunt bears, carry a tower of meat, process it, collect cash, buy upgrades. Everything is still made of simple shapes; models and effects come in 0.4.0.
+- **Movement.** A floating joystick: touch anywhere and drag. On a computer, WASD or the arrow keys. The fence blocks the player everywhere except the gate.
+- **Bears.** 28 polar bears roam the snowfield. A bear that is hit gets angry for a few seconds, chases the player and attacks; bears never enter the base, so they crowd at the fence. Health bars show on hurt bears. Dead bears respawn after a few seconds, out of the player's sight.
+- **Auto-attack.** No button: every 0.4 s the player swings at the nearest bears in reach, up to 3 at once. Target choice keeps the swing on the closest bears first and skips dead ones.
+- **Meat stack.** Each kill throws 2–3 pieces of meat onto the snow. Walking near them makes them fly onto the stack above the player's head. The tower leans against the direction of travel and springs back when the player stops. The counter at the top turns red when the stack is full.
+- **Processing line.** Standing in the dashed circle unloads the stack piece by piece onto the conveyor. The machine turns each piece into a bundle of cash on the table; standing by the table collects it.
+- **Upgrade pads.** Stand on a pad and cash flows into it until the price is paid. *Capacity* adds 5 to the stack (price ×1.25 per level). *Wide sweep* adds one more bear per swing, up to 6 (price ×1.8 per level, 3 levels, then MAX).
+- **Health.** Bears hurt the player; inside the base health refills. At zero health the carried meat is lost and the player wakes up back at the base.
+- **Fixes.** On iPhone the game now fills the whole screen; before, a strip of page background showed above the home indicator. Machines and pads moved closer to the centre so they all fit a portrait screen. The camera now looks down at 43° from 37 units.
+
+**TR.** Reklamlardaki ana döngü oynanabilir: ayı avla, kule gibi et taşı, işle, parayı topla, yükseltme al. Her şey hâlâ basit şekillerden oluşuyor; modeller ve efektler 0.4.0'da gelecek.
+- **Hareket.** Kayan joystick: ekranın herhangi bir yerine dokunup sürükle. Bilgisayarda WASD ya da ok tuşları. Çit, kapı dışında her yerde karakteri durduruyor.
+- **Ayılar.** Kar alanında 28 kutup ayısı dolaşıyor. Vurulan ayı birkaç saniye öfkeleniyor, karakteri kovalıyor ve saldırıyor. Ayılar üsse hiç girmediği için çitin önüne yığılıyor. Yaralı ayıların üstünde can barı görünüyor. Ölen ayılar birkaç saniye sonra, karakterin göremeyeceği bir yerde yeniden doğuyor.
+- **Otomatik saldırı.** Düğme yok: karakter 0,4 saniyede bir menzildeki en yakın ayılara vuruyor, aynı anda en fazla 3 ayıya. Hedef seçimi önce en yakın ayılara vuruyor ve ölüleri atlıyor.
+- **Et yığını.** Her ölen ayı kara 2–3 parça et fırlatıyor. Yanlarından geçince etler karakterin kafasındaki yığına uçuyor. Kule gidilen yönün tersine eğiliyor ve karakter durunca yerine yaylanıyor. Yığın dolunca üstteki sayaç kırmızıya dönüyor.
+- **İşleme hattı.** Kesik çizgili dairede durunca yığın parça parça konveyöre boşalıyor. Makine her parçayı masada bir deste paraya çeviriyor; masanın yanında durunca para toplanıyor.
+- **Yükseltme pedleri.** Bir pedin üstünde durunca fiyat ödenene kadar para pede akıyor. *Kapasite* yığına 5 ekliyor (her seviyede fiyat ×1,25). *Geniş savuruş* her vuruşa bir ayı daha ekliyor, en fazla 6'ya kadar (her seviyede fiyat ×1,8, 3 seviye, sonra MAKS).
+- **Can.** Ayılar karakterin canını azaltıyor; üssün içinde can doluyor. Can sıfırlanınca taşınan et kayboluyor ve karakter üste geri dönüyor.
+- **Düzeltmeler.** iPhone'da oyun artık bütün ekranı kaplıyor; önceden alt çubuğun üstünde sayfa arka planından bir şerit görünüyordu. Makineler ve pedler dikey ekrana sığmaları için merkeze yaklaştırıldı. Kamera artık 37 birim uzaktan 43° açıyla bakıyor.
+
 ## 0.2.0 (2026-10-13)
 
 **EN.** The app skeleton: it now builds, publishes itself and opens on the iPhone home screen.

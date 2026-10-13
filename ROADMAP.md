@@ -120,15 +120,16 @@ Yol haritası, README (EN/TR), CHANGELOG, lisans ve resmi olmama uyarısı.
 - [x] Vite + TypeScript + Three.js + `vite-plugin-pwa` kurulumu
 - [x] Kar zemini, çitli üs, üstten açılı kamera, ikon ve açılış ekranı
 - [x] `deploy.yml` ile GitHub Pages yayını
-- [ ] iPhone'da "Ana Ekrana Ekle" ile tam ekran ve internetsiz açılıyor
+- [x] iPhone'da "Ana Ekrana Ekle" ile tam ekran ve internetsiz açılıyor
 
-### 0.3.0 — Gri kutu çekirdek döngü (≈1–2 hafta)
-- [ ] Sanal joystick (dokunmatik) ve karakter hareketi
-- [ ] Oto-saldırı: menzildeki en yakın ayı
-- [ ] Ayı sürüsü: spawn ve respawn (pooling), basit dolaşma ve kaçma/saldırma, HP barı
-- [ ] Et düşürme ve toplama, **kafa üstü yığın** (kapasite sınırlı)
-- [ ] Makine: et girer, konveyörden geçer, para yığını olarak çıkar
-- [ ] Para toplama, sayaç ve 1 unlock pedi (kapasite)
+### 0.3.0 — Gri kutu çekirdek döngü (≈1–2 hafta) ✅
+- [x] Sanal joystick (dokunmatik) ve karakter hareketi, çit ve kapı
+- [x] Oto-saldırı: menzildeki en yakın ayılar (en fazla 3)
+- [x] Ayı sürüsü: dolaşma, öfkelenip saldırma, HP barı, yeniden doğma
+- [x] Et düşürme ve toplama, **kafa üstü yığın** (kapasite sınırlı, sallanan)
+- [x] Makine: et girer, konveyörden geçer, para yığını olarak çıkar
+- [x] Para toplama, sayaç ve 2 unlock pedi (kapasite, geniş savuruş)
+- [x] Karakter canı, üste dönünce dolma, bayılınca yığını kaybetme
 
 ✅ **Bitti kriteri:** Model ve süsleme olmadan bile 3 dakika oynamak keyifli olmalı.
 

@@ -1,24 +1,74 @@
-import { PCFSoftShadowMap, Timer, WebGLRenderer } from 'three'
-import { CAMERA } from '../config/world.ts'
+import { MathUtils, PCFSoftShadowMap, Timer, WebGLRenderer } from 'three'
+import { BEAR, CAPACITY_UPGRADE, PLAYER, SWEEP_UPGRADE } from '../config/balance.ts'
+import { CAMERA, COLORS, LAYOUT } from '../config/world.ts'
+import { Player } from '../entities/Player.ts'
+import { HpBar } from '../fx/HpBar.ts'
+import { Joystick } from '../input/Joystick.ts'
+import { BearHerd } from '../systems/BearHerd.ts'
+import { AutoAttack } from '../systems/combat.ts'
+import { Loot } from '../systems/Loot.ts'
+import { Processor } from '../systems/Processor.ts'
+import { Stack } from '../systems/Stack.ts'
+import { UnlockPad } from '../systems/UnlockPad.ts'
+import { Wallet } from '../systems/Wallet.ts'
+import { Hud } from '../ui/Hud.ts'
 import { createCamera, placeCamera } from '../world/camera.ts'
-import { createWorld } from '../world/scene.ts'
+import { createScene } from '../world/scene.ts'
+
+const MAX_STEP = 0.05 // a long frame (or a return from the background) never advances more than this
 
 export class Game {
   private renderer: WebGLRenderer
   private canvas: HTMLCanvasElement
-  private world = createWorld()
+  private onFirstFrame: () => void
+  private scene = createScene()
   private camera = createCamera(1)
   private timer = new Timer()
   private running = false
   private frame = 0
-  private onFirstFrame: () => void
+
+  private player = new Player()
+  private playerBar = new HpBar(COLORS.hpPlayer, 1.3)
+  private wallet = new Wallet()
+  private attack = new AutoAttack()
+  private hud = new Hud()
+  private stack: Stack
+  private loot: Loot
+  private herd: BearHerd
+  private processor: Processor
+  private capacityPad: UnlockPad
+  private sweepPad: UnlockPad
+  private joystick: Joystick
 
   constructor(canvas: HTMLCanvasElement, onFirstFrame: () => void) {
-    this.onFirstFrame = onFirstFrame
     this.canvas = canvas
+    this.onFirstFrame = onFirstFrame
     this.renderer = new WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' })
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = PCFSoftShadowMap
+
+    this.scene.add(this.player.root, this.playerBar.root)
+    this.stack = new Stack(this.scene)
+    this.loot = new Loot(this.scene)
+    this.herd = new BearHerd(this.scene, (at) => this.loot.spawn(at, MathUtils.randInt(BEAR.meatMin, BEAR.meatMax)))
+    this.processor = new Processor(this.scene)
+    this.capacityPad = new UnlockPad(
+      this.scene,
+      LAYOUT.capacityPad,
+      'KAPASİTE',
+      `+${CAPACITY_UPGRADE.step}`,
+      CAPACITY_UPGRADE,
+      () => (this.stack.capacity += CAPACITY_UPGRADE.step),
+    )
+    this.sweepPad = new UnlockPad(
+      this.scene,
+      LAYOUT.sweepPad,
+      'GENİŞ SAVURUŞ',
+      `+${SWEEP_UPGRADE.step} AYI`,
+      SWEEP_UPGRADE,
+      () => (this.attack.maxTargets += SWEEP_UPGRADE.step),
+    )
+    this.joystick = new Joystick(canvas)
 
     this.resize()
     window.addEventListener('resize', () => this.resize())
@@ -40,9 +90,33 @@ export class Game {
 
   private tick(time: number): void {
     this.timer.update(time)
-    placeCamera(this.camera, this.world.player.position)
-    this.renderer.render(this.world.scene, this.camera)
+    const dt = Math.min(this.timer.getDelta(), MAX_STEP)
+    if (dt > 0) this.step(dt)
+
+    placeCamera(this.camera, this.player.position)
+    this.playerBar.update(this.player.hp / PLAYER.maxHp, this.player.position, 1.75, this.camera)
+    this.renderer.render(this.scene, this.camera)
     if (this.frame++ === 0) this.onFirstFrame()
+  }
+
+  // One step of the game, in the order things depend on each other.
+  private step(dt: number): void {
+    this.player.update(dt, this.joystick)
+    this.herd.update(dt, this.player, this.camera)
+    this.attack.update(dt, this.player, this.herd)
+    this.loot.update(dt, this.player, this.stack)
+    this.stack.update(dt, this.player)
+    this.processor.update(dt, this.player, this.stack, this.wallet, this.timer.getElapsed())
+    this.capacityPad.update(dt, this.player, this.wallet)
+    this.sweepPad.update(dt, this.player, this.wallet)
+
+    // Knocked out: the carried meat is lost and the player wakes up back at the base.
+    if (this.player.hp <= 0) {
+      this.stack.clear()
+      this.player.respawn()
+    }
+
+    this.hud.update(this.wallet.amount, this.stack.count, this.stack.capacity)
   }
 
   // Sized from the canvas, not the window, because on a computer the canvas is a narrower phone frame.

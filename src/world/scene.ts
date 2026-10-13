@@ -1,30 +1,22 @@
 import {
-  CapsuleGeometry,
+  BoxGeometry,
   CircleGeometry,
   Color,
   DirectionalLight,
   Fog,
-  Group,
   HemisphereLight,
   InstancedMesh,
   Mesh,
   MeshLambertMaterial,
   Object3D,
   PlaneGeometry,
-  RingGeometry,
   Scene,
   SphereGeometry,
-  BoxGeometry,
-  MeshBasicMaterial,
 } from 'three'
 import { COLORS, WORLD } from '../config/world.ts'
 
-export interface World {
-  scene: Scene
-  player: Group
-}
-
-export function createWorld(): World {
+// The static world: sky, ground, snow, the base and its fence.
+export function createScene(): Scene {
   const scene = new Scene()
   scene.background = new Color(COLORS.sky)
   scene.fog = new Fog(COLORS.sky, 45, 110)
@@ -35,10 +27,7 @@ export function createWorld(): World {
   addBase(scene)
   addFence(scene)
 
-  const player = createPlayer()
-  scene.add(player)
-
-  return { scene, player }
+  return scene
 }
 
 function addLights(scene: Scene): void {
@@ -151,26 +140,6 @@ function addFence(scene: Scene): void {
     m.castShadow = true
     scene.add(m)
   }
-}
-
-// Placeholder until a real character model arrives in 0.4.0.
-function createPlayer(): Group {
-  const player = new Group()
-
-  const body = new Mesh(new CapsuleGeometry(0.45, 0.8, 4, 12), new MeshLambertMaterial({ color: COLORS.player }))
-  body.position.y = 0.85
-  body.castShadow = true
-  player.add(body)
-
-  const ring = new Mesh(
-    new RingGeometry(0.75, 0.9, 32),
-    new MeshBasicMaterial({ color: COLORS.playerRing, transparent: true, opacity: 0.85 }),
-  )
-  ring.rotation.x = -Math.PI / 2
-  ring.position.y = 0.03
-  player.add(ring)
-
-  return player
 }
 
 // Same layout on every launch, so the world looks the same each time the app opens.
