@@ -1,15 +1,16 @@
 import { BoxGeometry, CapsuleGeometry, Group, Mesh, MeshBasicMaterial, MeshLambertMaterial, RingGeometry, Vector3 } from 'three'
-import { PLAYER } from '../config/balance.ts'
+import { BASE_STATS, PLAYER } from '../config/balance.ts'
 import { COLORS, LAYOUT } from '../config/world.ts'
 import { turnTowards } from '../game/math.ts'
 import type { Joystick } from '../input/Joystick.ts'
-import { clampToWorld, constrainToFence, isInsideBase } from '../world/bounds.ts'
+import { clampToWorld, constrainToFence, isInsideBase, pushOutOfObstacles } from '../world/bounds.ts'
 
 // Placeholder look until a real character model arrives in 0.4.0.
 export class Player {
   readonly root = new Group()
   readonly velocity = new Vector3()
-  hp: number = PLAYER.maxHp
+  maxHp: number = BASE_STATS.maxHp // kept in step with Stats every frame
+  hp: number = BASE_STATS.maxHp
   private body = new Group()
   private facing = 0
   private punch = 0
@@ -50,6 +51,7 @@ export class Player {
     p.x += input.x * speed * dt
     p.z += input.z * speed * dt
     constrainToFence(prevX, prevZ, p, PLAYER.radius)
+    pushOutOfObstacles(p, PLAYER.radius)
     clampToWorld(p)
     // The real velocity after collisions, so the stack only sways when the player actually moves.
     this.velocity.set((p.x - prevX) / dt, 0, (p.z - prevZ) / dt)
@@ -59,7 +61,7 @@ export class Player {
     }
     this.body.rotation.y = this.facing
 
-    if (this.inBase) this.hp = Math.min(PLAYER.maxHp, this.hp + PLAYER.regenPerSec * dt)
+    if (this.inBase) this.hp = Math.min(this.maxHp, this.hp + PLAYER.regenPerSec * dt)
 
     this.punch = Math.max(0, this.punch - dt * 6)
     const s = 1 + this.punch * 0.15
@@ -84,6 +86,6 @@ export class Player {
   respawn(): void {
     this.position.set(LAYOUT.playerSpawn.x, 0, LAYOUT.playerSpawn.z)
     this.velocity.set(0, 0, 0)
-    this.hp = PLAYER.maxHp
+    this.hp = this.maxHp
   }
 }

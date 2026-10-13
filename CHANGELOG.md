@@ -6,6 +6,26 @@ Her güncelleme, neyin neden değiştiğiyle birlikte burada listelenir. En yeni
 
 ---
 
+## 0.5.0 (2026-10-13)
+
+**EN.** Where upgrades live, and a base that grows.
+- **Character menu.** A button with a person icon at the top of the screen opens the character upgrades: carry capacity, damage, move speed, health and pickup radius. The game pauses while the menu is open. Wide sweep moved here too, as a locked row until its condition is met; in 0.7.0 it will come from the first boss instead.
+- **Station upgrades stand next to their station.** Furnace slot, cooking speed and furnace shelf by the furnace; counter by the counter; meat price, queue length and customer rate by the till. At most two pads stand by a station; a pad that reaches its last level leaves, and the next one takes its spot. The base no longer fills up with pads.
+- **Great Furnace and base level.** A tall furnace in the base shows the base level. Its pad raises the base: level 2 needs 25 customers served, level 3 needs two furnace slots and the first main boss (bosses arrive in 0.7.0, so level 3 waits until then). While a condition is missing the pad is grey and shows what is missing with an icon: 👥 customers, 🔥 furnace slots, 🐻 bosses.
+- **The fence grows.** Each base level pushes the fence out (12 → 14 → 16) and unlocks new station upgrades. Bears move back to stay outside it.
+- **Solid objects.** The player can no longer walk through the counter, the till, the furnace and its trays, or the Great Furnace.
+- **Pads stop only after a purchase.** Cash flows as soon as you step on a pad. Right after a purchase it stops once for a second, so the money left over is not spent on the next level by accident; stepping off and on again carries on straight away.
+- **Fixes from playing 0.4.1.** The angry face no longer covers how many pieces a customer wants: it takes the steak icon's place. The cooked meat shelf moved to the counter side of the furnace, the raw tray to the gate side. "No tip" now appears as a small second line under the amount paid instead of on top of it.
+
+**TR.** Yükseltmelerin yeri ve büyüyen bir üs.
+- **Karakter menüsü.** Ekranın üstündeki insan simgeli düğme karakter yükseltmelerini açıyor: taşıma kapasitesi, hasar, hareket hızı, can ve toplama yarıçapı. Menü açıkken oyun duruyor. Geniş savuruş da buraya taşındı ve koşulu sağlanana kadar kilitli bir satır olarak duruyor; 0.7.0'da bunun yerine ilk boss'tan gelecek.
+- **İstasyon yükseltmeleri kendi istasyonlarının yanında.** Ocak yuvası, pişirme hızı ve ocak rafı ocağın yanında; tezgâh tezgâhın yanında; et fiyatı, sıra uzunluğu ve müşteri sıklığı kasanın yanında. Bir istasyonun yanında en fazla iki ped duruyor; son seviyesine ulaşan ped kayboluyor ve yerini sıradaki alıyor. Üs artık pedlerle dolmuyor.
+- **Büyük Ocak ve üs seviyesi.** Üsteki büyük ocak, üs seviyesini gösteriyor. Pedi üssü büyütüyor: Üs 2 için 25 müşteri, Üs 3 için iki ocak yuvası ve ilk ana boss gerekiyor (bosslar 0.7.0'da gelecek, Üs 3 o zamana kadar bekliyor). Bir koşul eksikken ped gri oluyor ve eksik olanı simgeyle gösteriyor: 👥 müşteri, 🔥 ocak yuvası, 🐻 boss.
+- **Çit büyüyor.** Her üs seviyesi çiti dışarı açıyor (12 → 14 → 16) ve yeni istasyon yükseltmeleri getiriyor. Ayılar çitin dışında kalmak için geri çekiliyor.
+- **Katı nesneler.** Karakter artık tezgâhın, kasanın, ocağın ve tepsilerinin ve Büyük Ocak'ın içinden geçemiyor.
+- **Pedler sadece satın almadan sonra duruyor.** Pede basınca para hemen akıyor. Satın almadan hemen sonra bir kez bir saniye duruyor; böylece kalan para yanlışlıkla bir sonraki seviyeye gitmiyor. Pedden çıkıp tekrar basınca beklemeden devam ediyor.
+- **0.4.1'i oynadıktan sonraki düzeltmeler.** Kızgın yüz artık müşterinin kaç parça istediğini kapatmıyor: et simgesinin yerine geçiyor. Pişmiş et rafı ocağın tezgâh tarafına, çiğ et tepsisi kapı tarafına taşındı. "Bahşiş yok" artık ödenen tutarın üstüne değil, altına küçük ikinci bir satır olarak çıkıyor.
+
 ## 0.4.1 (2026-10-13)
 
 **EN.** Changes from playing 0.4.0 on iPhone.

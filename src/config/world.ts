@@ -2,7 +2,8 @@
 
 export const WORLD = {
   groundSize: 220,
-  baseRadius: 12,
+  startBaseRadius: 12, // the fence grows with the base level (BASE_LEVELS in balance.ts)
+  maxBaseRadius: 22,
   gateWidth: 4.5, // both gates: the front one toward the bears (-z), the back one for customers (+z)
   fencePostSpacing: 1.6,
   fenceHeight: 1.1,
@@ -16,14 +17,34 @@ export const WORLD = {
 export const LAYOUT = {
   playerSpawn: { x: 1.5, z: 1.5 },
   furnace: { x: -4, z: 2.6 },
-  rack: { x: -4, z: 4.8 }, // the furnace's input tray, where raw meat waits
-  shelf: { x: -4, z: 0.4 }, // cooked meat waits here until the player picks it up
+  // Raw meat comes in from the front gate side, cooked meat leaves on the counter side.
+  rack: { x: -4, z: 0.4 }, // the furnace's input tray, where raw meat waits
+  shelf: { x: -4, z: 4.8 }, // cooked meat waits here until the player picks it up
   furnaceZone: { x: -1.7, z: 2.6 }, // standing here pours raw meat in and picks cooked meat up
   counter: { x: 0, z: 7.4 },
   serviceSpot: { x: 0, z: 5.9 },
   till: { x: 3.1, z: 7.4 },
   queueFront: { x: 0, z: 8.7 }, // first customer; the queue runs toward +z through the back gate
   customerSpawn: { x: 0, z: 21.5 },
+  greatFurnace: { x: -4.6, z: -4.2 }, // the base level building
+  // Beside the building, not behind it: the camera looks from +z, so anything at a lower z hides behind it.
+  // Away from the path between the front gate and the stations, so nobody walks onto it by accident.
+  greatFurnacePad: { x: -7.6, z: -4.2 },
+  // Up to two upgrade pads stand next to each station; a maxed pad leaves and the next track takes its place.
+  stationSlots: {
+    furnace: [
+      { x: -7.2, z: 1.4 },
+      { x: -7.2, z: 4.0 },
+    ],
+    counter: [
+      { x: -3.2, z: 9.0 },
+      { x: -5.8, z: 8.2 },
+    ],
+    shop: [
+      { x: 5.9, z: 5.6 },
+      { x: 5.9, z: 8.2 },
+    ],
+  },
   // Bears roam just outside the front gate, so the hunt starts a few steps from the base.
   bearField: { minX: -26, maxX: 26, minZ: -46, maxZ: -15 },
   // Nothing walks past this rectangle; a forest edge marks it.

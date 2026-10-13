@@ -2,6 +2,7 @@ import { CanvasTexture, Mesh, MeshBasicMaterial, PlaneGeometry, SRGBColorSpace, 
 import { audio } from '../audio/Audio.ts'
 import { PAD } from '../config/balance.ts'
 import type { Player } from '../entities/Player.ts'
+import type { Requirement } from './progression.ts'
 import type { Wallet } from './Wallet.ts'
 
 export interface PadPricing {
@@ -20,28 +21,34 @@ export interface PadOptions {
   pricing: PadPricing
   apply: (level: number) => void // called with the new level after each purchase
   hidden?: boolean // starts out of sight until show() is called
+  vanishWhenMaxed?: boolean // leaves the base after its last level instead of showing MAKS
+  // Something besides cash the next level needs. While it is not met the pad is grey, takes no cash
+  // and shows the label ("Müşteri 6/10") instead of the price.
+  requirement?: () => Requirement
 }
 
 const TEX = 256
 const APPEAR_SECONDS = 0.35
 
 // A square on the ground: stand on it and cash flows in until the price is paid, then the reward applies.
-// Cash only starts to flow after a short wait on the pad, and the wait starts over after every purchase,
-// so walking across a pad or finishing one level never spends money by accident.
+// Right after a purchase cash stops once for a moment, so the money left over is not spent on the next
+// level by accident; stepping off and on again carries on straight away.
 export class UnlockPad {
   level = 0
   private paid = 0
-  private dwell = 0 // seconds the player has stood on the pad since stepping on or since the last purchase
+  private pause = 0 // seconds left of the stop after a purchase
   private tickTimer = 0
   private drawnKey = ''
   private appear = 1 // 0 → 1 while the pad pops into view
   private options: PadOptions
+  private at: { x: number; z: number }
   private plane: Mesh
   private ctx: CanvasRenderingContext2D
   private texture: CanvasTexture
 
   constructor(scene: Scene, options: PadOptions) {
     this.options = options
+    this.at = { ...options.at }
 
     const canvas = document.createElement('canvas')
     canvas.width = TEX
@@ -85,6 +92,17 @@ export class UnlockPad {
     audio.play('appear')
   }
 
+  hide(): void {
+    this.plane.visible = false
+    this.pause = 0
+  }
+
+  // Moves the pad to another spot next to its station, when a pad before it has left.
+  moveTo(at: { x: number; z: number }): void {
+    this.at = { ...at }
+    this.plane.position.set(at.x, 0.04, at.z)
+  }
+
   update(dt: number, player: Player, wallet: Wallet): void {
     if (!this.plane.visible) return
     if (this.appear < 1) {
@@ -97,11 +115,12 @@ export class UnlockPad {
 
     const half = this.options.pricing.size / 2
     const p = player.position
-    const { x, z } = this.options.at
-    const onPad = Math.abs(p.x - x) < half && Math.abs(p.z - z) < half
-    this.dwell = onPad ? this.dwell + dt : 0
+    const onPad = Math.abs(p.x - this.at.x) < half && Math.abs(p.z - this.at.z) < half
+    // The stop after a purchase lasts while the player stays; stepping off ends it.
+    this.pause = onPad ? Math.max(0, this.pause - dt) : 0
+    const ready = this.options.requirement?.().met ?? true
 
-    if (onPad && this.dwell >= PAD.delay && wallet.amount > 0) {
+    if (ready && onPad && this.pause <= 0 && wallet.amount > 0) {
       const pricing = this.options.pricing
       const rate = Math.max(this.price / pricing.drainSeconds, pricing.minDrainPerSec)
       const amount = Math.min(wallet.amount, this.price - this.paid, rate * dt)
@@ -115,9 +134,13 @@ export class UnlockPad {
       if (this.paid >= this.price - 1e-6) {
         this.paid = 0
         this.level++
-        this.dwell = 0 // the wait starts over before the next level
+        this.pause = PAD.afterPurchasePause
         this.options.apply(this.level)
         audio.play('purchase')
+        if (this.maxed && this.options.vanishWhenMaxed) {
+          this.hide()
+          return
+        }
         // Redraw now: once maxed, update() returns early and would never show MAKS.
         this.draw()
       }
@@ -127,17 +150,21 @@ export class UnlockPad {
 
   // What the texture currently shows; it is redrawn only when this changes.
   private drawKey(): string {
-    const waiting = this.dwell > 0 && this.dwell < PAD.delay ? Math.ceil((this.dwell / PAD.delay) * 12) : 0
-    return `${this.level}:${Math.floor(this.paid)}:${waiting}`
+    const waiting = this.pause > 0 ? Math.ceil((this.pause / PAD.afterPurchasePause) * 12) : 0
+    const req = this.options.requirement?.()
+    const reqKey = req ? `${req.met}:${req.label}` : ''
+    return `${this.level}:${Math.floor(this.paid)}:${waiting}:${reqKey}`
   }
 
   private draw(): void {
     const c = this.ctx
     const price = this.price
+    const req = this.maxed ? undefined : this.options.requirement?.()
+    const locked = req !== undefined && !req.met
     this.drawnKey = this.drawKey()
     c.clearRect(0, 0, TEX, TEX)
 
-    c.fillStyle = 'rgba(31, 58, 77, 0.55)'
+    c.fillStyle = locked ? 'rgba(90, 96, 102, 0.55)' : 'rgba(31, 58, 77, 0.55)'
     roundRect(c, 8, 8, TEX - 16, TEX - 16, 28)
     c.fill()
 
@@ -151,14 +178,14 @@ export class UnlockPad {
     c.restore()
 
     c.lineWidth = 8
-    c.strokeStyle = 'rgba(255, 255, 255, 0.9)'
+    c.strokeStyle = locked ? 'rgba(255, 255, 255, 0.45)' : 'rgba(255, 255, 255, 0.9)'
     roundRect(c, 8, 8, TEX - 16, TEX - 16, 28)
     c.stroke()
 
-    // While the player waits on the pad, a thin line fills along the bottom: cash is about to flow.
-    if (!this.maxed && this.dwell > 0 && this.dwell < PAD.delay) {
+    // During the stop after a purchase, a thin line along the bottom fills up: cash flows again when it is full.
+    if (!locked && !this.maxed && this.pause > 0) {
       c.fillStyle = 'rgba(255, 255, 255, 0.95)'
-      c.fillRect(36, TEX - 30, (TEX - 72) * (this.dwell / PAD.delay), 8)
+      c.fillRect(36, TEX - 30, (TEX - 72) * (1 - this.pause / PAD.afterPurchasePause), 8)
     }
 
     c.fillStyle = '#ffffff'
@@ -167,6 +194,11 @@ export class UnlockPad {
     fitText(c, this.options.title, 62, 34)
     if (this.maxed) {
       fitText(c, 'MAKS', 150, 64)
+    } else if (locked && req) {
+      // The missing prerequisite takes the price's place.
+      fitText(c, this.options.reward(this.level), 125, 52)
+      c.fillStyle = '#ffd38a'
+      fitText(c, req.label, 195, 32)
     } else {
       fitText(c, this.options.reward(this.level), 130, 64)
       fitText(c, `$${price - Math.floor(this.paid)}`, 200, 40)

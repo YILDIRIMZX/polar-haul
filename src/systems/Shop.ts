@@ -9,6 +9,7 @@ import { floatingText } from '../fx/FloatingText.ts'
 import { dashedRing } from '../fx/markers.ts'
 import { flatDistance } from '../game/math.ts'
 import type { Stats } from '../game/Stats.ts'
+import { addObstacle } from '../world/bounds.ts'
 import { orderSize, tipFor } from './orders.ts'
 import type { Progress } from './progression.ts'
 import type { Stack } from './Stack.ts'
@@ -148,12 +149,11 @@ export class Shop {
     this.layoutCash()
     progress.customersServed++
 
-    // "+$25" floats up over the customer's head; a cold customer also shows the tip they kept.
+    // "+$25" floats up over the customer's head; a cold customer also shows, underneath, the tip they kept.
     const head = front.position.clone().setY(2.6)
-    floatingText.spawn(`+$${Math.floor(paid)}`, head)
+    floatingText.spawn(`+$${Math.floor(paid)}`, head, front.cold ? 'bahşiş yok' : undefined)
     audio.play('pay')
     if (tip > 0) audio.play('tip', { volume: Math.min(1, 0.4 + tip / (front.want * price)) })
-    if (front.cold) floatingText.spawn('bahşiş yok', head.setY(3.2), 'bad')
 
     front.state = 'leaving'
     this.queue.shift()
@@ -239,5 +239,7 @@ export class Shop {
     till.receiveShadow = true
 
     this.scene.add(counter, till, dashedRing(LAYOUT.serviceSpot.x, LAYOUT.serviceSpot.z, SHOP.serviceRadius, 10))
+    addObstacle(LAYOUT.counter, 3.2, 1.0)
+    addObstacle(LAYOUT.till, 1.4, 1.2)
   }
 }

@@ -110,7 +110,12 @@ body {
   background: var(--full);
 }
 
-.pill.sound {
+.hud-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.pill.icon {
   pointer-events: auto;
   border: 0;
   padding: 0;
@@ -121,15 +126,127 @@ body {
   cursor: pointer;
 }
 
-.pill.sound svg {
+.pill.icon svg {
   width: 22px;
   height: 22px;
   fill: #fff;
 }
 
-.pill.sound:focus-visible {
+.pill.icon:focus-visible,
+.menu-buy:focus-visible,
+.menu-close:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 2px;
+}
+
+/* Character menu: a panel over the paused game. */
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(15, 28, 38, 0.55);
+}
+
+.menu-overlay.hidden {
+  display: none;
+}
+
+.menu-panel {
+  width: min(360px, calc(var(--game-w) - 32px));
+  max-height: calc(100% - 32px);
+  overflow-y: auto;
+  border-radius: 20px;
+  background: #f4f8fa;
+  color: var(--ink);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.menu-head {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #f4f8fa;
+  border-bottom: 1px solid #dce5ea;
+}
+
+.menu-head h2 {
+  margin: 0;
+  flex: 1;
+  font-size: 20px;
+}
+
+.menu-cash {
+  font-weight: 800;
+  color: #2a8c55;
+  font-variant-numeric: tabular-nums;
+}
+
+.menu-close {
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: #dce5ea;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.menu-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5ecf0;
+}
+
+.menu-row.locked {
+  opacity: 0.6;
+}
+
+.menu-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-name {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.menu-detail {
+  margin-top: 2px;
+  font-size: 13px;
+  color: #5b6f7c;
+}
+
+.menu-buy {
+  min-width: 76px;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--cash);
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.menu-buy:disabled {
+  background: #b9c6ce;
+  cursor: default;
 }
 
 /* "+$25" over a paying customer: floats up and fades (moved by FloatingText.ts). */
@@ -148,8 +265,12 @@ body {
     0 0 6px rgba(31, 58, 77, 0.6);
 }
 
-.float-text.bad {
-  font-size: 16px;
+.float-text {
+  text-align: center;
+}
+
+.float-note {
+  font-size: 15px;
   color: #ffb4a8;
 }
 

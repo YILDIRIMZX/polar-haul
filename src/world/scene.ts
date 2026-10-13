@@ -1,6 +1,4 @@
 import {
-  BoxGeometry,
-  CircleGeometry,
   Color,
   ConeGeometry,
   CylinderGeometry,
@@ -17,7 +15,8 @@ import {
 } from 'three'
 import { COLORS, LAYOUT, WORLD } from '../config/world.ts'
 
-// The static world: sky, ground, snow, the forest edge, the base and its fence.
+// The static world: sky, ground, snow and the forest edge. The base and its fence are in BaseArea,
+// because they grow with the base level.
 export function createScene(): Scene {
   const scene = new Scene()
   scene.background = new Color(COLORS.sky)
@@ -27,8 +26,6 @@ export function createScene(): Scene {
   addGround(scene)
   addSnowMounds(scene)
   addForestEdge(scene)
-  addBase(scene)
-  addFence(scene)
 
   return scene
 }
@@ -125,7 +122,8 @@ function addSnowMounds(scene: Scene): void {
   while (placed < WORLD.snowMounds) {
     const x = (rand() - 0.5) * WORLD.groundSize * 0.8
     const z = (rand() - 0.5) * WORLD.groundSize * 0.8
-    if (Math.hypot(x, z) < WORLD.baseRadius + 3) continue
+    // Clear of the base even at its largest, so a growing fence never swallows a mound.
+    if (Math.hypot(x, z) < WORLD.maxBaseRadius + 3) continue
     // Keep mounds off the forest edge, so they never poke through a tree trunk.
     const a = LAYOUT.playArea
     const nearEdgeX = x > a.minX - 10 && x < a.maxX + 10 && (x < a.minX + 1 || x > a.maxX - 1)
@@ -140,69 +138,6 @@ function addSnowMounds(scene: Scene): void {
   }
   mounds.receiveShadow = true
   scene.add(mounds)
-}
-
-function addBase(scene: Scene): void {
-  const base = new Mesh(
-    new CircleGeometry(WORLD.baseRadius, 48),
-    new MeshLambertMaterial({ color: COLORS.baseGround }),
-  )
-  base.rotation.x = -Math.PI / 2
-  base.position.y = 0.01
-  base.receiveShadow = true
-  scene.add(base)
-}
-
-// Posts around the base with rails between them, leaving two gates open:
-// the front one toward -z (the bears) and the back one toward +z (the customers).
-function addFence(scene: Scene): void {
-  const r = WORLD.baseRadius
-  const count = Math.floor((2 * Math.PI * r) / WORLD.fencePostSpacing)
-  const step = (2 * Math.PI) / count
-  const gateHalfAngle = WORLD.gateWidth / 2 / r
-  const gateAngles = [-Math.PI / 2, Math.PI / 2]
-
-  const angles: number[] = []
-  for (let i = 0; i < count; i++) {
-    const a = i * step
-    const inGate = gateAngles.some((g) => Math.abs(Math.atan2(Math.sin(a - g), Math.cos(a - g))) <= gateHalfAngle)
-    if (!inGate) angles.push(a)
-  }
-
-  const wood = new MeshLambertMaterial({ color: COLORS.fenceWood })
-  const h = WORLD.fenceHeight
-  const posts = new InstancedMesh(new BoxGeometry(0.28, h, 0.28), wood, angles.length)
-  const rails = new InstancedMesh(new BoxGeometry(1, 0.14, 0.12), wood, angles.length * 2)
-  const dummy = new Object3D()
-  let railCount = 0
-
-  angles.forEach((a, i) => {
-    dummy.position.set(Math.cos(a) * r, h / 2, Math.sin(a) * r)
-    dummy.rotation.set(0, 0, 0)
-    dummy.scale.set(1, 1, 1)
-    dummy.updateMatrix()
-    posts.setMatrixAt(i, dummy.matrix)
-
-    // A rail only joins neighbouring posts, so the gate gap stays open.
-    const next = angles[(i + 1) % angles.length]
-    const gap = (next - a + 2 * Math.PI) % (2 * Math.PI)
-    if (Math.abs(gap - step) > 1e-6) return
-    const mid = a + step / 2
-    const length = 2 * r * Math.sin(step / 2)
-    for (const y of [h * 0.4, h * 0.8]) {
-      dummy.position.set(Math.cos(mid) * r, y, Math.sin(mid) * r)
-      dummy.rotation.set(0, -mid + Math.PI / 2, 0)
-      dummy.scale.set(length, 1, 1)
-      dummy.updateMatrix()
-      rails.setMatrixAt(railCount++, dummy.matrix)
-    }
-  })
-  rails.count = railCount
-
-  for (const m of [posts, rails]) {
-    m.castShadow = true
-    scene.add(m)
-  }
 }
 
 // Same layout on every launch, so the world looks the same each time the app opens.

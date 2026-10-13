@@ -14,10 +14,20 @@ interface Item {
 class FloatingTexts {
   private items: Item[] = []
 
-  spawn(text: string, at: Vector3, kind: 'cash' | 'bad' = 'cash'): void {
+  // `note` is a smaller second line under the main text ("bahşiş yok" under "+$12"). Both lines live in
+  // one element, so they always move together and can never cover each other.
+  spawn(text: string, at: Vector3, note?: string): void {
     const el = document.createElement('div')
-    el.className = `float-text ${kind}`
-    el.textContent = text
+    el.className = 'float-text'
+    const main = document.createElement('div')
+    main.textContent = text
+    el.append(main)
+    if (note) {
+      const small = document.createElement('div')
+      small.className = 'float-note'
+      small.textContent = note
+      el.append(small)
+    }
     document.body.append(el)
     this.items.push({ el, at: at.clone(), age: 0 })
   }

@@ -145,7 +145,7 @@ Yol haritası, README (EN/TR), CHANGELOG, lisans ve resmi olmama uyarısı.
 |---|---|
 | 0.4.0 ✅ | Üretim zinciri (elle): ocak, tezgâh, müşteriler, bahşiş, kasa |
 | 0.4.1 ✅ | Pişmiş eti elle taşıma, sesler, uçan ödeme yazıları, kızgın müşteri, ped beklemesi |
-| 0.5.0 | Yükseltme düzeni ve üs: Karakter menüsü, istasyon pedleri, inşa pedleri, Büyük Ocak ve üs seviyeleri 1–3 |
+| 0.5.0 ✅ | Yükseltme düzeni ve üs: Karakter menüsü, istasyon pedleri, inşa pedleri, Büyük Ocak ve üs seviyeleri 1–3 |
 | 0.6.0 | İşçiler: Kapı Deposu ve Taşıyıcı, Garson, Kasiyer, Avcı Kulübesi ve avcılar |
 | 0.7.0 | Av seviyesi, mini boss ve kartlar, 1. ana boss ve Üçlü Vuruş, acil müşteriler |
 | 0.8.0 | Konveyörler, üs seviyeleri 4–6, 2. ana boss ve final, benzersiz yetenekler, ikinci av bölgesi |

@@ -5,7 +5,7 @@ import { LAYOUT } from '../config/world.ts'
 import { Bear } from '../entities/Bear.ts'
 import type { Player } from '../entities/Player.ts'
 import { clamp, flatDistance } from '../game/math.ts'
-import { clampToWorld, keepOutsideBase } from '../world/bounds.ts'
+import { clampToWorld, getBaseRadius, keepOutsideBase } from '../world/bounds.ts'
 
 const toTarget = new Vector3()
 
@@ -89,7 +89,7 @@ export class BearHerd {
       bear.goal.set(
         clamp(bear.position.x + MathUtils.randFloat(-reach, reach), f.minX, f.maxX),
         0,
-        clamp(bear.position.z + MathUtils.randFloat(-reach, reach), f.minZ, f.maxZ),
+        clamp(bear.position.z + MathUtils.randFloat(-reach, reach), f.minZ, fieldMaxZ()),
       )
       bear.goalTimer = MathUtils.randFloat(BEAR.goalSecondsMin, BEAR.goalSecondsMax)
       return
@@ -123,5 +123,10 @@ export class BearHerd {
 
 function randomFieldPoint(): { x: number; z: number } {
   const f = LAYOUT.bearField
-  return { x: MathUtils.randFloat(f.minX, f.maxX), z: MathUtils.randFloat(f.minZ, f.maxZ) }
+  return { x: MathUtils.randFloat(f.minX, f.maxX), z: MathUtils.randFloat(f.minZ, fieldMaxZ()) }
+}
+
+// The field's edge nearest the base moves back as the fence grows, so bears never roam inside it.
+function fieldMaxZ(): number {
+  return Math.min(LAYOUT.bearField.maxZ, -(getBaseRadius() + 3))
 }

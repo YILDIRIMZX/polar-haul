@@ -4,6 +4,7 @@
 // which adds what has been bought on top of these starting values.
 export const BASE_STATS = {
   carryCapacity: 10,
+  maxHp: 100,
   moveSpeed: 7,
   attackDamage: 10,
   attackTargets: 1,
@@ -22,11 +23,18 @@ export const BASE_STATS = {
 
 export type StatId = keyof typeof BASE_STATS
 
+// Base levels, raised at the Great Furnace. Level 1 is where the game starts.
+// What each level needs besides cash is decided in systems/progression.ts (baseRequirement).
+export const BASE_LEVELS = [
+  { level: 1, price: 0, fenceRadius: 12 },
+  { level: 2, price: 250, fenceRadius: 14 },
+  { level: 3, price: 800, fenceRadius: 16 },
+] as const
+
 // Fixed numbers that no upgrade changes.
 export const PLAYER = {
   radius: 0.5,
   turnSpeed: 12,
-  maxHp: 100,
   regenPerSec: 35,
   attackRange: 3,
   attackCooldown: 0.4,
@@ -84,6 +92,6 @@ export const PAD = {
   size: 2.4,
   drainSeconds: 1.3,
   minDrainPerSec: 25,
-  delay: 0.7, // seconds on a pad before cash starts to flow, again after every purchase
+  afterPurchasePause: 1, // seconds cash stops after a purchase, so the rest is not spent on the next level by accident
   tickInterval: 0.08, // how often the rising tick sounds while cash flows
 } as const

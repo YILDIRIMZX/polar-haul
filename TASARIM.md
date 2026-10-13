@@ -153,18 +153,18 @@ Aynı anda vurulan ayı sayısı menüde **yok**: o bosslardan gelir (bölüm 6)
 - **işçi sınırını** yükseltir,
 - **yeni müşteri türleri** getirir.
 
-Seviye atlamak için hem **para** hem bir **ön koşul** gerekir. Ön koşul, oyuncuyu bir önceki aşamayı gerçekten oynamaya zorlar; parayla atlanamaz.
+Seviye atlamak için hem **para** hem **ön koşul** gerekir. Ön koşullar dönüşümlü olarak biri **ekonomiden** (müşteri, ocak), biri **savaştan** (boss) gelir. Oyuncu ne sadece avlanarak ne de sadece satarak üssü büyütebilir; iki yarıyı da ilerletmek zorundadır.
 
-| Üs seviyesi | Fiyat | Ön koşul | Açılanlar | Çit yarıçapı |
-|---|---|---|---|---|
-| **1** | — | — | Ocak, tezgâh, kasa, Karakter menüsü | 12 |
-| **2** | $250 | 10 müşteri servis edildi | **Kapı Deposu**, **Taşıyıcı** alımı, ocak hızı ve raf pedleri, sıra uzunluğu · işçi sınırı 2 | 14 |
-| **3** | $800 | Ocakta 2 yuva + **1. ana boss** yenildi | **Garson**, **Kasiyer**, **Avcı Kulübesi** (1 avcı), acil müşteriler · işçi sınırı 4 | 16 |
-| **4** | $2.000 | Av seviyesi 5 | **Konveyör**, **Tezgâh bandı**, 2. avcı, ikinci av bölgesi · işçi sınırı 6 | 18 |
-| **5** | $5.000 | **2. ana boss** yenildi | **İkinci ocak**, 3. avcı, VIP müşteriler · işçi sınırı 8 | 20 |
-| **6** | $12.000 | Av seviyesi 9 | 4. avcı, **final boss**'un yolu açılır | 22 |
+| Üs seviyesi | Fiyat | Ekonomi koşulu | Savaş koşulu | Açılanlar | Çit yarıçapı |
+|---|---|---|---|---|---|
+| **1** | — | — | — | Ocak, tezgâh, kasa, Karakter menüsü | 12 |
+| **2** | $250 | 25 müşteri | — | **Kapı Deposu**, **Taşıyıcı**, ocak hızı ve raf pedleri, sıra uzunluğu · işçi sınırı 2 | 14 |
+| **3** | $800 | Ocakta 2 yuva | **1. ana boss** (Yaşlı Ayı) | **Garson**, **Kasiyer**, **Avcı Kulübesi** (1 avcı), acil müşteriler · işçi sınırı 4 | 16 |
+| **4** | $2.000 | 60 müşteri | 2 mini boss | **Konveyör**, **Tezgâh bandı**, 2. avcı, ikinci av bölgesi · işçi sınırı 6 | 18 |
+| **5** | $5.000 | Ocakta 3 yuva | **2. ana boss** (Buzul Ayısı) | **İkinci ocak**, 3. avcı, VIP müşteriler · işçi sınırı 8 | 20 |
+| **6** | $12.000 | 150 müşteri | 4 mini boss | 4. avcı, **final boss**'un yolu açılır | 22 |
 
-Büyük Ocak'ın seviye pedi hemen yanında durur. Ön koşul eksikse ped gri görünür ve eksik koşulu yazar ("10 müşteri gerekli: 6/10").
+Büyük Ocak'ın seviye pedi hemen yanında durur. Ön koşul eksikse ped gri görünür ve **sadece eksik olan** koşulu yazar ("Müşteri 7/25", "Ocak yuvası 1/2", "Boss: Yaşlı Ayı"). Ped dar olduğu için iki koşul birden yazılmaz; oyuncu bir seferde tek hedefe odaklanır. Kural `baseRequirement` fonksiyonunda (`src/systems/progression.ts`).
 
 ---
 
@@ -256,6 +256,14 @@ Dev Ayı: normal ayıdan 1,6 kat büyük, 10 kat canlı, yavaş ama sert vuruyor
 ### Seçim ekranı
 Boss ölünce oyun durur ve iki kart ekrana gelir. Kart dokunuşla seçilir, oyun devam eder.
 
+### Boss'u kesememenin cezası: Kar Fırtınası
+Boss geldiğinde ekranın üstünde **90 saniyelik** bir sayaç başlar. Süre biterse ya da oyuncu boss'a karşı bayılırsa:
+- Boss kükreyip av sahasının derinliklerine çekilir ve **üsse kar fırtınası çöker** (60 saniye).
+- Fırtınada ekran beyazlaşır, görüş azalır; müşterilerin sabrı **iki kat hızlı** biter (bahşişler kaçar) ve ocak **%30 yavaş** pişirir.
+- Boss **2 dakika sonra tekrar gelir**; ödülü kaybolmaz.
+
+Ceza can sıkıcıdır ama oyunu bitirmez: "hazırlan, tekrar dene" hissi verir. Whiteout'un "beyaz kıyamet" temasıyla da uyumludur.
+
 ---
 
 ## 8. Tam ilerleme yolu (ilk harita ≈ 35 dakika)
@@ -264,8 +272,8 @@ Boss ölünce oyun durur ve iki kart ekrana gelir. Kart dokunuşla seçilir, oyu
 |---|---|---|---|
 | 0–2 | 1 | 1 | İlk av, ocak, ilk müşteriler. Karakter menüsünden ilk taşıma yükseltmesi. |
 | 2–4 | 1 | 1–2 | Ocak 2. yuva, tezgâh. İlk **mini boss**, ilk kart. |
-| ~4 | **2** | 2 | **Kapı Deposu ve Taşıyıcı**: eti ocağa taşımak otomatikleşir. |
-| 5–7 | 2 | 3 | **1. ana boss → Üçlü Vuruş.** Av hızı patlar. |
+| 5–6 | 1 | 2–3 | **1. ana boss → Üçlü Vuruş.** Av hızı patlar. |
+| ~7 | **2** | 3 | **Kapı Deposu ve Taşıyıcı** (25 müşteriden sonra): eti ocağa taşımak otomatikleşir. |
 | ~8 | **3** | 3 | **Garson, Kasiyer, Avcı Kulübesi.** Satış otomatikleşir, ilk avcı sahaya çıkar. Acil müşteriler. |
 | 8–14 | 3 | 4–5 | Avcılar depoyu doldurur, fiyat ve sıra yükseltmeleri, mini boss. |
 | ~14 | **4** | 5 | **Konveyörler**, 2. avcı, ikinci av bölgesi. Taşıyıcı kasaya geçer. |
@@ -284,7 +292,7 @@ Kural: ilk dakikalarda her 30–60 saniyede bir yeni şey açılmalı. Sonra bu 
 |---|---|
 | 0.4.0 ✅ | Üretim zinciri (elle): ocak, tezgâh, müşteriler, bahşiş, kasa |
 | 0.4.1 ✅ | Pişmiş eti elle taşıma, sesler, uçan ödeme yazıları, kızgın müşteri, ped beklemesi |
-| **0.5.0** | **Yükseltme düzeni ve üs:** Karakter menüsü, istasyon pedlerinin yanlarına taşınması (sadece sıradaki seviye), inşa pedleri, **Büyük Ocak** ve üs seviyeleri 1–3, genişleyen çit |
+| 0.5.0 ✅ | **Yükseltme düzeni ve üs:** Karakter menüsü, istasyon pedlerinin yanlarına taşınması (sadece sıradaki seviye), inşa pedleri, **Büyük Ocak** ve üs seviyeleri 1–3, genişleyen çit |
 | 0.6.0 | **İşçiler:** Kapı Deposu ve Taşıyıcı, Garson, Kasiyer, **Avcı Kulübesi ve avcılar** |
 | 0.7.0 | **Av seviyesi ve bosslar:** mini boss ve kart ekranı, 1. ana boss ve Üçlü Vuruş (Geniş Savuruş pedi kalkar), acil müşteriler |
 | 0.8.0 | Konveyörler, üs seviyeleri 4–6, 2. ana boss ve final, benzersiz yetenekler, ikinci av bölgesi, ikinci ocak, VIP müşteriler |

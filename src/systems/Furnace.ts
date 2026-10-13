@@ -9,6 +9,7 @@ import { HpBar } from '../fx/HpBar.ts'
 import { dashedRing } from '../fx/markers.ts'
 import { flatDistance } from '../game/math.ts'
 import type { Stats } from '../game/Stats.ts'
+import { addObstacle } from '../world/bounds.ts'
 import type { Stack } from './Stack.ts'
 
 const PALLET_TOP = 0.3
@@ -155,6 +156,9 @@ export class Furnace {
     }
 
     this.scene.add(body, dashedRing(LAYOUT.furnaceZone.x, LAYOUT.furnaceZone.z, FURNACE.zoneRadius))
+    addObstacle(LAYOUT.furnace, 2, 1.8)
+    addObstacle(LAYOUT.rack, 1.5, 1.4)
+    addObstacle(LAYOUT.shelf, 1.5, 1.4)
     return body
   }
 }

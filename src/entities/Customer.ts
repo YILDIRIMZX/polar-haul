@@ -126,20 +126,21 @@ export class Customer {
     c.roundRect(4, 4, BUBBLE_W - 8, BUBBLE_H - 8, 16)
     c.fill()
 
-    // A small cooked steak and the count still wanted.
-    c.fillStyle = '#8a4a28'
-    c.beginPath()
-    c.ellipse(36, 30, 17, 12, 0, 0, Math.PI * 2)
-    c.fill()
+    // A small cooked steak and the count still wanted. An angry customer shows a face instead of the steak,
+    // so the count is never covered.
+    if (this.cold) {
+      drawAngryFace(c, 36, 30)
+    } else {
+      c.fillStyle = '#8a4a28'
+      c.beginPath()
+      c.ellipse(36, 30, 17, 12, 0, 0, Math.PI * 2)
+      c.fill()
+    }
     c.fillStyle = '#1f3a4d'
     c.font = 'bold 30px system-ui, sans-serif'
     c.textAlign = 'left'
     c.textBaseline = 'middle'
     c.fillText(`×${left}`, 60, 31)
-
-    if (this.cold) {
-      drawAngryFace(c, BUBBLE_W - 26, 31)
-    }
     // Patience: green → orange → red. Once it runs out the bar is gone and the bubble turns red.
     if (!this.cold) {
       c.fillStyle = '#d5dde3'
