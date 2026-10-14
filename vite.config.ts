@@ -1,12 +1,16 @@
+import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // GitHub Pages serves the app under /<repo>/. Set BASE=/<repo>/ when building for it.
 const base = process.env.BASE ?? '/'
+const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string }
 
 export default defineConfig({
   base,
   server: { host: true },
+  // The app's version, from package.json; the test panel shows it and marks what is new in it.
+  define: { __APP_VERSION__: JSON.stringify(version) },
   // Three.js alone is ~540 kB; one bundle is fine for an offline app.
   build: { chunkSizeWarningLimit: 700 },
   plugins: [

@@ -26,6 +26,7 @@ const toTarget = new Vector3()
 export type CustomerState = 'arriving' | 'waiting' | 'leaving'
 
 // A cold survivor who queues at the counter, waits for an order of cooked meat, pays and leaves.
+// An urgent one pays far more but walks out unpaid once patience runs out.
 // A bubble above the head shows how many pieces are still wanted and how much patience is left.
 export class Customer {
   readonly root = new Group()
@@ -36,6 +37,7 @@ export class Customer {
   incoming = 0 // pieces flying toward this customer right now
   patience: number
   readonly patienceMax: number
+  readonly urgent: boolean // pays far more, but leaves without paying when patience runs out
   private body = new Group()
   private bubble: Sprite
   private ctx: CanvasRenderingContext2D
@@ -43,8 +45,9 @@ export class Customer {
   private drawnKey = ''
   private facing = Math.PI
 
-  constructor(want: number, patience: number) {
+  constructor(want: number, patience: number, urgent = false) {
     this.want = want
+    this.urgent = urgent
     this.patience = patience
     this.patienceMax = patience
 
@@ -125,6 +128,12 @@ export class Customer {
     c.beginPath()
     c.roundRect(4, 4, BUBBLE_W - 8, BUBBLE_H - 8, 16)
     c.fill()
+    // An urgent customer's bubble has a thick red rim, so they stand out in the queue.
+    if (this.urgent) {
+      c.strokeStyle = '#e0453a'
+      c.lineWidth = 6
+      c.stroke()
+    }
 
     // A small cooked steak and the count still wanted. An angry customer shows a face instead of the steak,
     // so the count is never covered.

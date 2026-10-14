@@ -88,8 +88,226 @@ body {
   box-sizing: border-box;
   padding: 0 12px;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   pointer-events: none;
+}
+
+.hud-top {
+  align-self: stretch;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Hunt level: "Av 2" and a thin bar of the kills toward the next level. */
+.hunt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--pill);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.hunt-bar {
+  width: 84px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+
+.hunt-fill {
+  height: 100%;
+  width: 0;
+  background: #ffcf5c;
+  transition: width 0.2s ease;
+}
+
+/* Boss fight: name, seconds left and health. */
+.boss-panel {
+  width: min(260px, 80%);
+  padding: 7px 12px 9px;
+  border-radius: 14px;
+  background: rgba(70, 20, 20, 0.78);
+  color: #fff;
+}
+
+.boss-panel.hidden {
+  display: none;
+}
+
+.boss-head {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 800;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.boss-time.low {
+  color: #ffb4a8;
+}
+
+.boss-bar {
+  margin-top: 5px;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  overflow: hidden;
+}
+
+.boss-fill {
+  height: 100%;
+  width: 100%;
+  background: #e0453a;
+}
+
+/* Big text in the middle of the screen for a moment. */
+.banner {
+  position: fixed;
+  left: 50%;
+  top: 34%;
+  z-index: 5;
+  width: calc(var(--game-w) - 32px);
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  font-size: 30px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow:
+    0 3px 0 #1f3a4d,
+    0 0 10px rgba(31, 58, 77, 0.7);
+}
+
+.banner.hidden {
+  display: none;
+}
+
+.banner.pop {
+  animation: banner-pop 0.35s ease-out;
+}
+
+@keyframes banner-pop {
+  from {
+    transform: translate(-50%, -50%) scale(1.6);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+/* The blizzard: white at the edges, a thinner veil in the middle. Its opacity is set by Storm.ts. */
+.storm {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  width: var(--game-w);
+  height: 100%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.28) 45%, rgba(250, 252, 255, 0.9) 100%);
+}
+
+/* Reward cards after a boss, over the paused game. */
+.cards-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 16px;
+  background: rgba(15, 28, 38, 0.7);
+  color: #fff;
+}
+
+.cards-overlay.hidden {
+  display: none;
+}
+
+.cards-heading {
+  margin: 0;
+  font-size: 24px;
+  text-align: center;
+}
+
+.cards-hint {
+  margin: 0;
+  font-size: 15px;
+  opacity: 0.8;
+}
+
+.cards-row {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+}
+
+.card {
+  width: min(150px, calc((var(--game-w) - 60px) / 2));
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 12px;
+  border: 3px solid #ffcf5c;
+  border-radius: 18px;
+  background: linear-gradient(#fdf7e8, #f1e2bd);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  animation: card-in 0.35s ease-out both;
+}
+
+.card:active {
+  transform: scale(0.96);
+}
+
+.card:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+.card-title {
+  font-size: 19px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.card-text {
+  font-size: 15px;
+  text-align: center;
+  color: #5b4a2c;
+}
+
+@keyframes card-in {
+  from {
+    transform: translateY(40px) scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* The boss marker is red, so it never reads as the way home. */
+.edge-marker.boss {
+  background: rgba(150, 30, 30, 0.85);
 }
 
 .pill {
@@ -295,12 +513,16 @@ body {
   text-align: center;
 }
 
+.float-text.loss {
+  color: #ff8a7a;
+}
+
 .float-note {
   font-size: 15px;
   color: #ffb4a8;
 }
 
-.home-marker {
+.edge-marker {
   position: fixed;
   left: 0;
   top: 0;
@@ -316,18 +538,18 @@ body {
   pointer-events: none;
 }
 
-.home-marker.hidden {
+.edge-marker.hidden {
   display: none;
 }
 
-.home-marker svg {
+.edge-marker svg {
   width: 26px;
   height: 26px;
   fill: #fff;
 }
 
-/* A small triangle that circles the badge and points toward home. */
-.home-arrow {
+/* A small triangle that circles the badge and points toward the target. */
+.edge-arrow {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -367,4 +589,142 @@ body {
   margin: -24px 0 0 -24px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.9);
+}
+
+/* Test panel: a small wrench in the bottom-left corner, opened by holding it for a second.
+   Everything from here to the end of the file belongs to it (see src/game/admin.ts to remove it). */
+.admin-button {
+  position: fixed;
+  left: calc(50% - var(--game-w) / 2 + 16px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
+  z-index: 4;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  background: rgba(31, 58, 77, 0.45);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.admin-button > svg:first-child {
+  width: 20px;
+  height: 20px;
+  fill: rgba(255, 255, 255, 0.85);
+}
+
+.admin-ring {
+  position: absolute;
+  inset: -8px;
+  width: 60px;
+  height: 60px;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+
+.admin-ring circle {
+  fill: none;
+  stroke: #ffcf5c;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.15s ease-out;
+}
+
+.admin-button.holding .admin-ring circle {
+  stroke-dashoffset: 0 !important;
+  transition: stroke-dashoffset 1s linear;
+}
+
+.admin-head {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.admin-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-top h2 {
+  margin: 0;
+  flex: 1;
+  font-size: 20px;
+}
+
+.admin-version {
+  font-size: 13px;
+  font-weight: 700;
+  color: #5b6f7c;
+}
+
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-tab {
+  position: relative;
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 11px;
+  background: #dce5ea;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-tab.active {
+  background: var(--ink);
+  color: #fff;
+}
+
+/* A dot on a tab that holds something new in this version. */
+.admin-tab.has-new::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e0453a;
+}
+
+.admin-badge {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #e5ecf0;
+  color: #5b6f7c;
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.admin-badge.new {
+  background: #e0453a;
+  color: #fff;
+}
+
+.admin-go.off {
+  background: #8fa1ad;
+}
+
+.admin-info .menu-text {
+  font-size: 14px;
+  color: #5b6f7c;
+}
+
+.admin-value {
+  font-weight: 700;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }

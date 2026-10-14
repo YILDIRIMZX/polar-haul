@@ -1,0 +1,189 @@
+// TEST PANEL: everything it can do lives in this file and in ui/AdminPanel.ts.
+//
+// To switch it off, set ADMIN_PANEL to false: the button and the panel are then never built.
+// To remove it for good:
+//   1. delete this file and src/ui/AdminPanel.ts
+//   2. in src/game/Game.ts delete every line marked `// test panel` and the adminTabs() method
+//   3. in src/style.css delete the block that starts with "Test panel" (it ends at the end of the file)
+//   4. optionally delete the methods whose comment starts with "Test panel:" (BossFight, Storm, Shop, GreatFurnace)
+export const ADMIN_PANEL = true
+
+import { TRIPLE_STRIKE, type CardDef } from '../config/cards.ts'
+import type { Player } from '../entities/Player.ts'
+import type { BossFight } from '../systems/BossFight.ts'
+import type { GreatFurnace } from '../systems/GreatFurnace.ts'
+import type { HuntLevel } from '../systems/HuntLevel.ts'
+import type { Progress } from '../systems/progression.ts'
+import type { Shop } from '../systems/Shop.ts'
+import type { Storm } from '../systems/Storm.ts'
+import type { Wallet } from '../systems/Wallet.ts'
+import type { AdminTab } from '../ui/AdminPanel.ts'
+import type { Stats } from './Stats.ts'
+
+// Switches that bend the rules while testing. Game reads them every step.
+export interface Cheats {
+  invincible: boolean
+  oneHit: boolean
+  fast: boolean // the world runs three times faster
+}
+
+// What the test panel may reach inside the game.
+export interface AdminContext {
+  stats: Stats
+  progress: Progress
+  wallet: Wallet
+  hunt: HuntLevel
+  bossFight: BossFight
+  storm: Storm
+  shop: Shop
+  greatFurnace: GreatFurnace
+  player: Player
+  cheats: Cheats
+  countKill: () => void // one kill toward the hunt level, without dropping meat
+  offerCards: () => boolean // the mini boss card screen; false when pickCards gave no cards
+  takeCard: (card: CardDef) => void
+  announce: (text: string) => void
+}
+
+// The panel's tabs. Every new version adds its features here, marked with the version in `since`,
+// so each update can be tested without playing up to it.
+export function adminTabs(g: AdminContext): AdminTab[] {
+  const huntUp = (): void => {
+    for (let n = g.hunt.needed - g.hunt.kills; n > 0; n--) g.countKill()
+  }
+  const huntTo = (level: number): void => {
+    while (g.hunt.level < level) huntUp()
+  }
+  const baseTo = (level: number): void => {
+    while (g.progress.baseLevel < level) {
+      const before = g.progress.baseLevel
+      g.greatFurnace.skipLevel()
+      if (g.progress.baseLevel === before) break // already at the top level
+    }
+  }
+
+  return [
+    {
+      title: 'Atla',
+      actions: [
+        {
+          label: 'İlk mini boss',
+          hint: 'Av 2\'ye çıkar, Dev Ayı hemen gelir, +$300',
+          since: '0.6.0',
+          closes: true,
+          run: () => {
+            huntTo(2)
+            g.wallet.add(300)
+            g.bossFight.summon('mini')
+          },
+        },
+        {
+          label: 'Yaşlı Ayı',
+          hint: 'Av 3\'e çıkar, ilk ana boss hemen gelir, +$600',
+          since: '0.6.0',
+          closes: true,
+          run: () => {
+            huntTo(3)
+            g.wallet.add(600)
+            g.bossFight.summon('elder')
+          },
+        },
+        {
+          label: 'Üs 3 eşiği',
+          hint: 'Üs 2, 25 müşteri, 1 boss, +$1500. Ocak yuvası pedini al, sonra Büyük Ocak',
+          since: '0.6.0',
+          closes: true,
+          run: () => {
+            baseTo(2)
+            g.progress.customersServed = Math.max(g.progress.customersServed, 25)
+            g.progress.bossesDefeated = Math.max(g.progress.bossesDefeated, 1)
+            g.wallet.add(1500)
+          },
+        },
+        {
+          label: 'Acil müşteriler',
+          hint: 'Üs 3\'e çıkar ve bir acil müşteri gönderir',
+          since: '0.6.0',
+          closes: true,
+          run: () => {
+            baseTo(3)
+            g.shop.sendUrgent(g.stats, g.progress)
+          },
+        },
+        {
+          label: 'Kar fırtınası',
+          hint: '60 saniyelik fırtınayı başlatır',
+          since: '0.6.0',
+          closes: true,
+          run: () => g.storm.start(),
+        },
+      ],
+    },
+    {
+      title: 'Av ve boss',
+      actions: [
+        { label: 'Av seviyesi +1', hint: 'Eksik avları sayar; o seviyenin bossu sıraya girer', since: '0.6.0', run: huntUp },
+        { label: 'Dev Ayı çağır', hint: 'Mini boss sıranın başına geçer ve hemen gelir', since: '0.6.0', closes: true, run: () => g.bossFight.summon('mini') },
+        { label: 'Yaşlı Ayı çağır', hint: 'Ana boss sıranın başına geçer ve hemen gelir', since: '0.6.0', closes: true, run: () => g.bossFight.summon('elder') },
+        { label: 'Bossu yen', hint: 'Savaştaki boss ölür, ödülü gelir', since: '0.6.0', closes: true, run: () => g.bossFight.win() },
+        { label: 'Süreyi 5 sn yap', hint: 'Boss sayacı bitmek üzere: fırtınayı görmek için', since: '0.6.0', closes: true, run: () => g.bossFight.expireSoon(5) },
+        {
+          label: 'Kart ekranı',
+          hint: 'Senin pickCards fonksiyonunu çağırır ve sonucu gösterir',
+          since: '0.6.0',
+          closes: true,
+          run: () => {
+            if (!g.offerCards()) g.announce('pickCards boş liste döndürdü')
+          },
+        },
+        { label: 'Üçlü Vuruş ver', hint: 'Yaşlı Ayı\'nın ödülünü verir (+2 hedef)', since: '0.6.0', run: () => g.takeCard(TRIPLE_STRIKE) },
+        { label: 'Fırtınayı bitir', hint: 'Kar fırtınası hemen diner', since: '0.6.0', run: () => g.storm.stop() },
+      ],
+    },
+    {
+      title: 'Üs',
+      actions: [
+        { label: 'Üs seviyesi +1', hint: 'Bedava ve koşulsuz; çit büyür, yeni pedler açılır', since: '0.6.0', run: () => baseTo(g.progress.baseLevel + 1) },
+        { label: 'Müşteri sayısı +10', hint: 'Hizmet edilen müşteri sayacına ekler', since: '0.6.0', run: () => (g.progress.customersServed += 10) },
+        { label: 'Acil müşteri gönder', hint: 'Sıra doluysa en arkadaki yer açar', since: '0.6.0', closes: true, run: () => g.shop.sendUrgent(g.stats, g.progress) },
+      ],
+    },
+    {
+      title: 'Para',
+      actions: [
+        { label: '+$100', hint: 'Cüzdana ekler', since: '0.6.0', run: () => g.wallet.add(100) },
+        { label: '+$1000', hint: 'Cüzdana ekler', since: '0.6.0', run: () => g.wallet.add(1000) },
+        { label: '+$10000', hint: 'Cüzdana ekler', since: '0.6.0', run: () => g.wallet.add(10000) },
+      ],
+    },
+    {
+      title: 'Hileler',
+      actions: [
+        { label: 'Ölümsüz', hint: 'Can hiç azalmaz', since: '0.6.0', isOn: () => g.cheats.invincible, run: () => (g.cheats.invincible = !g.cheats.invincible) },
+        { label: 'Tek vuruş', hint: 'Her vuruş öldürür, bosslar dahil', since: '0.6.0', isOn: () => g.cheats.oneHit, run: () => (g.cheats.oneHit = !g.cheats.oneHit) },
+        { label: 'Oyun hızı ×3', hint: 'Her şey üç kat hızlı akar', since: '0.6.0', isOn: () => g.cheats.fast, run: () => (g.cheats.fast = !g.cheats.fast) },
+      ],
+    },
+    {
+      title: 'Durum',
+      info: () => {
+        const s = g.stats
+        const view = g.bossFight.view
+        return [
+          ['Av seviyesi', `${g.hunt.level} (${g.hunt.kills}/${g.hunt.needed})`],
+          ['Ayı: sayı / can / hasar', `${g.hunt.bearCount} / ${g.hunt.bearHp} / ${g.hunt.bearDamage.toFixed(1)}`],
+          ['Boss', view ? `${view.name}, ${Math.ceil(view.timeLeft)} sn` : 'yok'],
+          ['Yenilen boss (ana / mini)', `${g.progress.bossesDefeated} / ${g.progress.miniBossesDefeated}`],
+          ['Kar fırtınası', g.storm.active ? `${Math.ceil(g.storm.remaining)} sn` : 'yok'],
+          ['Üs seviyesi', String(g.progress.baseLevel)],
+          ['Hizmet edilen müşteri', String(g.progress.customersServed)],
+          ['Toplam kazanç', `$${Math.floor(g.progress.totalEarned)}`],
+          ['Hedef / hasar', `${s.count('attackTargets')} / ${s.get('attackDamage').toFixed(1)}`],
+          ['Vurma alanı / bekleme', `${s.get('attackRange').toFixed(2)} / ${s.get('attackCooldown').toFixed(2)} sn`],
+          ['Can / hız', `${Math.round(g.player.maxHp)} / ${s.get('moveSpeed').toFixed(2)}`],
+          ['Et fiyatı / pişirme', `$${s.get('meatPrice').toFixed(2)} / ${s.get('cookSeconds').toFixed(2)} sn`],
+        ]
+      },
+    },
+  ]
+}

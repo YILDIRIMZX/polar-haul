@@ -4,7 +4,7 @@ import type { Stats } from '../game/Stats.ts'
 import type { Progress } from '../systems/progression.ts'
 import type { Wallet } from '../systems/Wallet.ts'
 
-// The character upgrades, opened from the button at the top of the screen. The game pauses while it is open.
+// The character upgrades, opened from the button in the bottom-right corner. The game pauses while it is open.
 export class CharacterMenu {
   isOpen = false
   private levels = new Map<string, number>()
@@ -14,13 +14,11 @@ export class CharacterMenu {
   private stats: Stats
   private wallet: Wallet
   private progress: Progress
-  private onToggle: (open: boolean) => void
 
-  constructor(stats: Stats, wallet: Wallet, progress: Progress, onToggle: (open: boolean) => void) {
+  constructor(stats: Stats, wallet: Wallet, progress: Progress) {
     this.stats = stats
     this.wallet = wallet
     this.progress = progress
-    this.onToggle = onToggle
 
     this.overlay.className = 'menu-overlay hidden'
     const panel = document.createElement('div')
@@ -64,13 +62,11 @@ export class CharacterMenu {
     this.isOpen = true
     this.overlay.classList.remove('hidden')
     this.render()
-    this.onToggle(true)
   }
 
   close(): void {
     this.isOpen = false
     this.overlay.classList.add('hidden')
-    this.onToggle(false)
   }
 
   private buy(def: CharacterUpgradeDef): void {

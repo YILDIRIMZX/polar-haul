@@ -6,24 +6,23 @@ import { Bear } from '../entities/Bear.ts'
 import type { Player } from '../entities/Player.ts'
 import { clamp, flatDistance } from '../game/math.ts'
 import { clampToWorld, getBaseRadius, keepOutsideBase } from '../world/bounds.ts'
+import type { HuntLevel } from './HuntLevel.ts'
 
 const toTarget = new Vector3()
 
 // Owns every bear: wandering, chasing the player after being hit, attacking, dying and respawning.
+// The hunt level decides how many there are and how tough they are.
 export class BearHerd {
   readonly bears: Bear[] = []
+  private scene: Scene
+  private hunt: HuntLevel
   private onKilled: (at: Vector3) => void
 
-  constructor(scene: Scene, onKilled: (at: Vector3) => void) {
+  constructor(scene: Scene, hunt: HuntLevel, onKilled: (at: Vector3) => void) {
+    this.scene = scene
+    this.hunt = hunt
     this.onKilled = onKilled
-    for (let i = 0; i < BEAR.count; i++) {
-      const bear = new Bear()
-      const p = randomFieldPoint()
-      bear.spawn(p.x, p.z)
-      bear.facing = Math.random() * Math.PI * 2
-      scene.add(bear.root, bear.hpBar.root)
-      this.bears.push(bear)
-    }
+    this.grow()
   }
 
   hit(bear: Bear, damage: number): void {
@@ -34,6 +33,7 @@ export class BearHerd {
   }
 
   update(dt: number, player: Player, camera: Camera): void {
+    this.grow()
     for (const bear of this.bears) {
       if (bear.dead) this.respawnWhenReady(bear, dt, player)
       else if (bear.aggro > 0) this.chase(bear, dt, player)
@@ -45,7 +45,33 @@ export class BearHerd {
       keepOutsideBase(bear.position, BEAR.radius)
       clampToWorld(bear.position)
       bear.updateLook(dt)
-      bear.hpBar.update(bear.hp / BEAR.maxHp, bear.position, 2.4, camera)
+      bear.hpBar.update(bear.hp / bear.maxHp, bear.position, 2.4, camera)
+    }
+  }
+
+  // Shoves bears out of a circle, so they never stand inside the boss.
+  pushAway(center: Vector3, radius: number): void {
+    for (const bear of this.bears) {
+      if (bear.dead) continue
+      const dx = bear.position.x - center.x
+      const dz = bear.position.z - center.z
+      const d = Math.hypot(dx, dz)
+      const min = radius + BEAR.radius
+      if (d >= min || d < 0.0001) continue
+      bear.position.x = center.x + (dx / d) * min
+      bear.position.z = center.z + (dz / d) * min
+    }
+  }
+
+  // New bears join the herd when the hunt level rises. They come from the far side of the field.
+  private grow(): void {
+    while (this.bears.length < this.hunt.bearCount) {
+      const bear = new Bear()
+      const p = randomFieldPoint()
+      bear.spawn(p.x, p.z, this.hunt.bearHp)
+      bear.facing = Math.random() * Math.PI * 2
+      this.scene.add(bear.root, bear.hpBar.root)
+      this.bears.push(bear)
     }
   }
 
@@ -57,7 +83,8 @@ export class BearHerd {
     for (let tries = 0; tries < 10 && flatDistance(player.position, p) < BEAR.spawnMinDistance; tries++) {
       p = randomFieldPoint()
     }
-    bear.spawn(p.x, p.z)
+    // A respawned bear has the health of the current hunt level.
+    bear.spawn(p.x, p.z, this.hunt.bearHp)
   }
 
   private chase(bear: Bear, dt: number, player: Player): void {
@@ -73,7 +100,7 @@ export class BearHerd {
     }
     if (bear.attackTimer <= 0) {
       bear.attackTimer = BEAR.attackCooldown
-      player.damage(BEAR.attackDamage)
+      player.damage(this.hunt.bearDamage)
       audio.play('hurt')
     }
   }
@@ -98,7 +125,7 @@ export class BearHerd {
     bear.position.addScaledVector(toTarget.divideScalar(dist), BEAR.wanderSpeed * dt)
   }
 
-  // Pushes overlapping bears apart. 28 bears means ~400 pairs per frame, which is cheap.
+  // Pushes overlapping bears apart. 50 bears means ~1200 pairs per frame, which is still cheap.
   private separate(): void {
     const min = BEAR.radius * 2
     for (let i = 0; i < this.bears.length; i++) {
@@ -127,6 +154,6 @@ function randomFieldPoint(): { x: number; z: number } {
 }
 
 // The field's edge nearest the base moves back as the fence grows, so bears never roam inside it.
-function fieldMaxZ(): number {
+export function fieldMaxZ(): number {
   return Math.min(LAYOUT.bearField.maxZ, -(getBaseRadius() + 3))
 }

@@ -1,5 +1,5 @@
 import type { Stats } from '../game/Stats.ts'
-import { isSweepUnlocked, type Progress } from '../systems/progression.ts'
+import type { Progress } from '../systems/progression.ts'
 import type { PadPricing } from '../systems/UnlockPad.ts'
 import { PAD } from './balance.ts'
 
@@ -44,6 +44,7 @@ export function padPricing(def: UpgradeBase): PadPricing {
 
 const always = (): boolean => true
 
+// Hitting several bears at once is not sold here: it comes from the bosses (Triple Strike, then cards).
 export const CHARACTER_UPGRADES: CharacterUpgradeDef[] = [
   {
     id: 'capacity',
@@ -94,18 +95,6 @@ export const CHARACTER_UPGRADES: CharacterUpgradeDef[] = [
     maxLevel: 5,
     apply: (s) => s.add('pickupRadius', 0.4),
     unlocked: always,
-  },
-  {
-    // Moves to the first main boss in 0.7.0; until then it is bought here once unlocked.
-    id: 'sweep',
-    title: 'Geniş savuruş',
-    reward: (level) => (level === 0 ? 'Aynı anda 3 ayı' : '+1 ayı'),
-    baseCost: 120,
-    costGrowth: 1.6,
-    maxLevel: 4,
-    apply: (s, level) => s.add('attackTargets', level === 1 ? 2 : 1),
-    unlocked: isSweepUnlocked,
-    lockedText: '$100 kazan ve 20 ayı avla',
   },
 ]
 

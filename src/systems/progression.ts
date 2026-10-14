@@ -6,15 +6,8 @@ export interface Progress {
   customersServed: number // customers who got their whole order and paid
   baseLevel: number // the Great Furnace's level, 1 at the start
   furnaceSlots: number // how many pieces the furnace cooks at once, 1 at the start
-  bossesDefeated: number // main bosses beaten; bosses arrive in 0.7.0, until then this stays 0
-  miniBossesDefeated: number // mini bosses beaten; also 0 until 0.7.0
-}
-
-// Decides when the Wide sweep pad appears in the base. Once it returns true, the pad stays for good.
-export function isSweepUnlocked(progress: Progress): boolean {
-  if (progress.totalEarned >= 100 && progress.bearsKilled >= 20){return true}
-  else {return false}
-
+  bossesDefeated: number // main bosses beaten
+  miniBossesDefeated: number // mini bosses beaten
 }
 
 // What a base level needs besides its price, and how far along the player is.

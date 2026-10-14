@@ -11,11 +11,21 @@ const earGeo = new BoxGeometry(0.22, 0.22, 0.12)
 const noseGeo = new BoxGeometry(0.3, 0.22, 0.12)
 const noseMat = new MeshLambertMaterial({ color: COLORS.bearNose })
 
-// Placeholder look until a real model arrives in 0.4.0. The head points along +z.
+// A boss is the same bear, only bigger and in another colour.
+export interface BearLook {
+  scale: number
+  color: number
+}
+
+const NORMAL: BearLook = { scale: 1, color: COLORS.bear }
+
+// Placeholder look until real models arrive in 0.10.0. The head points along +z.
 export class Bear {
   readonly root = new Group()
-  readonly hpBar = new HpBar(COLORS.hpBear, 1.6)
+  readonly hpBar: HpBar
   readonly goal = new Vector3()
+  readonly scale: number
+  maxHp: number = BEAR.maxHp // set at every spawn, because it grows with the hunt level
   hp: number = BEAR.maxHp
   dead = false
   aggro = 0
@@ -24,9 +34,12 @@ export class Bear {
   respawnTimer = 0
   facing = 0
   private flash = 0
-  private material = new MeshLambertMaterial({ color: COLORS.bear })
+  private material: MeshLambertMaterial
 
-  constructor() {
+  constructor(look: BearLook = NORMAL) {
+    this.scale = look.scale
+    this.material = new MeshLambertMaterial({ color: look.color })
+    this.hpBar = new HpBar(COLORS.hpBear, 1.6 * look.scale)
     const body = new Mesh(bodyGeo, this.material)
     body.position.y = 0.8
     const head = new Mesh(headGeo, this.material)
@@ -40,6 +53,11 @@ export class Bear {
     body.castShadow = true
     head.castShadow = true
     this.root.add(body, head, nose, earL, earR)
+    this.root.scale.setScalar(look.scale)
+  }
+
+  get radius(): number {
+    return BEAR.radius * this.scale
   }
 
   get position(): Vector3 {
@@ -59,9 +77,10 @@ export class Bear {
     return true
   }
 
-  spawn(x: number, z: number): void {
+  spawn(x: number, z: number, maxHp: number): void {
     this.dead = false
-    this.hp = BEAR.maxHp
+    this.maxHp = maxHp
+    this.hp = maxHp
     this.aggro = 0
     this.attackTimer = 0
     this.goalTimer = 0

@@ -60,11 +60,12 @@ export class Shop {
     })
   }
 
-  update(dt: number, player: Player, stack: Stack, stats: Stats, wallet: Wallet, progress: Progress): void {
+  // `patienceRate` is 1 normally; the blizzard makes customers lose patience faster.
+  update(dt: number, player: Player, stack: Stack, stats: Stats, wallet: Wallet, progress: Progress, patienceRate: number): void {
     this.playerChest.set(player.position.x, 1.2, player.position.z)
     const atService = flatDistance(player.position, LAYOUT.serviceSpot) <= SHOP.serviceRadius
     this.spawnCustomers(dt, stats, progress)
-    this.moveQueue(dt)
+    this.moveQueue(dt * patienceRate, dt)
     this.dropOnCounter(dt, atService, stack, stats)
     this.serve(dt, atService, stats)
     this.finishOrder(stats, progress)
@@ -75,28 +76,57 @@ export class Shop {
     this.flights.update(dt)
   }
 
+  // Test panel: an urgent customer joins at once; when the queue is full the last one in it makes room.
+  sendUrgent(stats: Stats, progress: Progress): void {
+    if (this.queue.length >= stats.count('queueLength')) {
+      const last = this.queue.pop()
+      last?.root.removeFromParent()
+      last?.dispose()
+    }
+    this.addCustomer(stats, progress, true)
+  }
+
   private spawnCustomers(dt: number, stats: Stats, progress: Progress): void {
     this.spawnTimer -= dt
     if (this.spawnTimer > 0 || this.queue.length >= stats.count('queueLength')) return
-    const customer = new Customer(orderSize(progress, Math.random), stats.get('patienceSeconds'))
+    // From base level 3, now and then an urgent customer: pays far more, but leaves unpaid if kept waiting.
+    const urgent = progress.baseLevel >= SHOP.urgentFromBaseLevel && Math.random() < SHOP.urgentChance
+    this.addCustomer(stats, progress, urgent)
+    this.spawnTimer = stats.get('customerInterval')
+  }
+
+  private addCustomer(stats: Stats, progress: Progress, urgent: boolean): void {
+    const patience = stats.get('patienceSeconds') * (urgent ? SHOP.urgentPatience : 1)
+    const customer = new Customer(orderSize(progress, Math.random), patience, urgent)
     customer.position.set(LAYOUT.customerSpawn.x, 0, LAYOUT.customerSpawn.z)
     customer.slot = this.queue.length
     this.queue.push(customer)
     this.scene.add(customer.root)
-    this.spawnTimer = stats.get('customerInterval')
     audio.play('bell')
   }
 
-  private moveQueue(dt: number): void {
-    for (const c of this.queue) {
+  // `patienceDt` is the time that counts against patience; it runs faster than `dt` in a blizzard.
+  private moveQueue(patienceDt: number, dt: number): void {
+    for (const c of [...this.queue]) {
       const arrived = c.walkTo(this.queuePosition(c.slot), SHOP.walkSpeed, dt)
       if (!arrived) continue
       c.state = 'waiting'
       c.faceCounter(dt)
       const wasPatient = !c.cold
-      c.patience = Math.max(0, c.patience - dt)
-      if (wasPatient && c.cold) audio.play('angry')
+      c.patience = Math.max(0, c.patience - patienceDt)
+      if (!wasPatient || !c.cold) continue
+      audio.play('angry')
+      if (c.urgent) this.walkOut(c)
     }
+  }
+
+  // An urgent customer whose patience ran out leaves without paying; whatever they already got is lost.
+  private walkOut(c: Customer): void {
+    floatingText.spawn('Gitti!', c.position.clone().setY(2.6), 'ödemeden', 'loss')
+    c.state = 'leaving'
+    this.queue.splice(this.queue.indexOf(c), 1)
+    this.queue.forEach((q, i) => (q.slot = i))
+    this.leaving.push(c)
   }
 
   // The cooked meat the player carries moves onto the counter while there is room.
@@ -144,7 +174,7 @@ export class Shop {
     if (!front || front.got < front.want) return
     const price = stats.get('meatPrice')
     const tip = front.cold ? 0 : Math.max(0, tipFor(front.want, price, front.patience / front.patienceMax))
-    const paid = front.want * price + tip
+    const paid = front.want * price * (front.urgent ? SHOP.urgentPay : 1) + tip
     this.till += paid
     this.layoutCash()
     progress.customersServed++

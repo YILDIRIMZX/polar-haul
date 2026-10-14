@@ -164,6 +164,32 @@ Seviye atlamak için hem **para** hem **ön koşul** gerekir. Ön koşullar dön
 | **5** | $5.000 | Ocakta 3 yuva | **2. ana boss** (Buzul Ayısı) | **İkinci ocak**, 3. avcı, VIP müşteriler · işçi sınırı 8 | 20 |
 | **6** | $12.000 | 150 müşteri | 4 mini boss | 4. avcı, **final boss**'un yolu açılır | 22 |
 
+### Üs seviyesi neyi değiştirir: inşa alanları
+
+Üs seviyesi bir şeyi doğrudan vermez; **inşa edilecek bir yer hazırlar.** Oyuncu ödüle kendi parasıyla ulaşır ve üssün gözünün önünde değiştiğini görür:
+
+```
+Büyük Ocak pedi alınır
+   ↓
+1. ÇEVRE DEĞİŞİR       çit açılır, kar temizlenir, ağaçlar kesilir, Büyük Ocak büyür
+   ↓
+2. İNŞA ALANI BELİRİR  köşelerinde kazıklar, etrafında ip, önünde binanın adı ve fiyatı yazan bir ped
+   ↓
+3. OYUNCU ÖDER         iskele yükselir, çekiç sesleri, toz, bina "pop" diye ortaya çıkar
+   ↓
+4. BİNA ÇALIŞIR        yanında işçi alım pedi ve yükseltme pedleri belirir
+```
+
+| Üs | Çevrede ne değişir | İnşa alanı | Kurulunca ne açılır |
+|---|---|---|---|
+| **2** | Çit açılır. Ön kapının yanında kar temizlenir, kazıklı bir alan belirir | **Kapı Deposu** | Yanında **Taşıyıcı** alım pedi |
+| **3** | Büyük Ocak bir kat yükselir, alevleri büyür. Batıda ağaçlar kesilip bir alan açılır | **Avcı Kulübesi** | **Avcı** alım pedi; Garson ve Kasiyer pedleri kendi istasyonlarında |
+| **4** | Ahşap çit **kalın kütük çite** dönüşür. Ormanda bir **geçit** açılır (ikinci av bölgesi) | **Konveyör hattı**, **Tezgâh bandı** | Otomatik taşıma |
+| **5** | Doğuda yeni bir alan, müşteri tarafında bekleme çadırları | **İkinci Ocak**, **VIP Çadırı** | İkinci üretim hattı, VIP müşteriler |
+| **6** | Çit **taş duvara** dönüşür, kuzeyde büyük bir kapı | **Arena Kapısı** | Final boss: Ayı Kralı |
+
+Büyük Ocak her seviyede görünür şekilde büyür; üssün ortasındaki tek bina bile oyuncunun ne kadar ilerlediğini gösterir.
+
 Büyük Ocak'ın seviye pedi hemen yanında durur. Ön koşul eksikse ped gri görünür ve **sadece eksik olan** koşulu yazar ("Müşteri 7/25", "Ocak yuvası 1/2", "Boss: Yaşlı Ayı"). Ped dar olduğu için iki koşul birden yazılmaz; oyuncu bir seferde tek hedefe odaklanır. Kural `baseRequirement` fonksiyonunda (`src/systems/progression.ts`).
 
 ---
@@ -221,7 +247,7 @@ Bosslar **av seviyesine bağlı** olarak kendiliğinden gelir. Ekranda "Dev Ayı
 | **10** | **Final: Ayı Kralı** (Üs 6 gerekli) | 2 benzersiz yetenekten 1, ilk harita tamamlanır |
 
 ### Ana boss: oyun tarzını değiştiren yetenekler
-**İlk ana boss her zaman Üçlü Vuruş'u verir:** karakter artık aynı anda 3 ayıya vurur. Bu, oyunun ilk büyük dönüm noktası. Bu sistem gelince şu anki "Geniş Savuruş" pedi kaldırılacak.
+**İlk ana boss her zaman Üçlü Vuruş'u verir:** karakter artık aynı anda 3 ayıya vurur. Bu, oyunun ilk büyük dönüm noktası. Eski "Geniş Savuruş" satırı bu yüzden 0.6.0'da karakter menüsünden kaldırıldı.
 
 Sonraki ana bosslar 2 benzersiz yetenek sunar. Oyuncu birini seçer, seçilmeyen havuza geri döner:
 
@@ -293,9 +319,9 @@ Kural: ilk dakikalarda her 30–60 saniyede bir yeni şey açılmalı. Sonra bu 
 | 0.4.0 ✅ | Üretim zinciri (elle): ocak, tezgâh, müşteriler, bahşiş, kasa |
 | 0.4.1 ✅ | Pişmiş eti elle taşıma, sesler, uçan ödeme yazıları, kızgın müşteri, ped beklemesi |
 | 0.5.0 ✅ | **Yükseltme düzeni ve üs:** Karakter menüsü, istasyon pedlerinin yanlarına taşınması (sadece sıradaki seviye), inşa pedleri, **Büyük Ocak** ve üs seviyeleri 1–3, genişleyen çit |
-| 0.6.0 | **İşçiler:** Kapı Deposu ve Taşıyıcı, Garson, Kasiyer, **Avcı Kulübesi ve avcılar** |
-| 0.7.0 | **Av seviyesi ve bosslar:** mini boss ve kart ekranı, 1. ana boss ve Üçlü Vuruş (Geniş Savuruş pedi kalkar), acil müşteriler |
-| 0.8.0 | Konveyörler, üs seviyeleri 4–6, 2. ana boss ve final, benzersiz yetenekler, ikinci av bölgesi, ikinci ocak, VIP müşteriler |
+| **0.6.0** | **Av seviyesi ve bosslar:** sürü kendiliğinden büyür, mini boss ve kart ekranı, 1. ana boss ve Üçlü Vuruş (Geniş Savuruş satırı kalkar), Kar Fırtınası cezası, acil müşteriler. Üs 3 ulaşılabilir hale gelir. |
+| 0.7.0 | **İnşa alanları ve işçiler:** üs seviyesinde çevre değişimi ve inşaat animasyonu, Kapı Deposu ve Taşıyıcı (Üs 2), Avcı Kulübesi ve avcılar, Garson, Kasiyer (Üs 3) |
+| 0.8.0 | Konveyör hattı ve tezgâh bandı, üs seviyeleri 4–6 ve çevre değişimleri, 2. ana boss ve final, benzersiz yetenekler, ikinci av bölgesi, ikinci ocak, VIP müşteriler |
 | 0.9.0 | Kayıt sistemi, ekonomi simülasyonu ve denge ayarı |
 | 0.10.0 | Görseller ve animasyonlar: modeller, efektler, kayıtlı (CC0) organik sesler, müzik |
 | 1.0.0 | İlk harita baştan sona, iPhone'da sorunsuz |

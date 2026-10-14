@@ -16,9 +16,11 @@ class FloatingTexts {
 
   // `note` is a smaller second line under the main text ("bahşiş yok" under "+$12"). Both lines live in
   // one element, so they always move together and can never cover each other.
-  spawn(text: string, at: Vector3, note?: string): void {
+  // `tone` 'loss' shows the text in red, for money that got away.
+  spawn(text: string, at: Vector3, note?: string, tone?: 'loss'): void {
     const el = document.createElement('div')
     el.className = 'float-text'
+    if (tone) el.classList.add(tone)
     const main = document.createElement('div')
     main.textContent = text
     el.append(main)

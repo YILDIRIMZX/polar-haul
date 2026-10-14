@@ -87,6 +87,13 @@ export class GreatFurnace {
     this.pad.update(dt, player, wallet)
   }
 
+  // Test panel: raises the base one level at once, free and without its requirement.
+  skipLevel(): void {
+    if (this.progress.baseLevel >= BASE_LEVELS[BASE_LEVELS.length - 1].level) return
+    this.pad.level++
+    this.raiseTo(this.pad.level + 1)
+  }
+
   private raiseTo(level: number): void {
     const info = BASE_LEVELS.find((l) => l.level === level)
     if (!info) return

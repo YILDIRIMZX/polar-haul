@@ -46,11 +46,12 @@ export class Furnace {
     this.body = this.build()
   }
 
-  update(dt: number, player: Player, stack: Stack, stats: Stats, camera: Camera, time: number): void {
+  // `cookRate` is 1 normally; the blizzard slows the fire down.
+  update(dt: number, player: Player, stack: Stack, stats: Stats, camera: Camera, time: number, cookRate: number): void {
     const inZone = flatDistance(player.position, LAYOUT.furnaceZone) <= FURNACE.zoneRadius
     this.unload(dt, inZone, stack, stats)
     this.pickUp(dt, inZone, stack)
-    this.cook(dt, stats)
+    this.cook(dt * cookRate, stats)
 
     const busy = this.slots.some((s) => s.cooking && s.t < 1)
     this.body.position.x = LAYOUT.furnace.x + (busy ? Math.sin(time * 50) * 0.025 : 0)
