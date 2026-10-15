@@ -4,7 +4,10 @@ const areaMat = new MeshBasicMaterial({ color: 0xe0453a, transparent: true, opac
 const fillMat = new MeshBasicMaterial({ color: 0xe0453a, transparent: true, opacity: 0.45, depthWrite: false })
 const clawMat = new MeshBasicMaterial({ color: 0x3a2a24, transparent: true, opacity: 0.55, depthWrite: false })
 
-export type WarningShape = { kind: 'lane'; length: number; width: number } | { kind: 'fan'; radius: number; angle: number }
+export type WarningShape =
+  | { kind: 'lane'; length: number; width: number }
+  | { kind: 'fan'; radius: number; angle: number }
+  | { kind: 'circle'; radius: number }
 
 // A red area on the ground that shows where a boss's special move will land. It fills up from the boss
 // outward while the boss winds up; when it is full, the move comes. Built pointing along +z, so turning
@@ -25,9 +28,11 @@ export class GroundWarning {
     scene.add(this.root)
   }
 
-  show(x: number, z: number, facing: number): void {
+  // `size` stretches the whole shape, for a circle that has to fit bosses of different sizes.
+  show(x: number, z: number, facing: number, size = 1): void {
     this.root.position.set(x, 0.04, z)
     this.root.rotation.y = facing
+    this.root.scale.setScalar(size)
     this.root.visible = true
     this.setProgress(0)
   }
@@ -41,6 +46,11 @@ export class GroundWarning {
   hide(): void {
     this.root.visible = false
   }
+
+  // For warnings made for a single throw.
+  dispose(): void {
+    this.root.removeFromParent()
+  }
 }
 
 function shapeGeometry(shape: WarningShape): BufferGeometry {
@@ -48,6 +58,7 @@ function shapeGeometry(shape: WarningShape): BufferGeometry {
     // A strip that starts at the boss and runs `length` ahead of it.
     return new PlaneGeometry(shape.width, shape.length).rotateX(-Math.PI / 2).translate(0, 0, shape.length / 2)
   }
+  if (shape.kind === 'circle') return new CircleGeometry(shape.radius, 40).rotateX(-Math.PI / 2)
   // A slice of a circle centred on +z. After rotateX(-90°) the circle's -90° direction points along +z.
   return new CircleGeometry(shape.radius, 28, -Math.PI / 2 - shape.angle / 2, shape.angle).rotateX(-Math.PI / 2)
 }

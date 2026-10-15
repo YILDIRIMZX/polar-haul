@@ -3,6 +3,7 @@ import { BEAR } from '../config/balance.ts'
 import { COLORS } from '../config/world.ts'
 import { turnTowards } from '../game/math.ts'
 import { HpBar } from '../fx/HpBar.ts'
+import type { Fighter } from './Fighter.ts'
 
 // Shared by every bear; only the body material is per bear, so each one can flash on its own.
 const bodyGeo = new BoxGeometry(1.5, 1.0, 2.2)
@@ -29,6 +30,7 @@ export class Bear {
   hp: number = BEAR.maxHp
   dead = false
   aggro = 0
+  target: Fighter | null = null // who it is angry at; nobody set means the player
   attackTimer = 0
   goalTimer = 0
   respawnTimer = 0
@@ -55,6 +57,8 @@ export class Bear {
     head.castShadow = true
     this.root.add(body, head, nose, earL, earR)
     this.root.scale.setScalar(look.scale)
+    // Turn first, then tip: so a boss rearing up leans back along the way it faces.
+    this.root.rotation.order = 'YXZ'
   }
 
   get radius(): number {
@@ -83,6 +87,7 @@ export class Bear {
     this.maxHp = maxHp
     this.hp = maxHp
     this.aggro = 0
+    this.target = null
     this.attackTimer = 0
     this.goalTimer = 0
     this.root.visible = true

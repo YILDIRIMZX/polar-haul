@@ -3,6 +3,7 @@ import { audio } from '../audio/Audio.ts'
 import { BEAR } from '../config/balance.ts'
 import { LAYOUT } from '../config/world.ts'
 import { Bear } from '../entities/Bear.ts'
+import type { Fighter } from '../entities/Fighter.ts'
 import type { Player } from '../entities/Player.ts'
 import { clamp, flatDistance } from '../game/math.ts'
 import { clampToWorld, getBaseRadius, keepOutsideBase } from '../world/bounds.ts'
@@ -16,20 +17,22 @@ export class BearHerd {
   readonly bears: Bear[] = []
   private scene: Scene
   private hunt: HuntLevel
-  private onKilled: (at: Vector3) => void
+  private onKilled: (at: Vector3, by: Fighter | null) => void
 
-  constructor(scene: Scene, hunt: HuntLevel, onKilled: (at: Vector3) => void) {
+  constructor(scene: Scene, hunt: HuntLevel, onKilled: (at: Vector3, by: Fighter | null) => void) {
     this.scene = scene
     this.hunt = hunt
     this.onKilled = onKilled
     this.grow()
   }
 
-  hit(bear: Bear, damage: number): void {
+  // `by` is a hunter, or null for the player. The bear turns on whoever hit it last.
+  hit(bear: Bear, damage: number, by: Fighter | null = null): void {
     if (bear.dead) return
+    bear.target = by
     if (!bear.hit(damage)) return
     audio.play('bearDie')
-    this.onKilled(bear.position.clone())
+    this.onKilled(bear.position.clone(), by)
   }
 
   update(dt: number, player: Player, camera: Camera): void {
@@ -88,9 +91,14 @@ export class BearHerd {
   }
 
   private chase(bear: Bear, dt: number, player: Player): void {
+    const foe: Fighter = bear.target ?? player
+    if (!foe.alive) {
+      bear.aggro = 0
+      return
+    }
     bear.aggro -= dt
     bear.attackTimer -= dt
-    toTarget.subVectors(player.position, bear.position).setY(0)
+    toTarget.subVectors(foe.position, bear.position).setY(0)
     const dist = toTarget.length()
     if (dist < 0.001) return
     bear.facing = Math.atan2(toTarget.x, toTarget.z)
@@ -100,7 +108,7 @@ export class BearHerd {
     }
     if (bear.attackTimer <= 0) {
       bear.attackTimer = BEAR.attackCooldown
-      player.damage(this.hunt.bearDamage)
+      foe.damage(this.hunt.bearDamage)
       audio.play('hurt')
     }
   }

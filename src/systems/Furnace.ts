@@ -1,4 +1,16 @@
-import { BoxGeometry, Mesh, MeshLambertMaterial, Vector3, type Camera, type Object3D, type Scene } from 'three'
+import {
+  BoxGeometry,
+  CanvasTexture,
+  Mesh,
+  MeshLambertMaterial,
+  Sprite,
+  SpriteMaterial,
+  SRGBColorSpace,
+  Vector3,
+  type Camera,
+  type Object3D,
+  type Scene,
+} from 'three'
 import { audio } from '../audio/Audio.ts'
 import { FURNACE } from '../config/balance.ts'
 import { COLORS, LAYOUT } from '../config/world.ts'
@@ -38,15 +50,40 @@ export class Furnace {
   private body: Mesh
   private fireMat: MeshLambertMaterial
   private out = new Vector3(LAYOUT.furnace.x, 1.9, LAYOUT.furnace.z)
+  lit = true // a boss loose in the base puts the fire out; it is lit again with the repair minigame
+  private sign: Sprite
   private spot = new Vector3()
 
   constructor(scene: Scene) {
     this.scene = scene
     this.fireMat = new MeshLambertMaterial({ color: COLORS.furnaceFire, emissive: COLORS.furnaceFire, emissiveIntensity: 0.2 })
     this.body = this.build()
+    this.sign = signSprite('ATEŞ SÖNDÜ')
+    this.sign.position.set(LAYOUT.furnace.x, 3, LAYOUT.furnace.z)
+    scene.add(this.sign)
   }
 
   // `cookRate` is 1 normally; the blizzard slows the fire down.
+  // For the carrier: whether the raw tray takes another piece, and the piece itself (already in the scene).
+  trayHasRoom(stats: Stats): boolean {
+    return this.tray.length + this.toTray < stats.count('rackCapacity')
+  }
+
+  receiveRaw(item: Object3D): void {
+    const target = pilePosition(LAYOUT.rack, this.tray.length + this.toTray)
+    this.toTray++
+    this.flights.add(item, () => target, FURNACE.flightSeconds, 0.7, () => {
+      this.toTray--
+      this.tray.push(item)
+      layoutPile(this.tray, LAYOUT.rack)
+    })
+  }
+
+  // For the waiter: the top cooked piece on the shelf, or null.
+  takeCooked(): Object3D | null {
+    return this.shelf.pop() ?? null
+  }
+
   update(dt: number, player: Player, stack: Stack, stats: Stats, camera: Camera, time: number, cookRate: number): void {
     const inZone = flatDistance(player.position, LAYOUT.furnaceZone) <= FURNACE.zoneRadius
     this.unload(dt, inZone, stack, stats)
@@ -55,7 +92,8 @@ export class Furnace {
 
     const busy = this.slots.some((s) => s.cooking && s.t < 1)
     this.body.position.x = LAYOUT.furnace.x + (busy ? Math.sin(time * 50) * 0.025 : 0)
-    this.fireMat.emissiveIntensity = busy ? 0.9 + Math.sin(time * 12) * 0.2 : 0.2
+    this.fireMat.emissiveIntensity = !this.lit ? 0 : busy ? 0.9 + Math.sin(time * 12) * 0.2 : 0.2
+    this.sign.visible = !this.lit
     this.slots.forEach((s, i) => {
       this.spot.set(LAYOUT.furnace.x + (i - (this.slots.length - 1) / 2) * 0.55, 0, LAYOUT.furnace.z)
       s.bar.update(s.cooking ? s.t : 0, this.spot, 2.1, camera)
@@ -71,16 +109,10 @@ export class Furnace {
     }
     this.unloadTimer -= dt
     while (this.unloadTimer <= 0) {
-      if (this.tray.length + this.toTray >= stats.count('rackCapacity')) break
+      if (!this.trayHasRoom(stats)) break
       const item = stack.takeTop('raw')
       if (!item) break
-      const target = pilePosition(LAYOUT.rack, this.tray.length + this.toTray)
-      this.toTray++
-      this.flights.add(item, () => target, FURNACE.flightSeconds, 0.7, () => {
-        this.toTray--
-        this.tray.push(item)
-        layoutPile(this.tray, LAYOUT.rack)
-      })
+      this.receiveRaw(item)
       audio.play('pour')
       this.unloadTimer += FURNACE.unloadInterval
     }
@@ -101,7 +133,17 @@ export class Furnace {
     }
   }
 
+  douse(): void {
+    this.lit = false
+  }
+
+  relight(): void {
+    this.lit = true
+    audio.play('cooked')
+  }
+
   private cook(dt: number, stats: Stats): void {
+    if (!this.lit) return
     const want = stats.count('furnaceSlots')
     while (this.slots.length < want) {
       const bar = new HpBar(COLORS.progress, 0.45)
@@ -176,4 +218,29 @@ function pilePosition(at: { x: number; z: number }, index: number): Vector3 {
 
 function layoutPile(items: Object3D[], at: { x: number; z: number }): void {
   items.forEach((item, i) => item.position.copy(pilePosition(at, i)))
+}
+
+// A red sign floating over the furnace while its fire is out.
+function signSprite(text: string): Sprite {
+  const canvas = document.createElement('canvas')
+  canvas.width = 256
+  canvas.height = 64
+  const c = canvas.getContext('2d')
+  if (!c) throw new Error('2D canvas is not available')
+  c.fillStyle = 'rgba(224, 69, 58, 0.95)'
+  c.beginPath()
+  c.roundRect(4, 4, 248, 56, 16)
+  c.fill()
+  c.fillStyle = '#ffffff'
+  c.font = 'bold 32px system-ui, sans-serif'
+  c.textAlign = 'center'
+  c.textBaseline = 'middle'
+  c.fillText(text, 128, 34)
+  const texture = new CanvasTexture(canvas)
+  texture.colorSpace = SRGBColorSpace
+  const sprite = new Sprite(new SpriteMaterial({ map: texture, depthTest: false }))
+  sprite.scale.set(3.2, 0.8, 1)
+  sprite.renderOrder = 12
+  sprite.visible = false
+  return sprite
 }

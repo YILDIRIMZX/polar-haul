@@ -1,12 +1,15 @@
-import { Vector3, type Camera, type Group, type Scene } from 'three'
+import { BoxGeometry, Color, Mesh, MeshLambertMaterial, Vector3, type Camera, type Group, type Scene } from 'three'
 import { audio } from '../audio/Audio.ts'
-import { BEAR, BOSS_FIGHT, BOSS_MOVES, BOSS_SCHEDULE, BOSSES, type BossKind } from '../config/balance.ts'
+import { BEAR, BOSS_FIGHT, BOSS_MOVES, BOSS_SCHEDULE, BOSSES, SIEGE, type BossKind } from '../config/balance.ts'
+import { WORLD } from '../config/world.ts'
 import { Bear } from '../entities/Bear.ts'
 import type { Player } from '../entities/Player.ts'
 import { floatingText } from '../fx/FloatingText.ts'
 import { clawMarks, GroundWarning } from '../fx/GroundWarning.ts'
+import { Shockwave } from '../fx/Shockwave.ts'
 import { flatDistance, inFan } from '../game/math.ts'
-import { clampToWorld, getBaseRadius, keepOutsideBase } from '../world/bounds.ts'
+import { clampToWorld, constrainToFence, getBaseRadius, isInsideBase, keepOutsideBase, pushOutOfObstacles } from '../world/bounds.ts'
+import type { Gate } from '../world/Gate.ts'
 import type { BearHerd } from './BearHerd.ts'
 import type { HuntLevel } from './HuntLevel.ts'
 import type { Storm } from './Storm.ts'
@@ -14,6 +17,30 @@ import type { Storm } from './Storm.ts'
 const toTarget = new Vector3()
 const before = new Vector3()
 const focus = new Vector3()
+const glowColor = new Color()
+const goal = new Vector3()
+const iceGeo = new BoxGeometry(0.75, 0.75, 0.75)
+const iceMat = new MeshLambertMaterial({ color: 0xbfe6ff, emissive: 0x5a8fb0, emissiveIntensity: 0.3 })
+
+// A chunk of ice a boss throws over the fence at a player hiding in the base.
+interface Shard {
+  mesh: Mesh
+  from: Vector3
+  to: Vector3
+  t: number
+  warning: GroundWarning
+}
+const HEARTBEAT = 0.85 // seconds between heartbeats while a boss is on its way
+const SLAM_RING = 12 // how far the shockwave of a slam spreads
+
+const easeOut = (k: number): number => 1 - (1 - k) * (1 - k)
+const smooth = (k: number): number => k * k * (3 - 2 * k)
+
+// What the screen adds for drama: cinema bars during the intro, and red at the edges while danger is near.
+export interface Drama {
+  bars: boolean
+  dread: number // 0–1
+}
 
 // What the screen shows about the fight in progress.
 export interface BossView {
@@ -26,6 +53,7 @@ export interface BossView {
 interface Events {
   onDefeated: (kind: BossKind, at: Vector3) => void
   onCubKilled: (at: Vector3) => void
+  onRampage: () => void // the boss broke into the base
   announce: (text: string) => void
   nameCard: (name: string, title: string) => void
   hideNameCard: () => void
@@ -34,11 +62,12 @@ interface Events {
 type Phase = 'waiting' | 'warning' | 'intro' | 'fighting'
 
 // What the boss is doing right now. Each special move is a wind-up (the red area fills) followed by the move.
-type Move = 'chase' | 'chargeWindup' | 'charge' | 'stunned' | 'sweepWindup' | 'recover' | 'roar'
+type Move = 'chase' | 'chargeWindup' | 'charge' | 'stunned' | 'sweepWindup' | 'stompWindup' | 'recover' | 'roar'
 
 // Bosses arrive by hunt level, one at a time, and each one is a stage to remember rather than a bigger bear:
-// the camera visits it and its name shows, its special moves are marked on the ground before they land,
-// Yaşlı Ayı changes at half health, and the fight leaves marks behind. Each fight has a time limit; a boss
+// a heartbeat announces it, it runs in from the forest and roars while the camera watches, its special moves
+// are marked on the ground before they land, Yaşlı Ayı flies into a rage at half health, and the fight leaves
+// marks behind. Each fight has a time limit; a boss
 // that is not beaten in time, or that knocks the player out, backs off into the field, a blizzard falls on
 // the base, and the same boss comes back later. Its reward is never lost.
 export class BossFight {
@@ -59,16 +88,36 @@ export class BossFight {
   private angry = false
   private cubs: Bear[] = []
   private marks: Group | null = null
+  private introT = 0 // seconds since the intro began
+  private entry = new Vector3() // where the boss runs in from
+  private beat = 0 // time until the next stride or heartbeat sound
+  private slammed = false
+  private roarT = 0 // seconds into Yaşlı Ayı's angry roar
+  private pulse = 0 // clock for the angry red pulse
+  private shakeLevel = 0
+  private slowLeft = 0 // seconds of slow motion left, in real time
+  private dread = 0
+  private shockwaves: Shockwave[] = []
+  private hideTime = 0 // how long the player has been hiding in the base during the fight
+  private iceTimer = 0
+  private poundTimer = 0
+  private inside = false // the boss broke in and is loose in the base
+  private shards: Shard[] = []
+  private gate: Gate
+  private closeTime = 0 // how long the player has been hugging the boss
+  private stompReady = 0 // time until the next stomp is allowed
   private lane: GroundWarning
   private fan: GroundWarning
+  private ring: GroundWarning
   private scene: Scene
   private hunt: HuntLevel
   private herd: BearHerd
   private storm: Storm
   private events: Events
 
-  constructor(scene: Scene, hunt: HuntLevel, herd: BearHerd, storm: Storm, events: Events) {
+  constructor(scene: Scene, hunt: HuntLevel, herd: BearHerd, storm: Storm, gate: Gate, events: Events) {
     this.scene = scene
+    this.gate = gate
     this.hunt = hunt
     this.herd = herd
     this.storm = storm
@@ -77,10 +126,21 @@ export class BossFight {
     const s = BOSS_MOVES.sweep
     this.lane = new GroundWarning(scene, { kind: 'lane', length: c.length, width: c.width })
     this.fan = new GroundWarning(scene, { kind: 'fan', radius: s.radius, angle: s.angle })
+    this.ring = new GroundWarning(scene, { kind: 'circle', radius: 1 })
   }
 
   get fighting(): boolean {
     return this.phase === 'fighting' && this.boss !== null
+  }
+
+  // A boss is on its way or in the fight: hunters hide in their lodge until it is over.
+  get threat(): boolean {
+    return this.phase !== 'waiting'
+  }
+
+  // The boss broke through the gate and is in the base: no customers come in.
+  get inBase(): boolean {
+    return this.inside && this.fighting
   }
 
   // While true the world waits and the camera looks at the boss.
@@ -102,15 +162,29 @@ export class BossFight {
     return bear === this.boss || this.cubs.includes(bear)
   }
 
-  // Where the camera should look: the player, or during the intro a point gliding to the boss and back.
+  // Where the camera should look: the player, or during the intro the boss, following it as it runs in.
   cameraTarget(player: Vector3): Vector3 {
     if (this.phase !== 'intro' || !this.boss) return player
-    const total = BOSS_MOVES.introSeconds
-    const t = total - this.timer
-    const glide = 0.5
-    const k = t < glide ? t / glide : t > total - glide ? (total - t) / glide : 1
-    const ease = k * k * (3 - 2 * k)
-    return focus.lerpVectors(player, this.boss.position, ease)
+    return focus.lerpVectors(player, this.boss.position, this.introBlend())
+  }
+
+  // Closer than usual while the camera watches the boss arrive.
+  get zoom(): number {
+    if (this.phase !== 'intro') return 1
+    return 1 - (1 - BOSS_MOVES.intro.zoom) * this.introBlend()
+  }
+
+  get shake(): number {
+    return this.shakeLevel
+  }
+
+  // The world runs slower for a moment while Yaşlı Ayı roars in anger.
+  get timeScale(): number {
+    return this.slowLeft > 0 ? BOSS_MOVES.anger.slowMotion : 1
+  }
+
+  get drama(): Drama {
+    return { bars: this.phase === 'intro', dread: this.dread }
   }
 
   // Called when the hunt level rises: queues the bosses scheduled for that level.
@@ -158,19 +232,53 @@ export class BossFight {
     if (this.boss && this.fighting) this.boss.hp = Math.min(this.boss.hp, this.boss.maxHp * 0.5)
   }
 
-  // The intro runs on its own clock, because the rest of the world is paused while it plays.
+  // The arrival runs on its own clock, because the rest of the world waits while it plays:
+  // the boss runs in from the forest shaking the ground, rears up on its hind legs, slams down and roars.
   updateIntro(dt: number, camera: Camera): void {
-    if (this.phase !== 'intro' || !this.boss) return
-    this.timer -= dt
-    this.boss.updateLook(dt)
-    this.boss.hpBar.update(1, this.boss.position, 0, camera)
-    if (this.timer > 0) return
+    const boss = this.boss
+    if (this.phase !== 'intro' || !boss || !this.kind) return
+    const I = BOSS_MOVES.intro
+    this.introT += dt
+    const t = this.introT
+    this.updateEffects(dt)
+
+    if (t < I.runSeconds) {
+      boss.position.lerpVectors(this.entry, this.home, easeOut(t / I.runSeconds))
+      boss.root.position.y = Math.abs(Math.sin(t * 11)) * 0.25 * boss.scale // bounding strides
+      this.herd.pushAway(boss.position, boss.radius + 2.5) // bears scatter out of its way
+      this.beat -= dt
+      if (this.beat <= 0) {
+        this.beat = I.stride
+        this.shakeLevel = Math.max(this.shakeLevel, 0.35)
+        audio.play('stomp')
+      }
+    } else if (t < I.roarAt) {
+      const k = easeOut((t - I.runSeconds) / (I.roarAt - I.runSeconds))
+      if (boss.root.rotation.x === 0) audio.play('growl')
+      boss.position.copy(this.home)
+      boss.root.position.y = 0.5 * boss.scale * k
+      boss.root.rotation.x = -0.65 * k - 0.001 // rears up on its hind legs
+      this.dread = Math.max(this.dread, 0.55 + 0.25 * k)
+    } else {
+      if (!this.slammed) {
+        this.slam(0xffffff)
+        this.events.nameCard(BOSSES[this.kind].name, BOSSES[this.kind].title)
+      }
+      this.settle(dt)
+      this.herd.pushAway(boss.position, Math.min(SLAM_RING * 0.8, boss.radius + (t - I.roarAt) * 30)) // the roar throws bears back
+    }
+    boss.updateLook(dt)
+    boss.hpBar.update(1, boss.position, 0, camera)
+    if (t < I.seconds) return
+    boss.root.position.y = 0
+    boss.root.rotation.x = 0
     this.events.hideNameCard()
     this.phase = 'fighting'
     this.timer = BOSS_FIGHT.timeLimit
   }
 
   update(dt: number, player: Player, camera: Camera): void {
+    this.updateEffects(dt / this.timeScale)
     if (this.phase === 'waiting') this.wait(dt)
     else if (this.phase === 'warning') this.warn(dt)
     else if (this.phase === 'fighting') this.fight(dt, player, camera)
@@ -184,18 +292,28 @@ export class BossFight {
     this.phase = 'warning'
     this.timer = BOSS_FIGHT.warningSeconds
     this.events.announce(`${BOSSES[next].name} geliyor!`)
+    this.beat = 0
     audio.play('bossWarn')
   }
 
-  // The boss appears, the claw marks of an earlier escape go, and the camera goes to look at it.
+  // A heartbeat and red creeping in at the edges while the boss is on its way. Then it appears deep in the
+  // field, the claw marks of an earlier escape go, and the intro starts.
   private warn(dt: number): void {
     this.timer -= dt
+    this.dread = Math.min(0.5, this.dread + dt * 0.3)
+    this.beat -= dt
+    if (this.beat <= 0) {
+      this.beat = HEARTBEAT
+      audio.play('heartbeat')
+    }
     if (this.timer > 0 || !this.kind) return
     const def = BOSSES[this.kind]
     const boss = new Bear({ scale: def.scale, color: def.color })
-    // Just outside the front gate, where the player walks out to hunt.
+    // It stops just outside the front gate, where the player walks out to hunt, after running in from the forest.
     this.home.set(0, 0, -(getBaseRadius() + BOSS_FIGHT.spawnBeyondGate))
-    boss.spawn(this.home.x, this.home.z, Math.round(this.hunt.bearHp * def.hpMultiplier))
+    this.entry.set(this.home.x, 0, this.home.z - BOSS_MOVES.intro.entryDistance)
+    clampToWorld(this.entry)
+    boss.spawn(this.entry.x, this.entry.z, Math.round(this.hunt.bearHp * def.hpMultiplier))
     boss.facing = 0
     this.scene.add(boss.root, boss.hpBar.root)
     this.boss = boss
@@ -203,11 +321,17 @@ export class BossFight {
     this.move = 'chase'
     this.special = 1.5
     this.angry = false
+    this.closeTime = 0
+    this.stompReady = 0
+    this.hideTime = 0
+    this.iceTimer = SIEGE.iceEvery
+    this.inside = false
     this.marks?.removeFromParent()
     this.marks = null
     this.phase = 'intro'
-    this.timer = BOSS_MOVES.introSeconds
-    this.events.nameCard(def.name, def.title)
+    this.introT = 0
+    this.beat = 0
+    this.slammed = false
     audio.play('bossIntro')
   }
 
@@ -219,10 +343,22 @@ export class BossFight {
       this.lose()
       return
     }
+    this.dread = Math.max(this.angry ? 0.2 + 0.1 * Math.sin(this.pulse * 7) : 0, this.dread - dt * 0.6)
     boss.aggro = Math.max(0, boss.aggro - dt)
     this.attackTimer -= dt
     this.special -= dt
     this.moveTimer -= dt
+    this.stompReady -= dt
+    const prevX = boss.position.x
+    const prevZ = boss.position.z
+    // Hiding in the base: ice over the fence at once, and after a while the boss goes for the gate.
+    const hiding = player.inBase && !this.inside
+    this.hideTime = hiding ? this.hideTime + dt : 0
+    if (hiding && this.move !== 'roar') this.throwIceWhenReady(dt, player)
+    this.updateShards(dt, player)
+    // Time spent hugging the boss builds up, and drains away again once the player keeps their distance.
+    const close = !player.inBase && flatDistance(player.position, boss.position) < boss.radius + BOSS_MOVES.stomp.closeRange
+    this.closeTime = close ? this.closeTime + dt : Math.max(0, this.closeTime - dt * 2)
     if (this.kind === 'elder' && !this.angry && boss.hp <= boss.maxHp * BOSS_MOVES.anger.atHealth) this.roar()
 
     switch (this.move) {
@@ -244,6 +380,13 @@ export class BossFight {
           this.move = 'chase'
         }
         break
+      case 'stompWindup': {
+        const windup = this.angry ? BOSS_MOVES.stomp.angryWindup : BOSS_MOVES.stomp.windup
+        this.ring.setProgress(1 - this.moveTimer / windup)
+        boss.root.position.y = 0.4 * boss.scale * (1 - this.moveTimer / windup) // rising up before the pound
+        if (this.moveTimer <= 0) this.stomp(player)
+        break
+      }
       case 'sweepWindup': {
         const windup = this.angry ? BOSS_MOVES.sweep.angryWindup : BOSS_MOVES.sweep.windup
         this.fan.setProgress(1 - this.moveTimer / windup)
@@ -251,34 +394,57 @@ export class BossFight {
         break
       }
       case 'recover':
-      case 'roar':
         if (this.moveTimer <= 0) this.move = 'chase'
         break
+      case 'roar':
+        this.roarStep(dt)
+        break
     }
+    if (this.angry) this.angryPulse(dt)
 
-    keepOutsideBase(boss.position, boss.radius)
-    clampToWorld(boss.position)
+    this.contain(prevX, prevZ)
     this.herd.pushAway(boss.position, boss.radius)
     this.updateCubs(dt, player, camera)
     boss.updateLook(dt)
     boss.hpBar.update(boss.hp / boss.maxHp, boss.position, 2.6 * boss.scale, camera)
   }
 
-  // Walks at the player when they are close or have hit it, never into the base; otherwise goes home.
-  // From close enough it starts its special move.
+  // Walks at the player when they are close or have hit it; otherwise goes home. A player hiding in the base
+  // is besieged; once the gate is broken the boss follows them in. From close enough it starts its special move.
   private chase(dt: number, player: Player): void {
     const boss = this.boss
     if (!boss || !this.kind) return
     const def = BOSSES[this.kind]
-    const engaged = !player.inBase && (flatDistance(player.position, boss.position) < BOSS_FIGHT.aggroRadius || boss.aggro > 0)
-    const goal = engaged ? player.position : this.home
+    if (player.inBase && !this.gate.broken) {
+      this.besiege(dt)
+      return
+    }
+    const engaged = player.inBase || flatDistance(player.position, boss.position) < BOSS_FIGHT.aggroRadius || boss.aggro > 0
+    goal.copy(engaged ? player.position : this.home)
+    // Into the base through the broken gate: line up in front of it first, then walk through.
+    if (engaged && player.inBase && !this.inside) {
+      const r = getBaseRadius()
+      const front = -r - boss.radius - 1
+      const lined = Math.abs(boss.position.x) < 1 && boss.position.z > front - 1
+      goal.set(0, 0, lined ? -r + 3 : front)
+    }
     toTarget.subVectors(goal, boss.position).setY(0)
     const dist = toTarget.length()
     if (dist > 0.001) boss.facing = Math.atan2(toTarget.x, toTarget.z)
     const reach = BEAR.attackRange * def.scale
-    const stopAt = engaged ? reach * 0.8 : 0.3
+    const stopAt = engaged && this.canReach(player) ? reach * 0.8 : 0.3
     if (dist > stopAt) boss.position.addScaledVector(toTarget.divideScalar(dist), BEAR.chaseSpeed * def.speedMultiplier * dt)
-    if (!engaged) return
+    if (!engaged || !this.canReach(player)) return
+
+    // Too close for too long: it pounds the ground all around itself, whichever way it faces.
+    const st = BOSS_MOVES.stomp
+    if (this.closeTime >= st.triggerSeconds && this.stompReady <= 0) {
+      this.ring.show(boss.position.x, boss.position.z, 0, boss.radius + st.reach)
+      this.move = 'stompWindup'
+      this.moveTimer = this.angry ? st.angryWindup : st.windup
+      audio.play('growl')
+      return
+    }
 
     if (this.kind === 'mini') {
       const c = BOSS_MOVES.charge
@@ -326,22 +492,26 @@ export class BossFight {
     if (!boss) return
     const c = BOSS_MOVES.charge
     const step = Math.min(this.chargeLeft, c.speed * dt)
+    const px = boss.position.x
+    const pz = boss.position.z
     boss.position.addScaledVector(this.chargeDir, step)
     before.copy(boss.position)
-    keepOutsideBase(boss.position, boss.radius)
-    clampToWorld(boss.position)
+    this.contain(px, pz)
     this.chargeLeft -= step
-    if (!this.chargeHit && !player.inBase && flatDistance(player.position, boss.position) < boss.radius + 0.8) {
+    if (!this.chargeHit && this.canReach(player) && flatDistance(player.position, boss.position) < boss.radius + 0.8) {
       this.chargeHit = true
       player.damage(this.damage() * c.damage)
+      player.knockback(this.chargeDir.x, this.chargeDir.z, 12)
+      this.shakeLevel = Math.max(this.shakeLevel, 0.5)
       audio.play('bossHit')
     }
-    // The fence or the edge of the field pushed it back: it ran into something, even at a glancing angle.
+    // The fence, a station or the edge of the field pushed it back: it ran into something, even at a glancing angle.
     if (flatDistance(before, boss.position) > 0.01) {
       this.move = 'stunned'
       this.moveTimer = c.stunSeconds
       this.special = c.cooldown
       audio.play('bonk')
+      this.shakeLevel = Math.max(this.shakeLevel, 0.6)
       floatingText.spawn('SERSEM!', boss.position.clone().setY(2.8 * boss.scale))
       return
     }
@@ -358,35 +528,151 @@ export class BossFight {
     const s = BOSS_MOVES.sweep
     this.fan.hide()
     audio.play('whoosh')
-    if (!player.inBase && inFan(boss.position, boss.facing, player.position, s.radius, s.angle)) {
+    this.shakeLevel = Math.max(this.shakeLevel, 0.4)
+    this.shockwaves.push(new Shockwave(this.scene, boss.position.x, boss.position.z, s.radius, 0xe0453a, 0.35))
+    if (this.canReach(player) && inFan(boss.position, boss.facing, player.position, s.radius, s.angle)) {
       player.damage(this.damage() * s.damage)
+      // Thrown back, away from the paw.
+      player.knockback(player.position.x - boss.position.x, player.position.z - boss.position.z, s.knockback)
+      this.shakeLevel = 0.8
       audio.play('bossHit')
     }
     this.move = 'recover'
-    this.moveTimer = s.recover
+    this.moveTimer = this.angry ? s.angryRecover : s.recover
     this.special = this.angry ? s.angryCooldown : s.cooldown
   }
 
-  // Yaşlı Ayı at half health: it roars, turns red and calls young bears to its side.
+  // Pounds the ground: everyone inside the circle is hurt and thrown outward.
+  private stomp(player: Player): void {
+    const boss = this.boss
+    if (!boss) return
+    const st = BOSS_MOVES.stomp
+    this.ring.hide()
+    boss.root.position.y = 0
+    const reach = boss.radius + st.reach
+    this.shakeLevel = Math.max(this.shakeLevel, 0.7)
+    this.shockwaves.push(new Shockwave(this.scene, boss.position.x, boss.position.z, reach, 0xe0453a, 0.4))
+    audio.play('boom')
+    if (this.canReach(player) && flatDistance(player.position, boss.position) <= reach) {
+      player.damage(this.damage() * st.damage)
+      player.knockback(player.position.x - boss.position.x, player.position.z - boss.position.z, st.knockback)
+      audio.play('bossHit')
+    }
+    this.closeTime = 0
+    this.stompReady = this.angry ? st.angryCooldown : st.cooldown
+    this.move = 'recover'
+    this.moveTimer = st.recover
+  }
+
+  // Yaşlı Ayı at half health. It rears up, trembling, swells and glows red; then it slams down and roars
+  // in slow motion, and young bears come running out of the forest.
   private roar(): void {
+    if (!this.boss) return
+    this.angry = true
+    this.fan.hide()
+    this.ring.hide()
+    this.move = 'roar'
+    this.roarT = 0
+    this.slammed = false
+    audio.play('growl')
+  }
+
+  private roarStep(dt: number): void {
     const boss = this.boss
     if (!boss || !this.kind) return
     const a = BOSS_MOVES.anger
-    this.angry = true
-    this.fan.hide()
-    boss.glow = a.color
-    this.move = 'roar'
-    this.moveTimer = a.roarSeconds
-    audio.play('bossRoar')
-    this.events.announce(`${BOSSES[this.kind].name} öfkelendi!`)
+    this.roarT += dt
+    if (this.roarT < a.roarAt) {
+      const k = easeOut(this.roarT / a.roarAt)
+      boss.root.rotation.x = -0.7 * k
+      boss.root.rotation.z = Math.sin(this.roarT * 60) * 0.04 // trembling with rage
+      boss.root.position.y = 0.5 * boss.scale * k
+      boss.root.scale.setScalar(boss.scale * (1 + (a.swell - 1) * k))
+      this.shakeLevel = Math.max(this.shakeLevel, 0.3 * k)
+    } else if (!this.slammed) {
+      boss.root.rotation.z = 0
+      this.slam(a.color)
+      this.slowLeft = a.slowSeconds
+      this.dread = 0.9
+      this.events.announce(`${BOSSES[this.kind].name} öfkelendi!`)
+      this.callCubs()
+    } else {
+      this.settle(dt)
+    }
+    if (this.roarT < a.roarSeconds) return
+    boss.root.rotation.x = 0
+    boss.root.position.y = 0
+    this.move = 'chase'
+  }
+
+  // Young bears come running in from the forest behind and beside the boss.
+  private callCubs(): void {
+    const boss = this.boss
+    if (!boss || !this.kind) return
+    const a = BOSS_MOVES.anger
     for (let i = 0; i < a.cubs; i++) {
       const cub = new Bear({ scale: a.cubScale, color: BOSSES[this.kind].color })
-      const side = i % 2 === 0 ? 1 : -1
-      cub.spawn(boss.position.x + side * 3, boss.position.z - 1, Math.round(this.hunt.bearHp * a.cubHp))
+      const spread = a.cubs > 1 ? (i / (a.cubs - 1) - 0.5) * 2 : 0 // -1 … 1
+      const dir = boss.facing + Math.PI + spread * 1.1
+      const at = new Vector3(boss.position.x + Math.sin(dir) * a.cubsFrom, 0, boss.position.z + Math.cos(dir) * a.cubsFrom)
+      clampToWorld(at)
+      cub.spawn(at.x, at.z, Math.round(this.hunt.bearHp * a.cubHp))
       cub.aggro = Infinity
       this.scene.add(cub.root, cub.hpBar.root)
       this.cubs.push(cub)
     }
+  }
+
+  // An angry boss glows a beating red.
+  private angryPulse(dt: number): void {
+    const boss = this.boss
+    if (!boss) return
+    this.pulse += dt
+    const ramp = this.move === 'roar' && !this.slammed ? this.roarT / BOSS_MOVES.anger.roarAt : 1
+    const k = ramp * (0.6 + 0.4 * Math.sin(this.pulse * 7))
+    boss.glow = glowColor.setHex(BOSS_MOVES.anger.color).multiplyScalar(k).getHex()
+  }
+
+  // Comes down hard: the ground shakes and a shockwave rolls out.
+  private slam(color: number): void {
+    const boss = this.boss
+    if (!boss) return
+    this.slammed = true
+    boss.root.rotation.x = 0.15
+    boss.root.position.y = 0
+    this.shakeLevel = 1
+    this.dread = Math.max(this.dread, 0.85)
+    this.shockwaves.push(new Shockwave(this.scene, boss.position.x, boss.position.z, SLAM_RING, color, 0.8))
+    audio.play('boom')
+    audio.play('bossRoar')
+  }
+
+  // After a slam the boss eases back onto all fours.
+  private settle(dt: number): void {
+    const boss = this.boss
+    if (!boss) return
+    const k = Math.exp(-8 * dt)
+    boss.root.rotation.x *= k
+    boss.root.position.y *= k
+  }
+
+  // Shakes die out, shockwaves spread and fade, slow motion runs down. `realDt` ignores slow motion.
+  private updateEffects(realDt: number): void {
+    this.shakeLevel *= Math.exp(-5 * realDt)
+    if (this.shakeLevel < 0.01) this.shakeLevel = 0
+    this.slowLeft = Math.max(0, this.slowLeft - realDt)
+    this.shockwaves = this.shockwaves.filter((w) => w.update(realDt))
+    if (this.phase === 'waiting') this.dread = Math.max(0, this.dread - realDt * 0.6)
+  }
+
+  // From 0 (looking at the player) to 1 (looking at the boss) and back during the intro.
+  private introBlend(): number {
+    const I = BOSS_MOVES.intro
+    const t = this.introT
+    const glide = 0.5
+    if (t < glide) return smooth(t / glide)
+    if (t > I.returnAt) return smooth(Math.max(0, 1 - (t - I.returnAt) / (I.seconds - I.returnAt)))
+    return 1
   }
 
   // The young bears go for the player like any angry bear, but stay outside the base.
@@ -418,20 +704,125 @@ export class BossFight {
     if (!boss.hit(taken)) return
     const kind = this.kind
     audio.play('bossDie')
+    this.slowLeft = 0
     this.removeBoss()
     this.pending.shift()
     this.phase = 'waiting'
     this.events.onDefeated(kind, boss.position.clone())
   }
 
+  // A player in the base is out of reach, unless the boss has broken in too.
+  private canReach(player: Player): boolean {
+    return !player.inBase || this.inside
+  }
+
+  // Keeps the boss out of the base while the gate stands. Through a broken gate it may come in, but not
+  // through the fence, and inside it bumps into the stations like everyone else. Entering is a rampage.
+  private contain(prevX: number, prevZ: number): void {
+    const boss = this.boss
+    if (!boss) return
+    const pos = boss.position
+    if (!this.gate.broken) keepOutsideBase(pos, boss.radius)
+    else {
+      if (Math.abs(pos.x) >= WORLD.gateWidth / 2) constrainToFence(prevX, prevZ, pos, boss.radius)
+      pushOutOfObstacles(pos, boss.radius * 0.7)
+      if (!this.inside && isInsideBase(pos.x, pos.z)) {
+        this.inside = true
+        this.shakeLevel = 1
+        audio.play('bossRoar')
+        this.events.onRampage()
+      }
+    }
+    clampToWorld(pos)
+  }
+
+  // The player is hiding: the boss stands off for a moment, then walks up to the gate and pounds it.
+  private besiege(dt: number): void {
+    const boss = this.boss
+    if (!boss || !this.kind) return
+    const r = getBaseRadius()
+    const atGate = this.hideTime >= SIEGE.hideSeconds
+    goal.set(0, 0, -r - boss.radius - (atGate ? 0.4 : 4))
+    toTarget.subVectors(goal, boss.position).setY(0)
+    const dist = toTarget.length()
+    if (dist > 0.3) {
+      boss.facing = Math.atan2(toTarget.x, toTarget.z)
+      boss.position.addScaledVector(toTarget.divideScalar(dist), BEAR.chaseSpeed * BOSSES[this.kind].speedMultiplier * dt)
+      return
+    }
+    boss.facing = 0 // toward the base
+    this.settle(dt)
+    if (!atGate) return
+    this.poundTimer -= dt
+    if (this.poundTimer > 0) return
+    this.poundTimer = SIEGE.poundEvery
+    boss.root.rotation.x = 0.3 // throws its weight against the gate
+    this.shakeLevel = Math.max(this.shakeLevel, 0.5)
+    this.shockwaves.push(new Shockwave(this.scene, 0, -r, 3, 0xffffff, 0.35))
+    audio.play('bonk')
+    if (this.gate.pound(SIEGE.poundDamage)) this.events.announce(`${BOSSES[this.kind].name} kapıyı kırdı!`)
+  }
+
+  // Every few seconds a chunk of ice arcs over the fence at where the player stands; a red circle shows where.
+  private throwIceWhenReady(dt: number, player: Player): void {
+    const boss = this.boss
+    if (!boss) return
+    this.iceTimer -= dt
+    if (this.iceTimer > 0) return
+    this.iceTimer = SIEGE.iceEvery
+    const warning = new GroundWarning(this.scene, { kind: 'circle', radius: SIEGE.iceRadius })
+    const to = new Vector3(player.position.x, 0, player.position.z)
+    warning.show(to.x, to.z, 0)
+    const mesh = new Mesh(iceGeo, iceMat)
+    mesh.castShadow = true
+    const from = boss.position.clone().setY(2.5 * boss.scale)
+    mesh.position.copy(from)
+    this.scene.add(mesh)
+    this.shards.push({ mesh, from, to, t: 0, warning })
+    audio.play('whoosh')
+  }
+
+  private updateShards(dt: number, player: Player): void {
+    for (let i = this.shards.length - 1; i >= 0; i--) {
+      const s = this.shards[i]
+      s.t += dt / SIEGE.iceFlight
+      const k = Math.min(1, s.t)
+      s.mesh.position.lerpVectors(s.from, s.to, k)
+      s.mesh.position.y = s.from.y * (1 - k) + Math.sin(Math.PI * k) * 7
+      s.mesh.rotation.set(k * 6, k * 4, 0)
+      s.warning.setProgress(k)
+      if (k < 1) continue
+      s.mesh.removeFromParent()
+      s.warning.dispose()
+      this.shards.splice(i, 1)
+      this.shockwaves.push(new Shockwave(this.scene, s.to.x, s.to.z, SIEGE.iceRadius + 0.6, 0xdff4ff, 0.4))
+      audio.play('bonk')
+      if (flatDistance(player.position, s.to) <= SIEGE.iceRadius + 0.3) {
+        player.damage(this.damage() * SIEGE.iceDamage)
+        audio.play('hurt')
+      }
+    }
+  }
+
+  private clearShards(): void {
+    for (const s of this.shards) {
+      s.mesh.removeFromParent()
+      s.warning.dispose()
+    }
+    this.shards = []
+  }
+
+  // An angry boss hits harder.
   private damage(): number {
-    return this.kind ? this.hunt.bearDamage * BOSSES[this.kind].damageMultiplier : 0
+    if (!this.kind) return 0
+    return this.hunt.bearDamage * BOSSES[this.kind].damageMultiplier * (this.angry ? BOSS_MOVES.anger.damage : 1)
   }
 
   // The boss backs off leaving claw marks where it will come back, the blizzard falls, and the same boss
   // returns later with its reward intact.
   private lose(): void {
     const name = this.kind ? BOSSES[this.kind].name : ''
+    this.slowLeft = 0
     this.removeBoss()
     this.marks = clawMarks(this.home.x, this.home.z)
     this.scene.add(this.marks)
@@ -452,6 +843,9 @@ export class BossFight {
     for (const cub of [...this.cubs]) this.removeCub(cub)
     this.lane.hide()
     this.fan.hide()
+    this.ring.hide()
+    this.clearShards()
+    this.inside = false
     if (!this.boss) return
     this.boss.root.removeFromParent()
     this.boss.hpBar.root.removeFromParent()

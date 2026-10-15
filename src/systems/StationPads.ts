@@ -1,5 +1,5 @@
 import type { Scene } from 'three'
-import { padPricing, STATION_UPGRADES, type StationId, type StationUpgradeDef } from '../config/upgrades.ts'
+import { padPricing, STATION_UPGRADES, type StationId, type StationUpgradeDef, type WorkerKind } from '../config/upgrades.ts'
 import { LAYOUT } from '../config/world.ts'
 import type { Player } from '../entities/Player.ts'
 import type { Stats } from '../game/Stats.ts'
@@ -19,7 +19,8 @@ interface Track {
 export class StationPads {
   private tracks: Track[]
 
-  constructor(scene: Scene, stats: Stats) {
+  // `onHire` takes the pads that hire a worker instead of changing a value.
+  constructor(scene: Scene, stats: Stats, onHire: (kind: WorkerKind) => void) {
     this.tracks = STATION_UPGRADES.map((def) => ({
       def,
       unlocked: false,
@@ -28,7 +29,7 @@ export class StationPads {
         title: def.title,
         reward: def.reward,
         pricing: padPricing(def),
-        apply: (level) => def.apply(stats, level),
+        apply: (level) => (def.hire ? onHire(def.hire) : def.apply(stats, level)),
         hidden: true,
         vanishWhenMaxed: true,
       }),

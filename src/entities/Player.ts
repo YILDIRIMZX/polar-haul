@@ -5,11 +5,15 @@ import { turnTowards } from '../game/math.ts'
 import type { Joystick } from '../input/Joystick.ts'
 import { clampToWorld, constrainToFence, isInsideBase, pushOutOfObstacles } from '../world/bounds.ts'
 
+const PUSH_FADE = 6 // how quickly a knockback dies out
+
 // Placeholder look until a real character model arrives in 0.4.0.
 export class Player {
   readonly root = new Group()
   readonly velocity = new Vector3()
+  private push = new Vector3() // a shove from a heavy hit, fading fast
   maxHp: number = BASE_STATS.maxHp // kept in step with Stats every frame
+  regenScale = 1 // healing in the base is slower during a boss fight
   hp: number = BASE_STATS.maxHp
   private body = new Group()
   private facing = 0
@@ -40,6 +44,10 @@ export class Player {
     return this.root.position
   }
 
+  get alive(): boolean {
+    return this.hp > 0
+  }
+
   get inBase(): boolean {
     return isInsideBase(this.position.x, this.position.z)
   }
@@ -48,8 +56,9 @@ export class Player {
     const p = this.position
     const prevX = p.x
     const prevZ = p.z
-    p.x += input.x * speed * dt
-    p.z += input.z * speed * dt
+    p.x += (input.x * speed + this.push.x) * dt
+    p.z += (input.z * speed + this.push.z) * dt
+    this.push.multiplyScalar(Math.exp(-PUSH_FADE * dt))
     constrainToFence(prevX, prevZ, p, PLAYER.radius)
     pushOutOfObstacles(p, PLAYER.radius)
     clampToWorld(p)
@@ -61,7 +70,7 @@ export class Player {
     }
     this.body.rotation.y = this.facing
 
-    if (this.inBase) this.hp = Math.min(this.maxHp, this.hp + PLAYER.regenPerSec * dt)
+    if (this.inBase) this.hp = Math.min(this.maxHp, this.hp + PLAYER.regenPerSec * this.regenScale * dt)
 
     this.punch = Math.max(0, this.punch - dt * 6)
     const s = 1 + this.punch * 0.15
@@ -83,9 +92,17 @@ export class Player {
     this.hp -= amount
   }
 
+  // Throws the player along (x, z) at `speed`; the fence and solid objects still stop them.
+  knockback(x: number, z: number, speed: number): void {
+    const length = Math.hypot(x, z)
+    if (length < 1e-6) return
+    this.push.set((x / length) * speed, 0, (z / length) * speed)
+  }
+
   respawn(): void {
     this.position.set(LAYOUT.playerSpawn.x, 0, LAYOUT.playerSpawn.z)
     this.velocity.set(0, 0, 0)
+    this.push.set(0, 0, 0)
     this.hp = this.maxHp
   }
 }

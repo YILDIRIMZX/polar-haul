@@ -21,6 +21,16 @@ export const BASE_STATS = {
   customerInterval: 2, // seconds between new customers
   patienceSeconds: 20,
   serveInterval: 0.25, // seconds per piece handed over while serving
+  // Base level 2 and 3: the gate depot and the workers.
+  depotCapacity: 40, // raw pieces the gate depot holds
+  carrierLoad: 4, // pieces the carrier takes per trip, depot → furnace
+  waiterLoad: 4, // pieces the waiter takes per trip, shelf → counter
+  cashierInterval: 0.45, // seconds per piece the cashier hands over; slower than the player
+  workerSpeed: 3.4,
+  hunterDamage: 6, // 60% of the player's starting damage
+  hunterLoad: 6, // pieces a hunter carries home
+  hunterHp: 60,
+  gateHp: 120, // how much pounding the front gate takes before a boss breaks in
 } as const
 
 export type StatId = keyof typeof BASE_STATS
@@ -110,15 +120,38 @@ export const BOSS_FIGHT = {
 // The bosses' special moves. Every one is marked on the ground before it lands, so it can be dodged.
 // Damage values multiply the boss's normal hit.
 export const BOSS_MOVES = {
-  introSeconds: 2.2, // the camera visits the boss while its name card shows; the world waits
+  // The arrival, while the world waits: the boss runs in from the forest, rears up on its hind legs, slams down
+  // and roars. Times are seconds from the start of the intro.
+  intro: { seconds: 4, entryDistance: 18, runSeconds: 1.5, roarAt: 2.2, returnAt: 3.4, stride: 0.3, zoom: 0.72 },
   // Dev Ayı lowers its head, a red lane appears, then it runs down the lane, even from close by, so standing
   // next to it is never safe. Hitting the fence or the edge of the field stuns it, and a stunned boss takes
   // extra damage.
   charge: { maxDistance: 16, windup: 1, speed: 15, length: 16, width: 3, damage: 1.5, stunSeconds: 2, stunDamage: 1.5, recover: 0.6, cooldown: 5 },
-  // Yaşlı Ayı sweeps a wide fan in front of it. Once angry it sweeps faster and more often.
-  sweep: { radius: 5.5, angle: (120 * Math.PI) / 180, windup: 0.9, angryWindup: 0.65, damage: 1.4, recover: 0.5, cooldown: 3, angryCooldown: 2 },
-  // At half health Yaşlı Ayı roars and calls young bears to its side.
-  anger: { atHealth: 0.5, roarSeconds: 1.2, cubs: 2, cubScale: 0.8, cubHp: 1.5, color: 0x5a1a10 },
+  // Yaşlı Ayı sweeps a wide fan in front of it and throws whoever it hits back. Once angry it sweeps faster
+  // and more often.
+  sweep: { radius: 6.5, angle: (140 * Math.PI) / 180, windup: 0.9, angryWindup: 0.45, damage: 2, knockback: 26, recover: 0.5, angryRecover: 0.25, cooldown: 3, angryCooldown: 1.2 },
+  // Hugging a boss is punished: stay close for a moment and it pounds the ground all around itself, so
+  // circling behind it is no longer a safe way to win. `reach` is added to the boss's own radius.
+  stomp: { closeRange: 1.6, triggerSeconds: 0.7, windup: 0.5, angryWindup: 0.35, reach: 2.6, damage: 1.3, knockback: 22, recover: 0.4, cooldown: 2.2, angryCooldown: 1.4 },
+  // At half health Yaşlı Ayı rears up, swells, roars in slow motion and calls young bears out of the forest.
+  anger: { damage: 1.35, atHealth: 0.5, roarSeconds: 2, roarAt: 0.6, swell: 1.15, slowMotion: 0.3, slowSeconds: 0.8, cubs: 3, cubsFrom: 14, cubScale: 0.8, cubHp: 1.5, color: 0x7a1a0c },
+} as const
+
+// Hiding in the base during a boss fight is not free. Healing slows down; the boss throws ice over the fence;
+// after a few seconds it pounds the front gate, and if the gate breaks it storms in: customers run off
+// without paying and the furnace goes out. Nothing it breaks costs money to fix, so the game can never get
+// stuck: the gate mends itself once the boss is gone, and the furnace is relit by standing at it.
+export const SIEGE = {
+  battleRegen: 0.2, // healing in the base during a boss fight, as a share of the normal rate
+  hideSeconds: 4, // hiding longer than this sends the boss to the gate
+  poundEvery: 1.2,
+  poundDamage: 12,
+  iceEvery: 2.4, // seconds between ice chunks thrown at a player hiding in the base
+  iceFlight: 1.1, // seconds from throw to landing; the red circle shows where
+  iceRadius: 1.7,
+  iceDamage: 0.8, // × the boss's normal hit
+  gateRepairSeconds: 15,
+  relightSeconds: 2, // standing this long at a furnace that went out lights it again
 } as const
 
 // The blizzard after a lost boss fight.
@@ -158,6 +191,24 @@ export const SHOP = {
   urgentChance: 0.15, // share of new customers who are urgent
   urgentPay: 2.5, // they pay this many times the normal price…
   urgentPatience: 0.6, // …have this share of the normal patience, and leave without paying when it runs out
+} as const
+
+// Building sites and the workers. Sites appear when the base level opens them; paying builds the building.
+export const BUILD = {
+  depotPrice: 150,
+  lodgePrice: 300,
+  buildSeconds: 1.4, // the scaffold rises, hammers ring, then the building pops up
+  treeFallSeconds: 0.7,
+} as const
+
+export const WORKER = {
+  radius: 0.45,
+  handInterval: 0.09, // seconds per piece picked up or put down
+  hunterAttackCooldown: 0.7,
+  hunterAttackRange: 2.4,
+  hunterRestSeconds: 10, // a hunter knocked down rests this long at the lodge
+  hunterRegenPerSec: 12,
+  hunterFleeSpeed: 1.4, // walking speed × this on the way home; just faster than a chasing bear
 } as const
 
 // Shared by every upgrade pad.

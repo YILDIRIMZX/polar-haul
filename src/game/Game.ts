@@ -1,15 +1,18 @@
-import { MathUtils, PCFSoftShadowMap, Timer, WebGLRenderer, type Vector3 } from 'three'
+import { PCFSoftShadowMap, Timer, WebGLRenderer, type Vector3 } from 'three'
 import { audio } from '../audio/Audio.ts'
-import { BASE_LEVELS, BEAR, BOSSES, type BossKind } from '../config/balance.ts'
+import { BASE_LEVELS, BOSSES, FURNACE, SIEGE, type BossKind } from '../config/balance.ts'
 import { MINI_BOSS_CARDS, TRIPLE_STRIKE, type CardDef } from '../config/cards.ts'
 import { CAMERA, COLORS, LAYOUT } from '../config/world.ts'
 import type { Bear } from '../entities/Bear.ts'
+import type { Fighter } from '../entities/Fighter.ts'
 import { Player } from '../entities/Player.ts'
 import { floatingText } from '../fx/FloatingText.ts'
 import { HpBar } from '../fx/HpBar.ts'
 import { Joystick } from '../input/Joystick.ts'
 import { BearHerd } from '../systems/BearHerd.ts'
 import { BossFight } from '../systems/BossFight.ts'
+import { Construction } from '../systems/Construction.ts'
+import { Depot } from '../systems/Depot.ts'
 import { pickCards } from '../systems/cards.ts'
 import { AutoAttack } from '../systems/combat.ts'
 import { Furnace } from '../systems/Furnace.ts'
@@ -22,6 +25,7 @@ import { Stack } from '../systems/Stack.ts'
 import { StationPads } from '../systems/StationPads.ts'
 import { Storm } from '../systems/Storm.ts'
 import { Wallet } from '../systems/Wallet.ts'
+import { bearMeat, Workers } from '../systems/Workers.ts'
 import { CardPicker } from '../ui/CardPicker.ts'
 import { CharacterMenu } from '../ui/CharacterMenu.ts'
 import { BOSS_ICON, EdgeMarker, HOME_ICON } from '../ui/EdgeMarker.ts'
@@ -31,7 +35,10 @@ import { createCamera, placeCamera } from '../world/camera.ts'
 import { createScene } from '../world/scene.ts'
 import { Trophies } from '../world/Trophies.ts'
 import { AdminPanel, type AdminTab } from '../ui/AdminPanel.ts' // test panel
+import { RepairGame } from '../ui/RepairGame.ts'
+import { Gate } from '../world/Gate.ts'
 import { ADMIN_PANEL, adminTabs, type Cheats } from './admin.ts' // test panel
+import { flatDistance } from './math.ts'
 import { Stats } from './Stats.ts'
 
 const MAX_STEP = 0.05 // a long frame (or a return from the background) never advances more than this
@@ -58,6 +65,12 @@ export class Game {
     furnaceSlots: 1,
     bossesDefeated: 0,
     miniBossesDefeated: 0,
+    depotBuilt: false,
+    lodgeBuilt: false,
+    carriers: 0,
+    waiters: 0,
+    cashiers: 0,
+    hunters: 0,
   }
   private player = new Player()
   private playerBar = new HpBar(COLORS.hpPlayer, 1.3)
@@ -70,6 +83,11 @@ export class Game {
   private bossMarker = new EdgeMarker(BOSS_ICON, 'boss')
   private cardPicker = new CardPicker()
   private trophies: Trophies
+  private depot: Depot
+  private gate: Gate
+  private repair = new RepairGame()
+  private construction: Construction
+  private workers: Workers
   private cheats: Cheats = { invincible: false, oneHit: false, fast: false } // test panel
   private admin: AdminPanel | null = null // test panel
   private base: BaseArea
@@ -97,11 +115,13 @@ export class Game {
     this.scene.add(this.player.root, this.playerBar.root)
     this.stack = new Stack(this.scene)
     this.loot = new Loot(this.scene)
-    this.herd = new BearHerd(this.scene, this.hunt, (at) => this.bearKilled(at))
+    this.herd = new BearHerd(this.scene, this.hunt, (at, by) => this.bearKilled(at, by))
     this.storm = new Storm(this.scene)
-    this.bossFight = new BossFight(this.scene, this.hunt, this.herd, this.storm, {
+    this.gate = new Gate(this.scene)
+    this.bossFight = new BossFight(this.scene, this.hunt, this.herd, this.storm, this.gate, {
       onDefeated: (kind, at) => this.bossDefeated(kind, at),
-      onCubKilled: (at) => this.bearKilled(at),
+      onCubKilled: (at) => this.bearKilled(at, null),
+      onRampage: () => this.rampage(),
       announce: (text) => this.hud.announce(text),
       nameCard: (name, title) => this.hud.showNameCard(name, title),
       hideNameCard: () => this.hud.hideNameCard(),
@@ -109,7 +129,17 @@ export class Game {
     this.trophies = new Trophies(this.scene)
     this.furnace = new Furnace(this.scene)
     this.shop = new Shop(this.scene)
-    this.stationPads = new StationPads(this.scene, this.stats)
+    this.depot = new Depot(this.scene)
+    this.workers = new Workers(this.scene, this.progress, this.stats, this.depot, this.furnace, this.shop)
+    this.stationPads = new StationPads(this.scene, this.stats, (kind) => this.workers.hire(kind))
+    this.construction = new Construction(
+      this.scene,
+      () => {
+        this.progress.depotBuilt = true
+        return this.depot.build()
+      },
+      () => (this.progress.lodgeBuilt = true),
+    )
     this.greatFurnace = new GreatFurnace(this.scene, this.progress, this.base)
     this.menu = new CharacterMenu(this.stats, this.wallet, this.progress)
     this.hud = new Hud(() => this.menu.toggle())
@@ -135,6 +165,10 @@ export class Game {
       shop: this.shop,
       greatFurnace: this.greatFurnace,
       player: this.player,
+      depot: this.depot,
+      workers: this.workers,
+      gate: this.gate,
+      furnace: this.furnace,
       cheats: this.cheats,
       countKill: () => this.countKill(),
       offerCards: () => this.offerCards('Deneme kartları'),
@@ -166,13 +200,15 @@ export class Game {
   private tick(time: number): void {
     this.timer.update(time)
     const dt = Math.min(this.timer.getDelta(), MAX_STEP)
-    // A boss's intro freezes the world while the camera goes to look at it.
+    // A boss's intro freezes the world while the camera goes to look at it; an angry roar slows it down.
+    const slow = this.bossFight.timeScale
     if (this.bossFight.inIntro) {
       if (!this.paused) this.bossFight.updateIntro(dt, this.camera)
-    } else if (dt > 0 && !this.paused) this.step(dt)
-    if (this.cheats.fast) for (let i = 1; i < FAST_STEPS && dt > 0 && !this.paused && !this.bossFight.inIntro; i++) this.step(dt) // test panel
+    } else if (dt > 0 && !this.paused) this.step(dt * slow)
+    if (this.cheats.fast) for (let i = 1; i < FAST_STEPS && dt > 0 && !this.paused && !this.bossFight.inIntro; i++) this.step(dt * slow) // test panel
 
-    placeCamera(this.camera, this.bossFight.cameraTarget(this.player.position))
+    placeCamera(this.camera, this.bossFight.cameraTarget(this.player.position), this.bossFight.zoom, this.paused ? 0 : this.bossFight.shake)
+    this.hud.updateDrama(this.bossFight.drama)
     this.playerBar.update(this.player.hp / this.player.maxHp, this.player.position, 1.75, this.camera)
     this.homeMarker.update(this.camera, this.canvas, LAYOUT.home)
     const boss = this.bossFight.boss
@@ -196,6 +232,8 @@ export class Game {
     this.attack.cooldown = s.get('attackCooldown')
     if (this.cheats.oneHit) this.attack.damage = Number.MAX_SAFE_INTEGER // test panel
     this.player.maxHp = s.get('maxHp')
+    this.player.regenScale = this.bossFight.fighting ? SIEGE.battleRegen : 1
+    this.shop.closed = this.bossFight.inBase
 
     this.player.update(dt, this.joystick, s.get('moveSpeed'))
     this.herd.update(dt, this.player, this.camera)
@@ -213,6 +251,11 @@ export class Game {
     this.stationPads.update(dt, this.player, this.wallet, this.progress)
     this.greatFurnace.update(dt, this.player, this.wallet, time)
     this.trophies.update(dt, this.progress)
+    this.construction.update(dt, this.player, this.wallet, this.progress)
+    this.depot.update(dt, this.player, this.stack, s)
+    this.workers.update(dt, this.herd, this.camera, this.bossFight.threat)
+    this.gate.update(dt, s.get('gateHp'), this.camera)
+    this.updateRepairs(dt)
 
     this.progress.totalEarned = this.wallet.totalEarned
     this.progress.capacityLevel = this.menu.level('capacity')
@@ -233,9 +276,34 @@ export class Game {
     this.hud.updateHunt(this.hunt.level, this.hunt.kills, this.hunt.needed)
   }
 
-  private bearKilled(at: Vector3): void {
-    this.loot.spawn(at, MathUtils.randInt(BEAR.meatMin, BEAR.meatMax) + this.hunt.meatBonus)
+  // A hunter keeps the meat it can carry; the rest, and everything from the player's kills, falls on the snow.
+  private bearKilled(at: Vector3, by: Fighter | null): void {
+    const meat = bearMeat(this.hunt.meatBonus)
+    const dropped = this.workers.isHunter(by) && by ? this.workers.hunterKill(by, meat) : meat
+    if (dropped > 0) this.loot.spawn(at, dropped)
     this.countKill()
+  }
+
+  // A boss broke into the base: the customers flee without paying and the furnace goes out.
+  private rampage(): void {
+    this.shop.closed = true // right away, so nobody walks in during this very frame
+    this.shop.panic()
+    this.furnace.douse()
+    const name = this.bossFight.view?.name ?? 'Boss'
+    this.hud.announce(`${name} üsse daldı!`)
+  }
+
+  // Free repairs, never with money, so the game can never get stuck: stand in the circle by the broken gate,
+  // or at a furnace that went out, and play the minigame. Not while the boss could break things again.
+  private updateRepairs(dt: number): void {
+    const gateReady = this.gate.broken && !this.bossFight.boss
+    this.gate.showRepairSpot(gateReady)
+    const atGate = gateReady && flatDistance(this.player.position, this.gate.repairSpot) < 1.4
+    const atFurnace = !this.furnace.lit && !this.bossFight.inBase && flatDistance(this.player.position, LAYOUT.furnaceZone) < FURNACE.zoneRadius
+    if (atGate) this.repair.open('gate', () => this.gate.repair())
+    else if (atFurnace) this.repair.open('furnace', () => this.furnace.relight())
+    else if (this.repair.kind) this.repair.close()
+    this.repair.update(dt)
   }
 
   private countKill(): void {

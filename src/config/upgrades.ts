@@ -20,11 +20,14 @@ export interface CharacterUpgradeDef extends UpgradeBase {
   lockedText?: string // shown in the menu while `unlocked` is false
 }
 
-export type StationId = 'furnace' | 'counter' | 'shop'
+export type StationId = 'furnace' | 'counter' | 'shop' | 'depot' | 'lodge' | 'gate'
+
+export type WorkerKind = 'carrier' | 'waiter' | 'cashier' | 'hunter'
 
 // Bought on a pad next to its station. Up to two pads stand by a station at once.
 export interface StationUpgradeDef extends UpgradeBase {
   station: StationId
+  hire?: WorkerKind // a one-off pad that hires this worker instead of changing a value
 }
 
 export function priceFor(def: UpgradeBase, level: number): number {
@@ -98,7 +101,59 @@ export const CHARACTER_UPGRADES: CharacterUpgradeDef[] = [
   },
 ]
 
+const nothing = (): void => {}
+
+// Each station shows the first two unlocked, unfinished tracks in this order, so a hiring pad comes first
+// and the worker's own upgrades take its spot once it is hired.
 export const STATION_UPGRADES: StationUpgradeDef[] = [
+  {
+    id: 'hireCarrier',
+    station: 'depot',
+    hire: 'carrier',
+    title: 'TAŞIYICI',
+    reward: () => 'İŞE AL',
+    baseCost: 200,
+    costGrowth: 1,
+    maxLevel: 1,
+    apply: nothing,
+    unlocked: (p) => p.depotBuilt,
+  },
+  {
+    id: 'hireHunter',
+    station: 'lodge',
+    hire: 'hunter',
+    title: 'AVCI',
+    reward: () => 'İŞE AL',
+    baseCost: 350,
+    costGrowth: 1,
+    maxLevel: 1,
+    apply: nothing,
+    unlocked: (p) => p.lodgeBuilt,
+  },
+  {
+    id: 'hireWaiter',
+    station: 'counter',
+    hire: 'waiter',
+    title: 'GARSON',
+    reward: () => 'İŞE AL',
+    baseCost: 300,
+    costGrowth: 1,
+    maxLevel: 1,
+    apply: nothing,
+    unlocked: (p) => p.baseLevel >= 3,
+  },
+  {
+    id: 'hireCashier',
+    station: 'shop',
+    hire: 'cashier',
+    title: 'KASİYER',
+    reward: () => 'İŞE AL',
+    baseCost: 400,
+    costGrowth: 1,
+    maxLevel: 1,
+    apply: nothing,
+    unlocked: (p) => p.baseLevel >= 3,
+  },
   {
     id: 'furnaceSlots',
     station: 'furnace',
@@ -175,5 +230,83 @@ export const STATION_UPGRADES: StationUpgradeDef[] = [
     maxLevel: 4,
     apply: (s) => s.multiply('customerInterval', -0.1),
     unlocked: (p) => p.baseLevel >= 3,
+  },
+  {
+    id: 'depotCapacity',
+    station: 'depot',
+    title: 'DEPO',
+    reward: () => '+15',
+    baseCost: 80,
+    costGrowth: 1.5,
+    maxLevel: 5,
+    apply: (s) => s.add('depotCapacity', 15),
+    unlocked: (p) => p.depotBuilt,
+  },
+  {
+    id: 'carrierLoad',
+    station: 'depot',
+    title: 'TAŞIYICI YÜKÜ',
+    reward: () => '+2',
+    baseCost: 120,
+    costGrowth: 1.6,
+    maxLevel: 4,
+    apply: (s) => s.add('carrierLoad', 2),
+    unlocked: (p) => p.carriers >= 1,
+  },
+  {
+    id: 'waiterLoad',
+    station: 'counter',
+    title: 'GARSON YÜKÜ',
+    reward: () => '+2',
+    baseCost: 120,
+    costGrowth: 1.6,
+    maxLevel: 4,
+    apply: (s) => s.add('waiterLoad', 2),
+    unlocked: (p) => p.waiters >= 1,
+  },
+  {
+    id: 'cashierSpeed',
+    station: 'shop',
+    title: 'KASİYER HIZI',
+    reward: () => '+%15',
+    baseCost: 150,
+    costGrowth: 1.6,
+    maxLevel: 4,
+    apply: (s) => s.multiply('cashierInterval', 1 / 1.15 - 1),
+    unlocked: (p) => p.cashiers >= 1,
+  },
+  {
+    id: 'hunterDamage',
+    station: 'lodge',
+    title: 'AVCI HASARI',
+    reward: () => '+3',
+    baseCost: 150,
+    costGrowth: 1.5,
+    maxLevel: 5,
+    apply: (s) => s.add('hunterDamage', 3),
+    unlocked: (p) => p.hunters >= 1,
+  },
+  {
+    // Shows up after the first boss is beaten: by then the player has seen what a boss does at the gate.
+    id: 'gateHp',
+    station: 'gate',
+    title: 'KAPI',
+    reward: () => '+60 DAYANIK',
+    baseCost: 100,
+    costGrowth: 1.5,
+    maxLevel: 4,
+    apply: (s) => s.add('gateHp', 60),
+    unlocked: (p) => p.bossesDefeated + p.miniBossesDefeated >= 1,
+  },
+  {
+    id: 'hunterLoad',
+    station: 'lodge',
+    title: 'AVCI YÜKÜ',
+    reward: () => '+3',
+    baseCost: 120,
+    costGrowth: 1.5,
+    maxLevel: 4,
+    apply: (s) => s.add('hunterLoad', 3),
+    unlocked: (p) => p.hunters >= 1,
   },
 ]

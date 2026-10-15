@@ -44,7 +44,7 @@ export function keepOutsideBase(pos: Vector3, radius: number): void {
 }
 
 // Solid buildings and tables, as rectangles on the ground. The player is pushed back out of them.
-interface Box {
+export interface Box {
   minX: number
   maxX: number
   minZ: number
@@ -53,13 +53,21 @@ interface Box {
 
 const obstacles: Box[] = []
 
-export function addObstacle(center: { x: number; z: number }, width: number, depth: number): void {
-  obstacles.push({
+export function addObstacle(center: { x: number; z: number }, width: number, depth: number): Box {
+  const box = {
     minX: center.x - width / 2,
     maxX: center.x + width / 2,
     minZ: center.z - depth / 2,
     maxZ: center.z + depth / 2,
-  })
+  }
+  obstacles.push(box)
+  return box
+}
+
+// For things that go away, such as trees cut down when the base grows.
+export function removeObstacle(box: Box): void {
+  const i = obstacles.indexOf(box)
+  if (i >= 0) obstacles.splice(i, 1)
 }
 
 // Moves a circle out of every obstacle it overlaps, to the nearest edge, so it slides along walls.

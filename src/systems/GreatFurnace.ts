@@ -32,6 +32,10 @@ export class GreatFurnace {
   private texture: CanvasTexture
   private fireMat: MeshLambertMaterial
   private top = new Vector3(LAYOUT.greatFurnace.x, 3.6, LAYOUT.greatFurnace.z)
+  private body: Mesh
+  private fire: Mesh
+  private label: Sprite
+  private grown = 0 // 0 → 1 while it grows a storey at base level 3
 
   constructor(scene: Scene, progress: Progress, base: BaseArea) {
     this.progress = progress
@@ -45,6 +49,8 @@ export class GreatFurnace {
     const fire = new Mesh(new CylinderGeometry(0.9, 0.9, 0.3, 10), this.fireMat)
     fire.position.y = 1.2
     body.add(fire)
+    this.body = body
+    this.fire = fire
 
     const canvas = document.createElement('canvas')
     canvas.width = LABEL_W
@@ -58,6 +64,7 @@ export class GreatFurnace {
     label.scale.set(2, 1, 1)
     label.position.copy(this.top)
     label.renderOrder = 12
+    this.label = label
 
     scene.add(body, label)
     addObstacle(LAYOUT.greatFurnace, 2.6, 2.6)
@@ -84,6 +91,7 @@ export class GreatFurnace {
 
   update(dt: number, player: Player, wallet: Wallet, time: number): void {
     this.fireMat.emissiveIntensity = 0.6 + Math.sin(time * 3) * 0.15
+    if (this.progress.baseLevel >= 3 && this.grown < 1) this.grow(dt)
     this.pad.update(dt, player, wallet)
   }
 
@@ -92,6 +100,18 @@ export class GreatFurnace {
     if (this.progress.baseLevel >= BASE_LEVELS[BASE_LEVELS.length - 1].level) return
     this.pad.level++
     this.raiseTo(this.pad.level + 1)
+  }
+
+  // At base level 3 the furnace rises a storey and its flames grow, so the middle of the base shows how far
+  // the player has come.
+  private grow(dt: number): void {
+    this.grown = Math.min(1, this.grown + dt / 1.2)
+    const k = this.grown - 1
+    const s = 1 + 2.7 * k * k * k + 1.7 * k * k // with a small overshoot
+    this.body.scale.set(1 + 0.25 * s, 1 + 0.6 * s, 1 + 0.25 * s)
+    this.body.position.y = 1.1 * (1 + 0.6 * s)
+    this.fire.scale.set(1 + 0.3 * s, 1 + 2 * s, 1 + 0.3 * s)
+    this.label.position.y = this.top.y + 1.3 * s
   }
 
   private raiseTo(level: number): void {

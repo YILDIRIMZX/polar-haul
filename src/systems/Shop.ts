@@ -39,6 +39,8 @@ export class Shop {
   private cashMeshes: Mesh[] = []
   private cashTimer = 0
   private playerChest = new Vector3()
+  cashier = false // once hired, customers are served without the player standing at the counter
+  closed = false // no new customers come while a boss is loose in the base
 
   constructor(scene: Scene) {
     this.scene = scene
@@ -76,6 +78,17 @@ export class Shop {
     this.flights.update(dt)
   }
 
+  // A boss broke into the base: everyone in the queue runs off without paying.
+  panic(): void {
+    for (const c of [...this.queue]) {
+      floatingText.spawn('Kaçtı!', c.position.clone().setY(2.6), undefined, 'loss')
+      c.state = 'leaving'
+      this.leaving.push(c)
+    }
+    this.queue.length = 0
+    if (this.leaving.length > 0) audio.play('angry')
+  }
+
   // Test panel: an urgent customer joins at once; when the queue is full the last one in it makes room.
   sendUrgent(stats: Stats, progress: Progress): void {
     if (this.queue.length >= stats.count('queueLength')) {
@@ -88,7 +101,7 @@ export class Shop {
 
   private spawnCustomers(dt: number, stats: Stats, progress: Progress): void {
     this.spawnTimer -= dt
-    if (this.spawnTimer > 0 || this.queue.length >= stats.count('queueLength')) return
+    if (this.closed || this.spawnTimer > 0 || this.queue.length >= stats.count('queueLength')) return
     // From base level 3, now and then an urgent customer: pays far more, but leaves unpaid if kept waiting.
     const urgent = progress.baseLevel >= SHOP.urgentFromBaseLevel && Math.random() < SHOP.urgentChance
     this.addCustomer(stats, progress, urgent)
@@ -145,10 +158,11 @@ export class Shop {
     }
   }
 
-  // While the player stands at the service spot, hands pieces from the counter to the first customer.
+  // While the player stands at the service spot, or once a cashier is hired, hands pieces from the counter
+  // to the first customer. The player serves faster than the cashier.
   private serve(dt: number, atService: boolean, stats: Stats): void {
     const front = this.queue[0]
-    const canServe = front !== undefined && front.state === 'waiting' && front.slot === 0 && atService
+    const canServe = front !== undefined && front.state === 'waiting' && front.slot === 0 && (atService || this.cashier)
     if (!canServe) {
       this.serveTimer = 0
       return
@@ -164,7 +178,7 @@ export class Shop {
         front.incoming--
         front.got++
       })
-      this.serveTimer += stats.get('serveInterval')
+      this.serveTimer += stats.get(atService ? 'serveInterval' : 'cashierInterval')
     }
   }
 

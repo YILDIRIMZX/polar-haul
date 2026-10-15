@@ -11,7 +11,11 @@ const back = CAMERA.distance * Math.cos(pitch)
 
 // Called every frame so the camera follows the target (the player).
 // The camera sits behind (+z) and above the player, so the bears (-z) fill the top of the screen.
-export function placeCamera(camera: PerspectiveCamera, target: Vector3): void {
-  camera.position.set(target.x, target.y + up, target.z + back)
-  camera.lookAt(target)
+// `zoom` below 1 moves it closer; `shake` (0–1) jolts it, for stomps and roars.
+export function placeCamera(camera: PerspectiveCamera, target: Vector3, zoom = 1, shake = 0): void {
+  const jolt = shake * CAMERA.maxShake
+  const jx = (Math.random() - 0.5) * jolt
+  const jy = (Math.random() - 0.5) * jolt
+  camera.position.set(target.x + jx, target.y + up * zoom + jy, target.z + back * zoom)
+  camera.lookAt(target.x + jx * 0.5, target.y + jy * 0.5, target.z)
 }

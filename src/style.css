@@ -204,18 +204,18 @@ body {
   }
 }
 
-/* A boss's name and title across the screen while the camera looks at it. */
+/* A boss's name and title across the screen while the camera looks at it. It slams in with the roar. */
 .name-card {
   position: fixed;
   left: 50%;
-  top: 62%;
-  z-index: 5;
+  top: 66%;
+  z-index: 7;
   width: calc(var(--game-w) - 32px);
   transform: translate(-50%, -50%);
   text-align: center;
   pointer-events: none;
   color: #fff;
-  animation: name-card-in 0.5s ease-out;
+  animation: name-card-in 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) both, name-card-shake 0.35s 0.15s linear;
 }
 
 .name-card.hidden {
@@ -245,13 +245,79 @@ body {
 
 @keyframes name-card-in {
   from {
-    transform: translate(-50%, -50%) scale(0.7);
+    transform: translate(-50%, -50%) scale(2.4);
     opacity: 0;
   }
   to {
     transform: translate(-50%, -50%) scale(1);
     opacity: 1;
   }
+}
+
+@keyframes name-card-shake {
+  0%,
+  100% {
+    margin-left: 0;
+  }
+  25% {
+    margin-left: -7px;
+  }
+  50% {
+    margin-left: 6px;
+  }
+  75% {
+    margin-left: -4px;
+  }
+}
+
+/* Cinema bars: slide in from the top and bottom while a boss makes its entrance. */
+.cinema {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: 6;
+  width: var(--game-w);
+  height: 100%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cinema-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 12%;
+  background: #05080b;
+  transition: transform 0.45s ease;
+}
+
+.cinema-bar.top {
+  top: 0;
+  transform: translateY(-100%);
+}
+
+.cinema-bar.bottom {
+  bottom: 0;
+  transform: translateY(100%);
+}
+
+.cinema.on .cinema-bar {
+  transform: none;
+}
+
+/* Danger: dark red creeping in from the edges. Its opacity is set by Hud.ts. */
+.dread {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: 1;
+  width: var(--game-w);
+  height: 100%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(ellipse at center, rgba(120, 0, 0, 0) 45%, rgba(110, 8, 4, 0.55) 80%, rgba(60, 0, 0, 0.85) 100%);
 }
 
 .boss-panel.angry {
@@ -643,6 +709,111 @@ body {
   margin: -24px 0 0 -24px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.9);
+}
+
+/* Repair minigame: a panel at the bottom with a sliding marker; tap while it is over the green zone. */
+.repair {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 92px);
+  z-index: 8;
+  width: min(320px, calc(var(--game-w) - 32px));
+  transform: translateX(-50%);
+  padding: 12px 14px 14px;
+  border-radius: 18px;
+  background: rgba(31, 58, 77, 0.9);
+  color: #fff;
+  text-align: center;
+  touch-action: none;
+}
+
+.repair.hidden {
+  display: none;
+}
+
+.repair-title {
+  font-weight: 800;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.repair-bar {
+  position: relative;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+}
+
+.repair-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.repair-marker {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 6px;
+  margin-left: -3px;
+  border-radius: 3px;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px #1f3a4d,
+    0 0 6px rgba(255, 255, 255, 0.9);
+}
+
+.repair-feedback {
+  height: 22px;
+  margin-top: 6px;
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.repair-feedback.perfect {
+  color: #7dffa8;
+}
+
+.repair-feedback.good {
+  color: #ffcf5c;
+}
+
+.repair-feedback.miss {
+  color: #ff8a7a;
+}
+
+.repair-button {
+  width: 100%;
+  margin-top: 4px;
+  padding: 12px 0;
+  border: 0;
+  border-radius: 14px;
+  background: #e08a2e;
+  color: #fff;
+  font: inherit;
+  font-size: 20px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.repair-button:active {
+  transform: scale(0.97);
+}
+
+.repair-progress {
+  height: 8px;
+  margin-top: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+}
+
+.repair-fill {
+  height: 100%;
+  width: 0;
+  background: #4cd964;
+  transition: width 0.15s ease;
 }
 
 /* Test panel: a small wrench in the bottom-left corner, opened by holding it for a second.

@@ -27,10 +27,31 @@ export const LAYOUT = {
   queueFront: { x: 0, z: 8.7 }, // first customer; the queue runs toward +z through the back gate
   customerSpawn: { x: 0, z: 21.5 },
   greatFurnace: { x: -4.6, z: -4.2 }, // the base level building
+  trophy: { x: -1.4, z: -4.4 }, // the beaten bosses' keepsakes lie beside the Great Furnace
   // Beside the building, not behind it: the camera looks from +z, so anything at a lower z hides behind it.
   // Away from the path between the front gate and the stations, so nobody walks onto it by accident.
-  trophy: { x: -1.4, z: -4.4 }, // the beaten bosses' keepsakes lie beside the Great Furnace
   greatFurnacePad: { x: -7.6, z: -4.2 },
+  // Gate depot (base level 2): raw meat waits here just inside the front gate. Hunters drop their meat on
+  // it, the player can drop theirs while walking in, and the carrier takes it to the furnace.
+  depot: { x: 5, z: -8.6 },
+  depotZone: { x: 2.6, z: -8.6 }, // standing here drops the raw meat you carry onto the depot
+  // Hunters' lodge (base level 3), in the west, where trees stand until the base grows.
+  lodge: { x: -11, z: 4.5 },
+  lodgeDoor: { x: -8.6, z: 4.5 },
+  westTrees: [
+    { x: -10.4, z: 2.6 },
+    { x: -12.2, z: 4.4 },
+    { x: -10.2, z: 6.4 },
+    { x: -12.4, z: 6.9 },
+    { x: -11.6, z: 1.6 },
+  ],
+  // Where each worker stands at either end of its round trip.
+  carrierPickup: { x: 3.2, z: -7.2 }, // by the depot
+  carrierDrop: { x: -2.4, z: 0.4 }, // by the furnace's raw tray
+  waiterPickup: { x: -2.6, z: 4.8 }, // by the furnace's cooked shelf
+  waiterDrop: { x: -2.3, z: 7.4 }, // at the end of the counter
+  cashierSpot: { x: 1.1, z: 6.1 }, // behind the counter, serving
+  hunterDrop: { x: 3, z: -9.4 }, // where hunters unload onto the depot: beside the shed, where the camera sees them
   // Up to two upgrade pads stand next to each station; a maxed pad leaves and the next track takes its place.
   stationSlots: {
     furnace: [
@@ -44,6 +65,18 @@ export const LAYOUT = {
     shop: [
       { x: 5.9, z: 5.6 },
       { x: 5.9, z: 8.2 },
+    ],
+    depot: [
+      { x: 8.2, z: -7.6 },
+      { x: 8.2, z: -10.2 },
+    ],
+    lodge: [
+      { x: -8.6, z: 8.2 },
+      { x: -11.2, z: 9.4 },
+    ],
+    gate: [
+      { x: -4.4, z: -9.4 },
+      { x: -6.8, z: -8.2 },
     ],
   },
   // Bears roam just outside the front gate, so the hunt starts a few steps from the base.
@@ -60,6 +93,7 @@ export const CAMERA = {
   maxPixelRatio: 2,
   pitchDeg: 43, // how steeply the camera looks down (90 = straight down)
   distance: 37, // how far the camera sits from the player
+  maxShake: 0.9, // how far a full-strength shake jolts the camera
 } as const
 
 export const COLORS = {
@@ -86,6 +120,13 @@ export const COLORS = {
   pine: 0x2f5d50,
   pineSnow: 0xf4f8fa,
   trunk: 0x6b4a36,
+  stake: 0x8a6a4a,
+  rope: 0xe8d9b0,
+  dirt: 0xb98d63,
+  carrier: 0xe08a2e,
+  waiter: 0xf4f4f0,
+  cashier: 0x3c9c6a,
+  hunter: 0x6b5a3a,
   skin: 0xf1c7a4,
   coats: [0x8a6fc9, 0xd98c3f, 0x4f9d8f, 0xc2556b, 0x6c8fd1],
 } as const

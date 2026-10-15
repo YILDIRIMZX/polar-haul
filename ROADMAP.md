@@ -148,7 +148,7 @@ Yol haritası, README (EN/TR), CHANGELOG, lisans ve resmi olmama uyarısı.
 | 0.5.0 ✅ | Yükseltme düzeni ve üs: Karakter menüsü, istasyon pedleri, inşa pedleri, Büyük Ocak ve üs seviyeleri 1–3 |
 | 0.6.0 ✅ | Av seviyesi, mini boss ve kartlar, 1. ana boss ve Üçlü Vuruş, Kar Fırtınası, acil müşteriler, test paneli |
 | 0.6.1 ✅ | Hatırlanan bosslar: giriş anı, uyarılı saldırılar, Dev Ayı'nın hücumu, Yaşlı Ayı'nın pençesi ve ikinci aşaması, post hatırası, pençe izleri |
-| 0.7.0 | İnşa alanları ve işçiler: üs seviyesinde çevre değişimi, Kapı Deposu ve Taşıyıcı, Avcı Kulübesi ve avcılar, Garson, Kasiyer |
+| 0.7.0 ✅ | Sinematik boss girişi, yakınlık cezası, sertleşen Yaşlı Ayı · İnşa alanları ve işçiler: üs seviyesinde çevre değişimi, Kapı Deposu ve Taşıyıcı, Avcı Kulübesi ve avcılar, Garson, Kasiyer |
 | 0.8.0 | Konveyörler, üs seviyeleri 4–6 ve çevre değişimleri, Buzul Ayısı ve Ayı Kralı (sunacakları yetenekleri sana karşı kullanırlar), üs seviyesinde ekonomi yetenekleri, ikinci av bölgesi |
 | 0.9.0 | Kayıt sistemi, ekonomi simülasyonu, denge |
 | 0.10.0 | Görseller, animasyonlar, kayıtlı (CC0) sesler ve müzik |

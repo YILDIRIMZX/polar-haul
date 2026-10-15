@@ -210,6 +210,9 @@ Her işçi kendi işinin yanındaki bir **inşa pediyle** işe alınır. İşe a
 - Avcı yığını dolunca üsse döner ve **Kapı Deposuna** bırakır. Depo doluysa kapıda bekler.
 - Ayılar avcılara da saldırır. Canı biten avcı kulübeye döner ve 10 saniye dinlenir.
 - Avcıların kestiği ayılar da **Av Seviyesi**ni ilerletir.
+- Avcı **ne zaman eve döneceğine** kendisi karar verir (`hunterShouldReturn`): sırtı dolunca, canı %30'un altına inince ya da sahada ayı kalmayıp sırtında et varken. Eve kaçarken kovalayan ayıdan biraz hızlıdır ve üsse girince iyileşir.
+- Boss yoldayken ve savaş sürerken avcılar **kulübelerine kaçıp saklanır**; boss gidince taşıdıklarını depoya götürüp ava döner.
+- Depo doluysa avcı başında "…" balonuyla bekler ve deponun üstünde **DEPO DOLU** tabelası yanar; darboğaz görünür olur.
 - Depodan ocağa taşıma önce elle, sonra Taşıyıcı, en sonunda Konveyör ile olur. Avcı ekonomisi bu yüzden kademeli büyür.
 
 ---
@@ -247,18 +250,19 @@ Bosslar **av seviyesine bağlı** olarak kendiliğinden gelir. Ekranda "Dev Ayı
 | **10** | **Final: Ayı Kralı** (Üs 6 gerekli) | 2 benzersiz yetenekten 1, ilk harita tamamlanır |
 
 ### Bosslar sadece büyük ayı değil: hatırlanan aşamalar
-Her boss oyunda iz bırakan bir aşama olmalı; canı ve hasarı büyük bir ayıdan fazlası. Bunun beş kuralı var:
+Her boss oyunda iz bırakan bir aşama olmalı; canı ve hasarı büyük bir ayıdan fazlası. Bunun altı kuralı var:
 
 1. **Ödülü önce düşmanın elinde görürsün.** Bir ana boss, vereceği gücü sana karşı kullanır. Oyuncu o gücün ne işe yaradığını önce acı çekerek öğrenir, sonra onu kazanır.
-2. **Giriş anı.** Kamera 1,5 saniye bossa kayar, isim kartı çıkar ("YAŞLI AYI · Sürünün Lideri"). Bu sırada oyun durur.
+2. **Giriş anı.** Yoldayken kalp atışı ve kızaran ekran kenarları; sonra sinema şeritleri, boss ormandan koşarak gelir, şahlanır, yere çakılıp kükrer ve adı ekrana çarpar ("YAŞLI AYI · Sürünün Lideri"). Bu sırada oyun durur.
 3. **Uyarılı saldırılar.** Her özel saldırıdan önce yerde kırmızı bir alan belirir ve bossun bir hazırlanma hareketi olur. Oyuncu kaçabilir: savaş hasar yarışı değil, beceridir.
-4. **İkinci aşama.** Canı yarıya inince boss kükrer, gözleri parlar ve yeni bir saldırı ekler.
+4. **İkinci aşama.** Canı yarıya inince boss şahlanır, şişer, kırmızı nabız gibi yanıp söner, ağır çekimde kükrer; daha sert vurur ve daha sık saldırır.
 5. **Kalıcı iz.** Yenilen ana boss üste görünür bir hatıra bırakır ve çevreyi değiştirir. Kaçan boss da av sahasında pençe izleri bırakır; izler, geri döneceği yeri gösterir.
+6. **Dibine sığınmak cezalandırılır.** Bossun etrafında dönmek kolay bir yol olmasın diye, dibinde bir an fazla kalan oyuncuya boss yere vurur: etrafında kırmızı bir daire belirir, içindeki herkes hasar alıp geri fırlar. Savaşın ritmi "yaklaş, vur, uzaklaş" olur.
 
 | Boss | Ödülü | Sana karşı kullandığı | İkinci aşama | Kalıcı iz |
 |---|---|---|---|---|
 | **Dev Ayı** (mini) | 2 karttan 1 | **Hücum:** başını eğer, yerde kırmızı bir çizgi belirir, o çizgi boyunca koşar. Kenara kaçılır. Çite ya da sahanın kenarına çarparsa 2 saniye sersemler: hasar penceresi. | — | — |
-| **Yaşlı Ayı** (Av 3) | Üçlü Vuruş | **Geniş pençe:** önündeki yelpaze biçimli alanı tarar; aynı anda birden çok hedefe vurmanın ne demek olduğunu gösterir. | Kükreyip 2 genç ayı çağırır: tek tek vurmak yetmez. Ödül tam bunun cevabı. | Postu Büyük Ocak'ın önüne serilir |
+| **Yaşlı Ayı** (Av 3) | Üçlü Vuruş | **Geniş pençe:** önündeki yelpaze biçimli alanı tarar; aynı anda birden çok hedefe vurmanın ne demek olduğunu gösterir. | Kükreyip ormandan 3 genç ayı çağırır: tek tek vurmak yetmez. Ödül tam bunun cevabı. | Postu Büyük Ocak'ın önüne serilir |
 | **Buzul Ayısı** (Av 6) | 2 buz yeteneğinden 1 | Savaşın başında buz havuzundan 2 yetenek seçer ve **sana karşı tam o ikisini** kullanır; kart ekranında da o ikisi çıkar. Her savaş farklıdır. | Zemin buzlanır, kayganlaşır | Donmuş göl çözülür, ikinci av bölgesinin yolu açılır |
 | **Ayı Kralı** (Av 10, final) | 2 kral yeteneğinden 1 | Zinciriyle seni çeker (Kanca), etrafında döner (Dönen Savuruş). Buzul Ayısı gibi, sunacağı iki yeteneği kullanır. | Muhafız ayılar gelir, arena daralır | Tacı üssün kapısına asılır; ilk harita tamamlanır |
 
@@ -307,6 +311,15 @@ Dev Ayı: normal ayıdan 1,6 kat büyük, 10 kat canlı, yavaş ama sert vuruyor
 ### Seçim ekranı
 Boss ölünce oyun durur ve iki kart ekrana gelir. Kart dokunuşla seçilir, oyun devam eder.
 
+### Üsse saklanmanın cezası: Kuşatma
+Canı azalan oyuncunun üsse kaçıp birkaç saniyede iyileşmesi, bossu kapıda bekletip savaşın gerilimini öldürüyordu. Artık saklanmanın bedeli var:
+- Boss savaşı sırasında üsteki iyileşme **beşte bire** iner; 90 saniyelik sayaç da işlemeye devam eder.
+- Oyuncu içerideyken boss çitin üstünden **buz** fırlatır; her parçanın düşeceği yerde kırmızı bir daire belirir. Üste güvenli bir köşe kalmaz.
+- 4 saniyeden fazla saklanırsa boss **ön kapıya** yüklenir. Kapının bir can çubuğu vardır.
+- Kapı kırılırsa boss **üsse dalar**: kuyruktaki müşteriler ödemeden kaçar, boss içerideyken yenisi gelmez, ocağın ateşi söner.
+
+**Hiçbir hasar para istemez; oyun asla kilitlenmez.** Kırık kapı ve sönen ocak bir **tamir mini oyunuyla** onarılır: oyuncu tamir dairesinde durur, alttaki panelde kayan işaret yeşil bölgedeyken dokunur. İyi zamanlama hızlı onarır, ıska bile biraz onarır. Kırık kapı onarılana kadar kırık kalır; onarılmazsa sonraki boss doğrudan içeri yürür. İlk boss yenildikten sonra kapının yanında **kapı dayanıklılığı** pedi çıkar; ilerideki kütük çit ve taş duvar da kapıyı güçlendirir.
+
 ### Boss'u kesememenin cezası: Kar Fırtınası
 Boss geldiğinde ekranın üstünde **90 saniyelik** bir sayaç başlar. Süre biterse ya da oyuncu boss'a karşı bayılırsa:
 - Boss kükreyip av sahasının derinliklerine çekilir ve **üsse kar fırtınası çöker** (60 saniye).
@@ -346,7 +359,7 @@ Kural: ilk dakikalarda her 30–60 saniyede bir yeni şey açılmalı. Sonra bu 
 | 0.5.0 ✅ | **Yükseltme düzeni ve üs:** Karakter menüsü, istasyon pedlerinin yanlarına taşınması (sadece sıradaki seviye), inşa pedleri, **Büyük Ocak** ve üs seviyeleri 1–3, genişleyen çit |
 | 0.6.0 ✅ | **Av seviyesi ve bosslar:** sürü kendiliğinden büyür, mini boss ve kart ekranı, 1. ana boss ve Üçlü Vuruş (Geniş Savuruş satırı kalkar), Kar Fırtınası cezası, acil müşteriler. Üs 3 ulaşılabilir hale gelir. |
 | 0.6.1 ✅ | **Hatırlanan bosslar:** giriş anı ve isim kartı, yerde uyarı alanları, Dev Ayı'nın hücumu ve sersemlemesi, Yaşlı Ayı'nın geniş pençesi ve ikinci aşaması (2 genç ayı), Büyük Ocak önünde post hatırası, kaçan bossun pençe izleri |
-| 0.7.0 | **İnşa alanları ve işçiler:** üs seviyesinde çevre değişimi ve inşaat animasyonu, Kapı Deposu ve Taşıyıcı (Üs 2), Avcı Kulübesi ve avcılar, Garson, Kasiyer (Üs 3) |
+| 0.7.0 ✅ | **Sinematik boss girişi, yakınlık cezası ve sertleşen Yaşlı Ayı · İnşa alanları ve işçiler:** üs seviyesinde çevre değişimi ve inşaat animasyonu, Kapı Deposu ve Taşıyıcı (Üs 2), Avcı Kulübesi ve avcılar, Garson, Kasiyer (Üs 3) |
 | 0.8.0 | Konveyör hattı ve tezgâh bandı, üs seviyeleri 4–6 ve çevre değişimleri, Buzul Ayısı ve Ayı Kralı (kullandıkları yeteneklerle), buz ve kral yetenekleri, üs seviyesinde ekonomi yeteneği seçimi, ikinci av bölgesi, ikinci ocak, VIP müşteriler |
 | 0.9.0 | Kayıt sistemi, ekonomi simülasyonu ve denge ayarı |
 | 0.10.0 | Görseller ve animasyonlar: modeller, efektler, kayıtlı (CC0) organik sesler, müzik |

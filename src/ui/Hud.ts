@@ -1,5 +1,5 @@
 import { audio } from '../audio/Audio.ts'
-import type { BossView } from '../systems/BossFight.ts'
+import type { BossView, Drama } from '../systems/BossFight.ts'
 
 const SOUND_ON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>'
 const SOUND_OFF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zm16.6 1.4-1.4-1.4L17 11.2 14.8 9l-1.4 1.4 2.2 2.2-2.2 2.2 1.4 1.4 2.2-2.2 2.2 2.2 1.4-1.4-2.2-2.2z"/></svg>'
@@ -25,6 +25,9 @@ export class Hud {
   private banner = document.createElement('div')
   private bannerTimer = 0
   private nameCard = document.createElement('div')
+  private cinema = document.createElement('div')
+  private dread = document.createElement('div')
+  private shownDread = -1
   private shownCash = -1
   private shownLoad = ''
   private shownHunt = ''
@@ -76,12 +79,16 @@ export class Hud {
     this.banner.setAttribute('role', 'status')
     this.nameCard.className = 'name-card hidden'
     this.nameCard.setAttribute('role', 'status')
+    // Black bars top and bottom while a boss makes its entrance, and red creeping in at the edges.
+    this.cinema.className = 'cinema'
+    this.cinema.innerHTML = '<div class="cinema-bar top"></div><div class="cinema-bar bottom"></div>'
+    this.dread.className = 'dread'
 
     const top = document.createElement('div')
     top.className = 'hud-top'
     top.append(this.load, this.sound, this.cash)
     hud.append(top, this.hunt, this.boss)
-    document.body.append(hud, this.banner, this.nameCard, this.character)
+    document.body.append(this.dread, this.cinema, hud, this.banner, this.nameCard, this.character)
   }
 
   // Big text in the middle of the screen for a moment: "Dev Ayı geliyor!", "Av seviyesi 3!".
@@ -108,6 +115,14 @@ export class Hud {
 
   hideNameCard(): void {
     this.nameCard.classList.add('hidden')
+  }
+
+  updateDrama(drama: Drama): void {
+    this.cinema.classList.toggle('on', drama.bars)
+    const d = Math.round(drama.dread * 50) / 50
+    if (d === this.shownDread) return
+    this.shownDread = d
+    this.dread.style.opacity = String(d)
   }
 
   updateHunt(level: number, kills: number, needed: number): void {

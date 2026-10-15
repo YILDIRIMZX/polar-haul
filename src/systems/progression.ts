@@ -8,6 +8,12 @@ export interface Progress {
   furnaceSlots: number // how many pieces the furnace cooks at once, 1 at the start
   bossesDefeated: number // main bosses beaten
   miniBossesDefeated: number // mini bosses beaten
+  depotBuilt: boolean // the gate depot (base level 2)
+  lodgeBuilt: boolean // the hunters' lodge (base level 3)
+  carriers: number // workers hired, by job
+  waiters: number
+  cashiers: number
+  hunters: number
 }
 
 // What a base level needs besides its price, and how far along the player is.

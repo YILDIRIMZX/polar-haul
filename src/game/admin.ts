@@ -11,12 +11,17 @@ export const ADMIN_PANEL = true
 import { TRIPLE_STRIKE, type CardDef } from '../config/cards.ts'
 import type { Player } from '../entities/Player.ts'
 import type { BossFight } from '../systems/BossFight.ts'
+import type { Depot } from '../systems/Depot.ts'
 import type { GreatFurnace } from '../systems/GreatFurnace.ts'
 import type { HuntLevel } from '../systems/HuntLevel.ts'
 import type { Progress } from '../systems/progression.ts'
 import type { Shop } from '../systems/Shop.ts'
 import type { Storm } from '../systems/Storm.ts'
 import type { Wallet } from '../systems/Wallet.ts'
+import type { Workers } from '../systems/Workers.ts'
+import type { Furnace } from '../systems/Furnace.ts'
+import type { Gate } from '../world/Gate.ts'
+import type { WorkerKind } from '../config/upgrades.ts'
 import type { AdminTab } from '../ui/AdminPanel.ts'
 import type { Stats } from './Stats.ts'
 
@@ -38,6 +43,10 @@ export interface AdminContext {
   shop: Shop
   greatFurnace: GreatFurnace
   player: Player
+  depot: Depot
+  workers: Workers
+  gate: Gate
+  furnace: Furnace
   cheats: Cheats
   countKill: () => void // one kill toward the hunt level, without dropping meat
   offerCards: () => boolean // the mini boss card screen; false when pickCards gave no cards
@@ -111,6 +120,26 @@ export function adminTabs(g: AdminContext): AdminTab[] {
           },
         },
         {
+          label: 'Kapı Deposu alanı',
+          hint: 'Üs 2\'ye çıkar, +$600: depoyu inşa et, Taşıyıcıyı işe al',
+          since: '0.7.0',
+          closes: true,
+          run: () => {
+            baseTo(2)
+            g.wallet.add(600)
+          },
+        },
+        {
+          label: 'Avcı Kulübesi alanı',
+          hint: 'Üs 3\'e çıkar, +$1500: ağaçlar kesilir, kulübeyi kur, avcı, garson ve kasiyer al',
+          since: '0.7.0',
+          closes: true,
+          run: () => {
+            baseTo(3)
+            g.wallet.add(1500)
+          },
+        },
+        {
           label: 'Kar fırtınası',
           hint: '60 saniyelik fırtınayı başlatır',
           since: '0.6.0',
@@ -124,8 +153,22 @@ export function adminTabs(g: AdminContext): AdminTab[] {
       actions: [
         { label: 'Av seviyesi +1', hint: 'Eksik avları sayar; o seviyenin bossu sıraya girer', since: '0.6.0', run: huntUp },
         { label: 'Dev Ayı çağır', hint: 'Hemen gelir. Hücumunu çite çarptır: sersemler', since: '0.6.0', closes: true, run: () => g.bossFight.summon('mini') },
-        { label: 'Yaşlı Ayı çağır', hint: 'Hemen gelir. Kırmızı yelpazeden çık: geniş pençe', since: '0.6.0', closes: true, run: () => g.bossFight.summon('elder') },
-        { label: 'Canını yarıya indir', hint: 'Yaşlı Ayı öfkelenir ve 2 genç ayı çağırır', since: '0.6.1', closes: true, run: () => g.bossFight.halveHealth() },
+        { label: 'Yaşlı Ayı çağır', hint: 'Ormandan koşarak gelir. Kırmızı yelpazeden çık: pençesi geri fırlatır', since: '0.6.0', closes: true, run: () => g.bossFight.summon('elder') },
+        { label: 'Canını yarıya indir', hint: 'Yaşlı Ayı şahlanıp öfkelenir, ağır çekimde kükrer, 3 genç ayı çağırır', since: '0.6.1', closes: true, run: () => g.bossFight.halveHealth() },
+        {
+          label: 'Kapıyı kır',
+          hint: 'Kapı kırılır; boss varsa içeri dalar, yoksa onarım dairesi çıkar',
+          since: '0.7.0',
+          closes: true,
+          run: () => g.gate.setBroken(),
+        },
+        {
+          label: 'Ateşi söndür',
+          hint: 'Ocak söner; dairesinde durup Körük oyununu oyna',
+          since: '0.7.0',
+          closes: true,
+          run: () => g.furnace.douse(),
+        },
         { label: 'Bossu yen', hint: 'Savaştaki boss ölür, ödülü gelir', since: '0.6.0', closes: true, run: () => g.bossFight.win() },
         { label: 'Süreyi 5 sn yap', hint: 'Boss sayacı bitmek üzere: fırtınayı görmek için', since: '0.6.0', closes: true, run: () => g.bossFight.expireSoon(5) },
         {
@@ -151,6 +194,28 @@ export function adminTabs(g: AdminContext): AdminTab[] {
           since: '0.6.1',
           closes: true,
           run: () => (g.progress.bossesDefeated = Math.max(g.progress.bossesDefeated, 1)),
+        },
+        {
+          label: 'Depoya 20 çiğ et',
+          hint: 'Kapı Deposu kuruluysa; Taşıyıcıyı izlemek için',
+          since: '0.7.0',
+          run: () => (g.depot.built ? g.depot.fill(20, g.stats) : g.announce('Önce Kapı Deposunu kur')),
+        },
+        {
+          label: 'Bütün işçileri al',
+          hint: 'Binaları kurulu olan işçileri bedavaya işe alır',
+          since: '0.7.0',
+          closes: true,
+          run: () => {
+            const p = g.progress
+            const hire = (kind: WorkerKind, have: number, open: boolean): void => {
+              if (have === 0 && open) g.workers.hire(kind)
+            }
+            hire('carrier', p.carriers, p.depotBuilt)
+            hire('waiter', p.waiters, p.baseLevel >= 3)
+            hire('cashier', p.cashiers, p.baseLevel >= 3)
+            hire('hunter', p.hunters, p.lodgeBuilt)
+          },
         },
         { label: 'Müşteri sayısı +10', hint: 'Hizmet edilen müşteri sayacına ekler', since: '0.6.0', run: () => (g.progress.customersServed += 10) },
         { label: 'Acil müşteri gönder', hint: 'Sıra doluysa en arkadaki yer açar', since: '0.6.0', closes: true, run: () => g.shop.sendUrgent(g.stats, g.progress) },
@@ -184,6 +249,9 @@ export function adminTabs(g: AdminContext): AdminTab[] {
           ['Yenilen boss (ana / mini)', `${g.progress.bossesDefeated} / ${g.progress.miniBossesDefeated}`],
           ['Kar fırtınası', g.storm.active ? `${Math.ceil(g.storm.remaining)} sn` : 'yok'],
           ['Üs seviyesi', String(g.progress.baseLevel)],
+          ['Kapı', g.gate.broken ? 'kırık' : `${Math.ceil(g.gate.hp)}/${g.gate.maxHp}`],
+          ['Kapı Deposu', g.depot.built ? `${g.depot.count}/${s.count('depotCapacity')}` : 'kurulmadı'],
+          ['İşçiler: taşıyıcı / garson / kasiyer / avcı', g.workers.counts],
           ['Hizmet edilen müşteri', String(g.progress.customersServed)],
           ['Toplam kazanç', `$${Math.floor(g.progress.totalEarned)}`],
           ['Hedef / hasar', `${s.count('attackTargets')} / ${s.get('attackDamage').toFixed(1)}`],
