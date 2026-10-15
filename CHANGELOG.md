@@ -6,6 +6,26 @@ Her güncelleme, neyin neden değiştiğiyle birlikte burada listelenir. En yeni
 
 ---
 
+## 0.6.1 (2026-10-15)
+
+**EN.** Bosses that are remembered, not just bigger bears. Every boss is now a stage of its own: you see it arrive, you learn its moves, and the fight leaves a mark.
+- **Arrival.** When a boss appears the world stops for a moment, the camera glides over to it and back, and its name and title cross the screen: "DEV AYI · Hücumcu", "YAŞLI AYI · Sürünün Lideri".
+- **Moves you can see coming.** Before a special move a red area appears on the ground and fills up while the boss winds up; when it is full, the move lands. Stepping out in time means it misses. Fights are about reading the boss, not only about damage.
+- **Dev Ayı charges.** Every few seconds it lowers its head, a red lane appears and it runs down it, even from close by. If it runs into the fence or the edge of the field it is stunned for two seconds and takes 50% more damage, so luring it into the fence is a tactic.
+- **Yaşlı Ayı sweeps and gets angry.** Its only attack is a wide 120° sweep in front of it. At half health it roars, turns red and calls two young bears to its side, and sweeps faster from then on. One hit at a time is no longer enough, which is exactly what its reward, Triple Strike, answers.
+- **Marks that stay.** Yaşlı Ayı's pelt lies beside the Great Furnace for good once it is beaten. A boss that gets away leaves claw marks where it will come back; they go when it returns.
+- **The plan behind it.** The design now has five rules for bosses, and the main bosses use against you the power they give: Buzul Ayısı will fight with the two ice abilities it then offers, Ayı Kralı with its royal ones. Economy abilities (Magnet, Plenty, Feast, Ember Furnace) will come from base levels instead of bosses. Both arrive in 0.8.0.
+- **Test panel.** New in this version: "Halve its health" (to see Yaşlı Ayı get angry) and "Pelt keepsake". Only this version's additions are marked NEW now.
+
+**TR.** Sadece büyük ayı değil, hatırlanan bosslar. Her boss artık kendi başına bir aşama: geldiğini görüyorsun, hamlelerini öğreniyorsun ve savaş arkasında bir iz bırakıyor.
+- **Giriş anı.** Boss belirince dünya bir an duruyor, kamera bossa kayıp geri dönüyor ve ekranda adı ile unvanı çıkıyor: "DEV AYI · Hücumcu", "YAŞLI AYI · Sürünün Lideri".
+- **Gelişi görülen hamleler.** Özel bir hamleden önce yerde kırmızı bir alan beliriyor ve boss hazırlanırken doluyor; dolunca hamle iniyor. Vaktinde dışarı adım atan kurtuluyor. Savaş artık sadece hasar yarışı değil, bossu okumak.
+- **Dev Ayı hücum ediyor.** Birkaç saniyede bir başını eğiyor, kırmızı bir şerit beliriyor ve o şerit boyunca koşuyor, yakındayken bile. Çite ya da sahanın kenarına çarparsa iki saniye sersemliyor ve %50 fazla hasar alıyor; onu çite çarptırmak bir taktik.
+- **Yaşlı Ayı pençe savuruyor ve öfkeleniyor.** Tek saldırısı önündeki 120°'lik geniş pençe. Canı yarıya inince kükrüyor, kırmızılaşıyor, yanına iki genç ayı çağırıyor ve bundan sonra daha hızlı savuruyor. Tek tek vurmak artık yetmiyor; ödülü Üçlü Vuruş da tam bunun cevabı.
+- **Kalıcı izler.** Yaşlı Ayı yenilince postu Büyük Ocak'ın yanına kalıcı olarak seriliyor. Kaçan boss geri döneceği yerde pençe izleri bırakıyor; geri gelince izler kayboluyor.
+- **Arkasındaki plan.** Tasarıma bosslar için beş kural eklendi ve ana bosslar verecekleri gücü sana karşı kullanıyor: Buzul Ayısı sonra sunacağı iki buz yeteneğiyle, Ayı Kralı kendi kral yetenekleriyle savaşacak. Ekonomi yetenekleri (Mıknatıs, Bereket, Ziyafet, Kor Ocak) bosslardan değil üs seviyelerinden gelecek. İkisi de 0.8.0'da.
+- **Test paneli.** Bu sürümde yeni: "Canını yarıya indir" (Yaşlı Ayı'nın öfkelenmesini görmek için) ve "Post hatırası". Artık sadece bu sürümün eklemeleri YENİ olarak işaretleniyor.
+
 ## 0.6.0 (2026-10-14)
 
 **EN.** The hunt grows on its own, and bosses arrive.

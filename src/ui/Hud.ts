@@ -24,6 +24,7 @@ export class Hud {
   private bossFill = document.createElement('div')
   private banner = document.createElement('div')
   private bannerTimer = 0
+  private nameCard = document.createElement('div')
   private shownCash = -1
   private shownLoad = ''
   private shownHunt = ''
@@ -73,12 +74,14 @@ export class Hud {
 
     this.banner.className = 'banner hidden'
     this.banner.setAttribute('role', 'status')
+    this.nameCard.className = 'name-card hidden'
+    this.nameCard.setAttribute('role', 'status')
 
     const top = document.createElement('div')
     top.className = 'hud-top'
     top.append(this.load, this.sound, this.cash)
     hud.append(top, this.hunt, this.boss)
-    document.body.append(hud, this.banner, this.character)
+    document.body.append(hud, this.banner, this.nameCard, this.character)
   }
 
   // Big text in the middle of the screen for a moment: "Dev Ayı geliyor!", "Av seviyesi 3!".
@@ -89,6 +92,22 @@ export class Hud {
     this.banner.classList.add('pop')
     window.clearTimeout(this.bannerTimer)
     this.bannerTimer = window.setTimeout(() => this.banner.classList.add('hidden'), ANNOUNCE_MS)
+  }
+
+  // A boss's name and title across the screen while the camera looks at it.
+  showNameCard(name: string, title: string): void {
+    const n = document.createElement('div')
+    n.className = 'name-card-name'
+    n.textContent = name
+    const t = document.createElement('div')
+    t.className = 'name-card-title'
+    t.textContent = title
+    this.nameCard.replaceChildren(n, t)
+    this.nameCard.classList.remove('hidden')
+  }
+
+  hideNameCard(): void {
+    this.nameCard.classList.add('hidden')
   }
 
   updateHunt(level: number, kills: number, needed: number): void {
@@ -103,10 +122,11 @@ export class Hud {
     this.boss.classList.toggle('hidden', view === null)
     if (!view) return
     const secs = Math.ceil(view.timeLeft)
-    const key = `${view.name}:${secs}:${Math.round(view.hpRatio * 200)}`
+    const key = `${view.name}:${secs}:${Math.round(view.hpRatio * 200)}:${view.angry}`
     if (key === this.shownBoss) return
     this.shownBoss = key
-    this.bossName.textContent = view.name
+    this.bossName.textContent = view.angry ? `${view.name} · öfkeli` : view.name
+    this.boss.classList.toggle('angry', view.angry)
     this.bossTime.textContent = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`
     this.bossTime.classList.toggle('low', secs <= 15)
     this.bossFill.style.width = `${Math.max(0, view.hpRatio) * 100}%`

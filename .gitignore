@@ -11,6 +11,7 @@ npm-debug.log*
 
 # Local tool output (never published)
 graphify-out/
+.graphifyignore
 
 # Editor and OS files
 .vscode/*

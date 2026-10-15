@@ -204,6 +204,60 @@ body {
   }
 }
 
+/* A boss's name and title across the screen while the camera looks at it. */
+.name-card {
+  position: fixed;
+  left: 50%;
+  top: 62%;
+  z-index: 5;
+  width: calc(var(--game-w) - 32px);
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  color: #fff;
+  animation: name-card-in 0.5s ease-out;
+}
+
+.name-card.hidden {
+  display: none;
+}
+
+.name-card-name {
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow:
+    0 3px 0 #4a1a12,
+    0 0 14px rgba(0, 0, 0, 0.6);
+}
+
+.name-card-title {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: rgba(31, 58, 77, 0.78);
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffcf5c;
+}
+
+@keyframes name-card-in {
+  from {
+    transform: translate(-50%, -50%) scale(0.7);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+.boss-panel.angry {
+  background: rgba(120, 20, 12, 0.88);
+}
+
 /* The blizzard: white at the edges, a thinner veil in the middle. Its opacity is set by Storm.ts. */
 .storm {
   position: fixed;

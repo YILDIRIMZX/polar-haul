@@ -246,25 +246,50 @@ Bosslar **av seviyesine bağlı** olarak kendiliğinden gelir. Ekranda "Dev Ayı
 | 9 | Mini boss | 2 rastgele karttan 1 |
 | **10** | **Final: Ayı Kralı** (Üs 6 gerekli) | 2 benzersiz yetenekten 1, ilk harita tamamlanır |
 
-### Ana boss: oyun tarzını değiştiren yetenekler
-**İlk ana boss her zaman Üçlü Vuruş'u verir:** karakter artık aynı anda 3 ayıya vurur. Bu, oyunun ilk büyük dönüm noktası. Eski "Geniş Savuruş" satırı bu yüzden 0.6.0'da karakter menüsünden kaldırıldı.
+### Bosslar sadece büyük ayı değil: hatırlanan aşamalar
+Her boss oyunda iz bırakan bir aşama olmalı; canı ve hasarı büyük bir ayıdan fazlası. Bunun beş kuralı var:
 
-Sonraki ana bosslar 2 benzersiz yetenek sunar. Oyuncu birini seçer, seçilmeyen havuza geri döner:
+1. **Ödülü önce düşmanın elinde görürsün.** Bir ana boss, vereceği gücü sana karşı kullanır. Oyuncu o gücün ne işe yaradığını önce acı çekerek öğrenir, sonra onu kazanır.
+2. **Giriş anı.** Kamera 1,5 saniye bossa kayar, isim kartı çıkar ("YAŞLI AYI · Sürünün Lideri"). Bu sırada oyun durur.
+3. **Uyarılı saldırılar.** Her özel saldırıdan önce yerde kırmızı bir alan belirir ve bossun bir hazırlanma hareketi olur. Oyuncu kaçabilir: savaş hasar yarışı değil, beceridir.
+4. **İkinci aşama.** Canı yarıya inince boss kükrer, gözleri parlar ve yeni bir saldırı ekler.
+5. **Kalıcı iz.** Yenilen ana boss üste görünür bir hatıra bırakır ve çevreyi değiştirir. Kaçan boss da av sahasında pençe izleri bırakır; izler, geri döneceği yeri gösterir.
 
-| Benzersiz yetenek | Etkisi |
+| Boss | Ödülü | Sana karşı kullandığı | İkinci aşama | Kalıcı iz |
+|---|---|---|---|---|
+| **Dev Ayı** (mini) | 2 karttan 1 | **Hücum:** başını eğer, yerde kırmızı bir çizgi belirir, o çizgi boyunca koşar. Kenara kaçılır. Çite ya da sahanın kenarına çarparsa 2 saniye sersemler: hasar penceresi. | — | — |
+| **Yaşlı Ayı** (Av 3) | Üçlü Vuruş | **Geniş pençe:** önündeki yelpaze biçimli alanı tarar; aynı anda birden çok hedefe vurmanın ne demek olduğunu gösterir. | Kükreyip 2 genç ayı çağırır: tek tek vurmak yetmez. Ödül tam bunun cevabı. | Postu Büyük Ocak'ın önüne serilir |
+| **Buzul Ayısı** (Av 6) | 2 buz yeteneğinden 1 | Savaşın başında buz havuzundan 2 yetenek seçer ve **sana karşı tam o ikisini** kullanır; kart ekranında da o ikisi çıkar. Her savaş farklıdır. | Zemin buzlanır, kayganlaşır | Donmuş göl çözülür, ikinci av bölgesinin yolu açılır |
+| **Ayı Kralı** (Av 10, final) | 2 kral yeteneğinden 1 | Zinciriyle seni çeker (Kanca), etrafında döner (Dönen Savuruş). Buzul Ayısı gibi, sunacağı iki yeteneği kullanır. | Muhafız ayılar gelir, arena daralır | Tacı üssün kapısına asılır; ilk harita tamamlanır |
+
+### Buz yetenekleri (Buzul Ayısı)
+| Yetenek | Boss sana karşı | Sen ayılara karşı |
+|---|---|---|
+| **Buz Nefesi** | Önündeki koni alanda seni %40 yavaşlatır | 6 saniyede bir önündeki ayıları 3 saniye %40 yavaşlatır |
+| **Donduran Vuruş** | Her 3. pençesi seni 1 saniye dondurur | Her 5. vuruşun ayıyı 1,5 saniye dondurur |
+| **Buz Zırhı** | Ön yüzü buz kaplıdır; arkasından vurulunca hasar alır | Ayılardan alınan hasar %40 az |
+| **Buz Sarkıtları** | Yerde gölgeler belirir, sarkıtlar düşer | Etrafındaki ayılara düzenli aralıklarla sarkıt düşer |
+
+### Kral yetenekleri (Ayı Kralı)
+| Yetenek | Boss sana karşı | Sen ayılara karşı |
+|---|---|---|
+| **Kanca** | Zinciriyle seni yanına çeker | 6 saniyede bir yakındaki 4 ayıyı üstüne çeker |
+| **Dönen Savuruş** | Etrafında döner, halka biçimli alana vurur | 5 saniyede bir etrafındaki bütün ayılara 2 kat hasar |
+| **Kasırga** | Vuruş alanı büyür | Vurma alanı +%50 |
+| **Kritik Vuruş** | Her 4. pençesi 2 kat vurur | Her 5. vuruş 3 kat hasar |
+
+### Ekonomi yetenekleri: üs seviyesinden
+Savaşa değil ekonomiye dokunan yetenekler bossların temasına uymaz; onlar **üs seviyesiyle** gelir. Büyük Ocak her seviye atladığında 2 ekonomi yeteneğinden birini sunar. Savaş yeteneği savaştan, ekonomi yeteneği ekonomiden gelir.
+
+| Ekonomi yeteneği | Etkisi |
 |---|---|
-| **Kanca** | 6 saniyede bir, yakındaki 4 ayıyı uzaktan üstüne çeker |
-| **Dönen Savuruş** | 5 saniyede bir etrafındaki bütün ayılara 2 kat hasar |
-| **Kasırga** | Vurma alanı +%50 |
-| Mıknatıs | Et toplama yarıçapı ×2 |
-| Kritik Vuruş | Her 5. vuruş 3 kat hasar |
-| Buz Zırhı | Ayılardan alınan hasar %40 az |
-| Bereket | Her ayıdan +1 et |
-| Ziyafet | Müşteriler %50 fazla öder |
-| Kor Ocak | Pişirme süresi yarıya iner |
+| **Mıknatıs** | Et toplama yarıçapı ×2 |
+| **Bereket** | Her ayıdan +1 et |
+| **Ziyafet** | Müşteriler %50 fazla öder |
+| **Kor Ocak** | Pişirme süresi yarıya iner |
 
 ### Mini boss: sayısal güçlenme kartları
-Dev Ayı: normal ayıdan 1,6 kat büyük, 10 kat canlı, yavaş ama sert vuruyor. Ölünce **2 rastgele kart** sunar. Kartlar tekrar çıkabilir, tavana ulaşanlar havuzdan çıkar.
+Dev Ayı: normal ayıdan 1,6 kat büyük, 10 kat canlı, yavaş ama sert vuruyor; asıl tehlikesi uyarılı **hücumu**. Ölünce **2 rastgele kart** sunar. Kartlar tekrar çıkabilir, tavana ulaşanlar havuzdan çıkar.
 
 | Kart | Etkisi | Not |
 |---|---|---|
@@ -319,9 +344,10 @@ Kural: ilk dakikalarda her 30–60 saniyede bir yeni şey açılmalı. Sonra bu 
 | 0.4.0 ✅ | Üretim zinciri (elle): ocak, tezgâh, müşteriler, bahşiş, kasa |
 | 0.4.1 ✅ | Pişmiş eti elle taşıma, sesler, uçan ödeme yazıları, kızgın müşteri, ped beklemesi |
 | 0.5.0 ✅ | **Yükseltme düzeni ve üs:** Karakter menüsü, istasyon pedlerinin yanlarına taşınması (sadece sıradaki seviye), inşa pedleri, **Büyük Ocak** ve üs seviyeleri 1–3, genişleyen çit |
-| **0.6.0** | **Av seviyesi ve bosslar:** sürü kendiliğinden büyür, mini boss ve kart ekranı, 1. ana boss ve Üçlü Vuruş (Geniş Savuruş satırı kalkar), Kar Fırtınası cezası, acil müşteriler. Üs 3 ulaşılabilir hale gelir. |
+| 0.6.0 ✅ | **Av seviyesi ve bosslar:** sürü kendiliğinden büyür, mini boss ve kart ekranı, 1. ana boss ve Üçlü Vuruş (Geniş Savuruş satırı kalkar), Kar Fırtınası cezası, acil müşteriler. Üs 3 ulaşılabilir hale gelir. |
+| 0.6.1 ✅ | **Hatırlanan bosslar:** giriş anı ve isim kartı, yerde uyarı alanları, Dev Ayı'nın hücumu ve sersemlemesi, Yaşlı Ayı'nın geniş pençesi ve ikinci aşaması (2 genç ayı), Büyük Ocak önünde post hatırası, kaçan bossun pençe izleri |
 | 0.7.0 | **İnşa alanları ve işçiler:** üs seviyesinde çevre değişimi ve inşaat animasyonu, Kapı Deposu ve Taşıyıcı (Üs 2), Avcı Kulübesi ve avcılar, Garson, Kasiyer (Üs 3) |
-| 0.8.0 | Konveyör hattı ve tezgâh bandı, üs seviyeleri 4–6 ve çevre değişimleri, 2. ana boss ve final, benzersiz yetenekler, ikinci av bölgesi, ikinci ocak, VIP müşteriler |
+| 0.8.0 | Konveyör hattı ve tezgâh bandı, üs seviyeleri 4–6 ve çevre değişimleri, Buzul Ayısı ve Ayı Kralı (kullandıkları yeteneklerle), buz ve kral yetenekleri, üs seviyesinde ekonomi yeteneği seçimi, ikinci av bölgesi, ikinci ocak, VIP müşteriler |
 | 0.9.0 | Kayıt sistemi, ekonomi simülasyonu ve denge ayarı |
 | 0.10.0 | Görseller ve animasyonlar: modeller, efektler, kayıtlı (CC0) organik sesler, müzik |
 | 1.0.0 | İlk harita baştan sona, iPhone'da sorunsuz |

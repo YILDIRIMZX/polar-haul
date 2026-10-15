@@ -6,7 +6,7 @@
 
 **English** · [Türkçe](README.tr.md)
 
-![Version](https://img.shields.io/badge/version-0.6.0-3b6e8f)
+![Version](https://img.shields.io/badge/version-0.6.1-3b6e8f)
 ![Status](https://img.shields.io/badge/status-in_development-8aa4b5)
 ![Three.js](https://img.shields.io/badge/Three.js-3D-1f2933)
 ![PWA](https://img.shields.io/badge/PWA-installable-3b6e8f)

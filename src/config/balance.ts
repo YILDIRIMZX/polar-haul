@@ -77,6 +77,7 @@ export type BossKind = 'mini' | 'elder'
 
 export const BOSSES: Record<BossKind, {
   name: string
+  title: string // shown under the name when the boss arrives
   scale: number
   color: number
   hpMultiplier: number
@@ -85,8 +86,8 @@ export const BOSSES: Record<BossKind, {
   attackCooldown: number
   meat: number
 }> = {
-  mini: { name: 'Dev Ayı', scale: 1.6, color: 0xeadfca, hpMultiplier: 10, damageMultiplier: 2.5, speedMultiplier: 0.75, attackCooldown: 1.6, meat: 8 },
-  elder: { name: 'Yaşlı Ayı', scale: 2.0, color: 0xb8b2a6, hpMultiplier: 16, damageMultiplier: 3, speedMultiplier: 0.7, attackCooldown: 1.8, meat: 14 },
+  mini: { name: 'Dev Ayı', title: 'Hücumcu', scale: 1.6, color: 0xeadfca, hpMultiplier: 10, damageMultiplier: 2.5, speedMultiplier: 0.75, attackCooldown: 1.6, meat: 8 },
+  elder: { name: 'Yaşlı Ayı', title: 'Sürünün Lideri', scale: 2.0, color: 0xb8b2a6, hpMultiplier: 16, damageMultiplier: 3, speedMultiplier: 0.7, attackCooldown: 1.8, meat: 14 },
 }
 
 // Which boss comes at which hunt level. Hunt levels 6 and 10 get their bosses in 0.8.0.
@@ -104,6 +105,20 @@ export const BOSS_FIGHT = {
   warningSeconds: 2.5, // "Dev Ayı geliyor!" stays on screen this long
   spawnBeyondGate: 9, // the boss appears this far outside the front gate
   aggroRadius: 9, // it charges once the player is this close
+} as const
+
+// The bosses' special moves. Every one is marked on the ground before it lands, so it can be dodged.
+// Damage values multiply the boss's normal hit.
+export const BOSS_MOVES = {
+  introSeconds: 2.2, // the camera visits the boss while its name card shows; the world waits
+  // Dev Ayı lowers its head, a red lane appears, then it runs down the lane, even from close by, so standing
+  // next to it is never safe. Hitting the fence or the edge of the field stuns it, and a stunned boss takes
+  // extra damage.
+  charge: { maxDistance: 16, windup: 1, speed: 15, length: 16, width: 3, damage: 1.5, stunSeconds: 2, stunDamage: 1.5, recover: 0.6, cooldown: 5 },
+  // Yaşlı Ayı sweeps a wide fan in front of it. Once angry it sweeps faster and more often.
+  sweep: { radius: 5.5, angle: (120 * Math.PI) / 180, windup: 0.9, angryWindup: 0.65, damage: 1.4, recover: 0.5, cooldown: 3, angryCooldown: 2 },
+  // At half health Yaşlı Ayı roars and calls young bears to its side.
+  anger: { atHealth: 0.5, roarSeconds: 1.2, cubs: 2, cubScale: 0.8, cubHp: 1.5, color: 0x5a1a10 },
 } as const
 
 // The blizzard after a lost boss fight.

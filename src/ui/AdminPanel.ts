@@ -185,9 +185,9 @@ function infoRow(name: string, value: string): HTMLElement {
   return row
 }
 
-// "New" means it arrived in the version being played: 0.6.x marks everything from 0.6.0.
+// "New" means it arrived in the version being played, so each update's additions stand out.
 function isNew(since: string): boolean {
-  return since.split('.').slice(0, 2).join('.') === __APP_VERSION__.split('.').slice(0, 2).join('.')
+  return since === __APP_VERSION__
 }
 
 function readTab(): number {

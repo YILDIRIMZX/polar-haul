@@ -123,8 +123,9 @@ export function adminTabs(g: AdminContext): AdminTab[] {
       title: 'Av ve boss',
       actions: [
         { label: 'Av seviyesi +1', hint: 'Eksik avları sayar; o seviyenin bossu sıraya girer', since: '0.6.0', run: huntUp },
-        { label: 'Dev Ayı çağır', hint: 'Mini boss sıranın başına geçer ve hemen gelir', since: '0.6.0', closes: true, run: () => g.bossFight.summon('mini') },
-        { label: 'Yaşlı Ayı çağır', hint: 'Ana boss sıranın başına geçer ve hemen gelir', since: '0.6.0', closes: true, run: () => g.bossFight.summon('elder') },
+        { label: 'Dev Ayı çağır', hint: 'Hemen gelir. Hücumunu çite çarptır: sersemler', since: '0.6.0', closes: true, run: () => g.bossFight.summon('mini') },
+        { label: 'Yaşlı Ayı çağır', hint: 'Hemen gelir. Kırmızı yelpazeden çık: geniş pençe', since: '0.6.0', closes: true, run: () => g.bossFight.summon('elder') },
+        { label: 'Canını yarıya indir', hint: 'Yaşlı Ayı öfkelenir ve 2 genç ayı çağırır', since: '0.6.1', closes: true, run: () => g.bossFight.halveHealth() },
         { label: 'Bossu yen', hint: 'Savaştaki boss ölür, ödülü gelir', since: '0.6.0', closes: true, run: () => g.bossFight.win() },
         { label: 'Süreyi 5 sn yap', hint: 'Boss sayacı bitmek üzere: fırtınayı görmek için', since: '0.6.0', closes: true, run: () => g.bossFight.expireSoon(5) },
         {
@@ -144,6 +145,13 @@ export function adminTabs(g: AdminContext): AdminTab[] {
       title: 'Üs',
       actions: [
         { label: 'Üs seviyesi +1', hint: 'Bedava ve koşulsuz; çit büyür, yeni pedler açılır', since: '0.6.0', run: () => baseTo(g.progress.baseLevel + 1) },
+        {
+          label: 'Post hatırası',
+          hint: 'Yaşlı Ayı yenilmiş sayılır; postu Büyük Ocak\'ın önüne serilir',
+          since: '0.6.1',
+          closes: true,
+          run: () => (g.progress.bossesDefeated = Math.max(g.progress.bossesDefeated, 1)),
+        },
         { label: 'Müşteri sayısı +10', hint: 'Hizmet edilen müşteri sayacına ekler', since: '0.6.0', run: () => (g.progress.customersServed += 10) },
         { label: 'Acil müşteri gönder', hint: 'Sıra doluysa en arkadaki yer açar', since: '0.6.0', closes: true, run: () => g.shop.sendUrgent(g.stats, g.progress) },
       ],

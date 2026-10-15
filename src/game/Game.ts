@@ -29,6 +29,7 @@ import { Hud } from '../ui/Hud.ts'
 import { BaseArea } from '../world/BaseArea.ts'
 import { createCamera, placeCamera } from '../world/camera.ts'
 import { createScene } from '../world/scene.ts'
+import { Trophies } from '../world/Trophies.ts'
 import { AdminPanel, type AdminTab } from '../ui/AdminPanel.ts' // test panel
 import { ADMIN_PANEL, adminTabs, type Cheats } from './admin.ts' // test panel
 import { Stats } from './Stats.ts'
@@ -68,6 +69,7 @@ export class Game {
   private homeMarker = new EdgeMarker(HOME_ICON)
   private bossMarker = new EdgeMarker(BOSS_ICON, 'boss')
   private cardPicker = new CardPicker()
+  private trophies: Trophies
   private cheats: Cheats = { invincible: false, oneHit: false, fast: false } // test panel
   private admin: AdminPanel | null = null // test panel
   private base: BaseArea
@@ -99,8 +101,12 @@ export class Game {
     this.storm = new Storm(this.scene)
     this.bossFight = new BossFight(this.scene, this.hunt, this.herd, this.storm, {
       onDefeated: (kind, at) => this.bossDefeated(kind, at),
+      onCubKilled: (at) => this.bearKilled(at),
       announce: (text) => this.hud.announce(text),
+      nameCard: (name, title) => this.hud.showNameCard(name, title),
+      hideNameCard: () => this.hud.hideNameCard(),
     })
+    this.trophies = new Trophies(this.scene)
     this.furnace = new Furnace(this.scene)
     this.shop = new Shop(this.scene)
     this.stationPads = new StationPads(this.scene, this.stats)
@@ -160,10 +166,13 @@ export class Game {
   private tick(time: number): void {
     this.timer.update(time)
     const dt = Math.min(this.timer.getDelta(), MAX_STEP)
-    if (dt > 0 && !this.paused) this.step(dt)
-    if (this.cheats.fast) for (let i = 1; i < FAST_STEPS && dt > 0 && !this.paused; i++) this.step(dt) // test panel
+    // A boss's intro freezes the world while the camera goes to look at it.
+    if (this.bossFight.inIntro) {
+      if (!this.paused) this.bossFight.updateIntro(dt, this.camera)
+    } else if (dt > 0 && !this.paused) this.step(dt)
+    if (this.cheats.fast) for (let i = 1; i < FAST_STEPS && dt > 0 && !this.paused && !this.bossFight.inIntro; i++) this.step(dt) // test panel
 
-    placeCamera(this.camera, this.player.position)
+    placeCamera(this.camera, this.bossFight.cameraTarget(this.player.position))
     this.playerBar.update(this.player.hp / this.player.maxHp, this.player.position, 1.75, this.camera)
     this.homeMarker.update(this.camera, this.canvas, LAYOUT.home)
     const boss = this.bossFight.boss
@@ -193,11 +202,9 @@ export class Game {
     this.bossFight.update(dt, this.player, this.camera)
     this.storm.update(dt)
     this.targets.length = 0
-    this.targets.push(...this.herd.bears)
-    const boss = this.bossFight.boss
-    if (boss) this.targets.push(boss)
+    this.targets.push(...this.herd.bears, ...this.bossFight.bears)
     this.attack.update(dt, this.player, this.targets, (bear, damage) =>
-      bear === boss ? this.bossFight.hit(damage) : this.herd.hit(bear, damage),
+      this.bossFight.owns(bear) ? this.bossFight.hit(bear, damage) : this.herd.hit(bear, damage),
     )
     this.loot.update(dt, this.player, this.stack, s.get('pickupRadius'))
     this.stack.update(dt, this.player)
@@ -205,6 +212,7 @@ export class Game {
     this.shop.update(dt, this.player, this.stack, s, this.wallet, this.progress, this.storm.patienceRate)
     this.stationPads.update(dt, this.player, this.wallet, this.progress)
     this.greatFurnace.update(dt, this.player, this.wallet, time)
+    this.trophies.update(dt, this.progress)
 
     this.progress.totalEarned = this.wallet.totalEarned
     this.progress.capacityLevel = this.menu.level('capacity')

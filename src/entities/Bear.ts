@@ -33,6 +33,7 @@ export class Bear {
   goalTimer = 0
   respawnTimer = 0
   facing = 0
+  glow = 0x000000 // a steady tint, such as an angry boss's red
   private flash = 0
   private material: MeshLambertMaterial
 
@@ -90,7 +91,7 @@ export class Bear {
 
   updateLook(dt: number): void {
     this.flash -= dt
-    this.material.emissive.setHex(this.flash > 0 ? COLORS.hitFlash : 0x000000)
+    this.material.emissive.setHex(this.flash > 0 ? COLORS.hitFlash : this.glow)
     this.root.rotation.y = turnTowards(this.root.rotation.y, this.facing, BEAR.turnSpeed * dt)
   }
 }

@@ -29,6 +29,7 @@ export const LAYOUT = {
   greatFurnace: { x: -4.6, z: -4.2 }, // the base level building
   // Beside the building, not behind it: the camera looks from +z, so anything at a lower z hides behind it.
   // Away from the path between the front gate and the stations, so nobody walks onto it by accident.
+  trophy: { x: -1.4, z: -4.4 }, // the beaten bosses' keepsakes lie beside the Great Furnace
   greatFurnacePad: { x: -7.6, z: -4.2 },
   // Up to two upgrade pads stand next to each station; a maxed pad leaves and the next track takes its place.
   stationSlots: {
