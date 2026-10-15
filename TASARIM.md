@@ -164,6 +164,9 @@ Seviye atlamak için hem **para** hem **ön koşul** gerekir. Ön koşullar dön
 | **5** | $5.000 | Ocakta 3 yuva | **2. ana boss** (Buzul Ayısı) | **İkinci ocak**, 3. avcı, VIP müşteriler · işçi sınırı 8 | 20 |
 | **6** | $12.000 | 150 müşteri | 4 mini boss | 4. avcı, **final boss**'un yolu açılır | 22 |
 
+### İlke: hiçbir gelişme rastgele değil
+Üsteki her bina, her sur ve her yükseltme dünyada gerçek bir ihtiyaca cevap verir: önce bir sorun çıkar (et ayıları çekiyor, kış uzuyor, kapı kırılıyor), sonra oyuncu onu çözen yapıyı kurar. Kar ikliminde yaşayan insanların kamptan kaleye nasıl geçtiği ve bunun oyuna uyarlanışı [KUZEY-YERLESIMLERI.md](KUZEY-YERLESIMLERI.md) belgesinde. Kısaca: önce ateş ve barınak; sur sonradan ve kampın **dışına** çekilir; sur malzemesi kademeli güçlenir (kazık → kütük → taş) ve her yeni sur eskisinin **yerine** geçer, üstüne eklenmez.
+
 ### Üs seviyesi neyi değiştirir: inşa alanları
 
 Üs seviyesi bir şeyi doğrudan vermez; **inşa edilecek bir yer hazırlar.** Oyuncu ödüle kendi parasıyla ulaşır ve üssün gözünün önünde değiştiğini görür:
