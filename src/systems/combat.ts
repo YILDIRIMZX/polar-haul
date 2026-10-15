@@ -2,6 +2,7 @@ import type { Vector3 } from 'three'
 import { audio } from '../audio/Audio.ts'
 import type { Bear } from '../entities/Bear.ts'
 import type { Player } from '../entities/Player.ts'
+import { isInsideBase } from '../world/bounds.ts'
 
 // Chooses the bears one swing hits: at most `max` of them, nearest first. An empty list means nothing to hit.
 // `from` is the player's position. A bear can be hit only when it is alive (`!bear.dead`)
@@ -29,9 +30,16 @@ export class AutoAttack {
   private wait = 0
 
   // `bears` is every bear that can be hit, the boss included; `hit` deals the damage to one of them.
-  update(dt: number, player: Player, bears: readonly Bear[], hit: (bear: Bear, damage: number) => void): void {
+  // A boss in reach is always struck first: nobody turns away from a giant bear to hit a small one.
+  // Nothing is hit across the fence: a bear outside cannot be struck from inside the base, nor the other way round.
+  update(dt: number, player: Player, allBears: readonly Bear[], hit: (bear: Bear, damage: number) => void, boss: Bear | null = null): void {
     this.wait = Math.max(0, this.wait - dt)
-    const targets = pickTargets(player.position, bears, this.maxTargets, this.range).filter(
+    const inside = player.inBase
+    const bears = allBears.filter((b) => isInsideBase(b.position.x, b.position.z) === inside)
+    const bossInReach = boss !== null && !boss.dead && bears.includes(boss) && boss.position.distanceTo(player.position) <= this.range
+    const others = bossInReach ? bears.filter((b) => b !== boss) : bears
+    const picked = pickTargets(player.position, others, this.maxTargets - (bossInReach ? 1 : 0), this.range)
+    const targets = (bossInReach && boss ? [boss, ...picked] : picked).filter(
       // Safety net: never hit a dead bear or one out of reach, whatever pickTargets returned.
       (bear) => !bear.dead && bear.position.distanceTo(player.position) <= this.range,
     )

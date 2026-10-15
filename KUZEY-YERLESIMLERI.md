@@ -186,13 +186,15 @@ Bu bölüm bir öneridir; neyin oyuna gireceğine birlikte karar vereceğiz.
 
 ---
 
-## 4. Karar bekleyen sorular
+## 4. Kararlar
 
-1. Üs 1'de çit **olmasın**, sadece kar bloklarından bir rüzgâr kesici mi olsun? (Ayılar şu an üsse hiç girmiyor; bunun açıklaması "ateş ve gürültü" olur.)
-2. Kapı Deposu ayaklı ambar olarak yeniden mi çizilsin?
-3. Çadırların kulübeye dönüşmesi oyuncunun parasıyla mı olsun, yoksa üs seviyesiyle kendiliğinden mi?
-4. Kurutma rafı ya da buz mahzeni üretim zincirine yeni bir adım olarak mı eklensin (fazla et bozulmasın), yoksa sadece görünüş mü?
-5. Sur kademesi (kazık, kütük, taş) Kar Fırtınası'nın etkisini de azaltsın mı?
+| # | Soru | Karar |
+|---|---|---|
+| 1 | Üs 1'de çit olsun mu? | **Olmasın.** Kampın etrafında diz boyu kar bloklarından bir rüzgâr kesici; ayıları ateş ve kamp gürültüsü uzak tutar. |
+| 2 | Kapı Deposu ayaklı ambar olsun mu? | **Evet.** Et kokusunun ayıları çekmesine karşı, ayının ulaşamayacağı ayaklı ambar. |
+| 3 | Çadırlar kulübeye nasıl dönüşsün? | **İkisi birden, dengeli:** bazı çadırlar üs seviyesiyle kendiliğinden kulübeye döner (kalış uzadı), bazılarını oyuncu parasıyla dönüştürür. |
+| 4 | Kurutma rafı ya da buz mahzeni ne yapsın? | **Müşterilerin isteği artar.** Saklanan et kışlık erzak demek: müşteriler kış için daha büyük siparişler verir. |
+| 5 | Sur kademesi Kar Fırtınası'nı etkilesin mi? | **Azaltsın, ama fırtınayı unutturmayacak kadar.** Her sur kademesi fırtınanın cezasını biraz hafifletir; fırtına her zaman hissedilir. |
 
 ---
 

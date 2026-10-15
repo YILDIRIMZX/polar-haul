@@ -54,6 +54,7 @@ interface Events {
   onDefeated: (kind: BossKind, at: Vector3) => void
   onCubKilled: (at: Vector3) => void
   onRampage: () => void // the boss broke into the base
+  canArrive: (kind: BossKind) => boolean // something in the world must draw it in first
   announce: (text: string) => void
   nameCard: (name: string, title: string) => void
   hideNameCard: () => void
@@ -74,6 +75,7 @@ export class BossFight {
   boss: Bear | null = null
   private kind: BossKind | null = null
   private pending: BossKind[] = [] // bosses whose hunt level was reached, oldest first
+  private forced: BossKind | null = null // test panel: this one comes next regardless
   private phase: Phase = 'waiting'
   private timer = 0 // warning countdown, then intro, then fight countdown
   private returnTimer = 0 // after a lost fight, time until the boss tries again
@@ -207,12 +209,11 @@ export class BossFight {
     if (this.fighting) this.lose()
   }
 
-  // Test panel: brings this boss next, right away, even during a blizzard's wait.
+  // Test panel: brings this boss next, right away, even during a blizzard's wait or before it would be drawn in.
   summon(kind: BossKind): void {
     if (this.phase !== 'waiting') return
-    const at = this.pending.indexOf(kind)
-    if (at > 0) this.pending.splice(at, 1)
-    if (at !== 0) this.pending.unshift(kind)
+    if (!this.pending.includes(kind)) this.pending.unshift(kind)
+    this.forced = kind
     this.returnTimer = 0
     this.storm.stop()
   }
@@ -284,10 +285,14 @@ export class BossFight {
     else if (this.phase === 'fighting') this.fight(dt, player, camera)
   }
 
+  // The oldest boss that is drawn in comes next; one that is not (Yaşlı Ayı before there is a meat store to
+  // smell) keeps waiting and lets the ones behind it come first.
   private wait(dt: number): void {
     this.returnTimer = Math.max(0, this.returnTimer - dt)
-    const next = this.pending[0]
-    if (!next || this.returnTimer > 0 || this.storm.active) return
+    if (this.returnTimer > 0 || this.storm.active) return
+    const next = this.forced ?? this.pending.find((kind) => this.events.canArrive(kind))
+    this.forced = null
+    if (!next) return
     this.kind = next
     this.phase = 'warning'
     this.timer = BOSS_FIGHT.warningSeconds
@@ -454,13 +459,8 @@ export class BossFight {
         this.move = 'chargeWindup'
         this.moveTimer = c.windup
         audio.play('growl')
-        return
       }
-      if (dist <= reach && this.attackTimer <= 0) {
-        this.attackTimer = def.attackCooldown
-        player.damage(this.damage())
-        audio.play('bossHit')
-      }
+      // No unwarned swipe: everything a boss does is marked on the ground first, so skill decides the fight.
       return
     }
 
@@ -506,7 +506,15 @@ export class BossFight {
       audio.play('bossHit')
     }
     // The fence, a station or the edge of the field pushed it back: it ran into something, even at a glancing angle.
-    if (flatDistance(before, boss.position) > 0.01) {
+    // Only a charge with a run-up stuns it; a short bump just ends the charge.
+    const bumped = flatDistance(before, boss.position) > 0.01
+    if (bumped && c.length - this.chargeLeft < c.stunAfter) {
+      this.move = 'recover'
+      this.moveTimer = c.recover
+      this.special = c.cooldown
+      return
+    }
+    if (bumped) {
       this.move = 'stunned'
       this.moveTimer = c.stunSeconds
       this.special = c.cooldown
@@ -686,7 +694,7 @@ export class BossFight {
       if (dist > BEAR.attackRange * 0.9) cub.position.addScaledVector(toTarget.divideScalar(dist), BEAR.chaseSpeed * dt)
       else if (!player.inBase && cub.attackTimer <= 0) {
         cub.attackTimer = BEAR.attackCooldown
-        player.damage(this.hunt.bearDamage)
+        player.damage(this.hunt.bearDamage * BOSS_MOVES.anger.cubDamage) // young bears hit softer
         audio.play('hurt')
       }
       keepOutsideBase(cub.position, cub.radius)
@@ -706,7 +714,7 @@ export class BossFight {
     audio.play('bossDie')
     this.slowLeft = 0
     this.removeBoss()
-    this.pending.shift()
+    this.pending.splice(this.pending.indexOf(kind), 1)
     this.phase = 'waiting'
     this.events.onDefeated(kind, boss.position.clone())
   }

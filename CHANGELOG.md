@@ -6,6 +6,28 @@ Her güncelleme, neyin neden değiştiğiyle birlikte burada listelenir. En yeni
 
 ---
 
+## 0.7.1 (2026-10-15)
+
+**EN.** Boss balance, after playing 0.7.0: Yaşlı Ayı could not be beaten even fully upgraded. The aim now is that a player with the upgrades they usually have when a boss comes can beat it with skill, while standing still and letting the auto-attack do the work loses. Each change was checked with a test player that dodges the red areas with a human reaction delay, and with one that does nothing.
+- **Yaşlı Ayı comes later, for a reason.** It is drawn in by the smell of stored meat, so it only arrives once the gate depot is built.
+- **Everything a boss does is warned.** Dev Ayı no longer has an unmarked swipe that reached further than the player's arm; it only charges and stomps, both shown on the ground first. Its charge hits harder instead.
+- **Softer numbers where it was unfair.** Yaşlı Ayı has less health, its sweep hurts less and, once angry, still gives time to react on a phone. The stomp needs a full second of hugging and comes less often. The young bears hit softer.
+- **A charge stuns only after a run-up.** Dev Ayı bumping into the fence from a few steps away no longer stuns it; luring it from afar still does.
+- **A boss in reach is struck first,** instead of a small bear standing next to it.
+- **Nothing is hit across the fence.** Bears outside cannot be struck from inside the base, nor the other way round.
+- **The base is a short breather, not a fortress.** During a fight it heals a little faster than in 0.7.0 and the siege starts after 6 seconds instead of 4; once a boss has broken in, the base no longer heals at all.
+- Results with the test players: with average upgrades the skilled player beat Yaşlı Ayı in about 35 seconds and, with no upgrades at all, in about 55; Dev Ayı with one damage and one health upgrade in two runs out of three. The player who stood still lost every time.
+
+**TR.** 0.7.0'ı oynadıktan sonra boss dengesi: Yaşlı Ayı bütün yükseltmeler alınmışken bile kesilemiyordu. Artık amaç şu: boss geldiğinde oyuncunun genelde sahip olduğu yükseltmelerle beceriyle kesilebilsin, ama hiç kıpırdamadan otomatik saldırıya bırakan kaybetsin. Her değişiklik iki test oyuncusuyla denendi: kırmızı alanlardan insan tepki süresiyle kaçan biri ve hiçbir şey yapmayan biri.
+- **Yaşlı Ayı daha geç ve bir sebeple geliyor.** Depolanan etin kokusu onu çekiyor; bu yüzden ancak Kapı Deposu kurulduktan sonra geliyor.
+- **Bossun her hamlesi uyarılı.** Dev Ayı'nın oyuncunun kolundan uzağa uzanan, uyarısız normal pençesi kaldırıldı; artık sadece hücum ediyor ve yere vuruyor, ikisi de önce yerde gösteriliyor. Buna karşılık hücumu daha sert.
+- **Haksız yerlerde sayılar yumuşadı.** Yaşlı Ayı'nın canı azaldı, pençesi daha az acıtıyor ve öfkeliyken bile telefonda tepki verecek kadar zaman bırakıyor. Yere vurması için dibinde tam bir saniye kalmak gerekiyor ve daha seyrek geliyor. Genç ayılar daha hafif vuruyor.
+- **Hücum ancak hız alınca sersemletiyor.** Dev Ayı birkaç adım ötedeki çite çarpınca artık sersemlemiyor; uzaktan kışkırtılan hücum hâlâ sersemletiyor.
+- **Menzildeki boss önce vuruluyor;** yanındaki küçük bir ayı değil.
+- **Çitin iki yanı birbirine vuramıyor.** Dışarıdaki ayılara üssün içinden, içeridekilere dışarıdan vurulamıyor.
+- **Üs kısa bir nefes, kale değil.** Savaşta üs 0.7.0'dakinden biraz daha hızlı iyileştiriyor ve kuşatma 4 yerine 6 saniye sonra başlıyor; boss içeri daldıysa üs artık hiç iyileştirmiyor.
+- Test oyuncularıyla sonuçlar: ortalama yükseltmelerle becerikli oyuncu Yaşlı Ayı'yı yaklaşık 35 saniyede, hiç yükseltme olmadan yaklaşık 55 saniyede kesti; Dev Ayı'yı bir hasar ve bir can yükseltmesiyle üç denemenin ikisinde kesti. Hiç kıpırdamayan oyuncu her seferinde kaybetti.
+
 ## 0.7.0 (2026-10-15)
 
 **EN.** The base starts to run itself, and the bosses become real fights.

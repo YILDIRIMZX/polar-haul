@@ -167,6 +167,8 @@ Seviye atlamak için hem **para** hem **ön koşul** gerekir. Ön koşullar dön
 ### İlke: hiçbir gelişme rastgele değil
 Üsteki her bina, her sur ve her yükseltme dünyada gerçek bir ihtiyaca cevap verir: önce bir sorun çıkar (et ayıları çekiyor, kış uzuyor, kapı kırılıyor), sonra oyuncu onu çözen yapıyı kurar. Kar ikliminde yaşayan insanların kamptan kaleye nasıl geçtiği ve bunun oyuna uyarlanışı [KUZEY-YERLESIMLERI.md](KUZEY-YERLESIMLERI.md) belgesinde. Kısaca: önce ateş ve barınak; sur sonradan ve kampın **dışına** çekilir; sur malzemesi kademeli güçlenir (kazık → kütük → taş) ve her yeni sur eskisinin **yerine** geçer, üstüne eklenmez.
 
+0.8.0 için verilen kararlar: Üs 1'de çit yok, kar bloklarından bir rüzgâr kesici var; Kapı Deposu ayaklı ambar olur; çadırlar kulübeye hem üs seviyesiyle hem oyuncunun parasıyla, dengeli biçimde döner; kurutma rafı ve buz mahzeni kışlık erzak sağlar ve müşteriler daha büyük siparişler verir; her sur kademesi Kar Fırtınası'nı biraz hafifletir ama fırtına her zaman hissedilir. Ayrıntılar [KUZEY-YERLESIMLERI.md](KUZEY-YERLESIMLERI.md) belgesinin 4. bölümünde.
+
 ### Üs seviyesi neyi değiştirir: inşa alanları
 
 Üs seviyesi bir şeyi doğrudan vermez; **inşa edilecek bir yer hazırlar.** Oyuncu ödüle kendi parasıyla ulaşır ve üssün gözünün önünde değiştiğini görür:
@@ -253,7 +255,7 @@ Bosslar **av seviyesine bağlı** olarak kendiliğinden gelir. Ekranda "Dev Ayı
 | **10** | **Final: Ayı Kralı** (Üs 6 gerekli) | 2 benzersiz yetenekten 1, ilk harita tamamlanır |
 
 ### Bosslar sadece büyük ayı değil: hatırlanan aşamalar
-Her boss oyunda iz bırakan bir aşama olmalı; canı ve hasarı büyük bir ayıdan fazlası. Bunun altı kuralı var:
+Her boss oyunda iz bırakan bir aşama olmalı; canı ve hasarı büyük bir ayıdan fazlası. Bunun yedi kuralı var:
 
 1. **Ödülü önce düşmanın elinde görürsün.** Bir ana boss, vereceği gücü sana karşı kullanır. Oyuncu o gücün ne işe yaradığını önce acı çekerek öğrenir, sonra onu kazanır.
 2. **Giriş anı.** Yoldayken kalp atışı ve kızaran ekran kenarları; sonra sinema şeritleri, boss ormandan koşarak gelir, şahlanır, yere çakılıp kükrer ve adı ekrana çarpar ("YAŞLI AYI · Sürünün Lideri"). Bu sırada oyun durur.
@@ -261,6 +263,7 @@ Her boss oyunda iz bırakan bir aşama olmalı; canı ve hasarı büyük bir ay�
 4. **İkinci aşama.** Canı yarıya inince boss şahlanır, şişer, kırmızı nabız gibi yanıp söner, ağır çekimde kükrer; daha sert vurur ve daha sık saldırır.
 5. **Kalıcı iz.** Yenilen ana boss üste görünür bir hatıra bırakır ve çevreyi değiştirir. Kaçan boss da av sahasında pençe izleri bırakır; izler, geri döneceği yeri gösterir.
 6. **Dibine sığınmak cezalandırılır.** Bossun etrafında dönmek kolay bir yol olmasın diye, dibinde bir an fazla kalan oyuncuya boss yere vurur: etrafında kırmızı bir daire belirir, içindeki herkes hasar alıp geri fırlar. Savaşın ritmi "yaklaş, vur, uzaklaş" olur.
+7. **Her hamle uyarılıdır.** Bossun hasarı yalnızca yerde önceden gösterilen hamlelerden gelir; uyarısız bir pençe becerinin işe yaramadığı bir hasar olurdu. Boss geldiğinde oyuncunun genelde sahip olduğu yükseltmelerle beceriyle kesilebilmeli; hiç kıpırdamayan oyuncu kaybetmeli.
 
 | Boss | Ödülü | Sana karşı kullandığı | İkinci aşama | Kalıcı iz |
 |---|---|---|---|---|
@@ -363,6 +366,7 @@ Kural: ilk dakikalarda her 30–60 saniyede bir yeni şey açılmalı. Sonra bu 
 | 0.6.0 ✅ | **Av seviyesi ve bosslar:** sürü kendiliğinden büyür, mini boss ve kart ekranı, 1. ana boss ve Üçlü Vuruş (Geniş Savuruş satırı kalkar), Kar Fırtınası cezası, acil müşteriler. Üs 3 ulaşılabilir hale gelir. |
 | 0.6.1 ✅ | **Hatırlanan bosslar:** giriş anı ve isim kartı, yerde uyarı alanları, Dev Ayı'nın hücumu ve sersemlemesi, Yaşlı Ayı'nın geniş pençesi ve ikinci aşaması (2 genç ayı), Büyük Ocak önünde post hatırası, kaçan bossun pençe izleri |
 | 0.7.0 ✅ | **Sinematik boss girişi, yakınlık cezası ve sertleşen Yaşlı Ayı · İnşa alanları ve işçiler:** üs seviyesinde çevre değişimi ve inşaat animasyonu, Kapı Deposu ve Taşıyıcı (Üs 2), Avcı Kulübesi ve avcılar, Garson, Kasiyer (Üs 3) |
+| 0.7.1 ✅ | **Boss dengesi:** her hamle uyarılı (Dev Ayı'nın uyarısız pençesi kalktı), Yaşlı Ayı Kapı Deposu kurulunca gelir, yumuşayan sayılar, hız almadan çarpan sersemlemez, menzildeki boss önce vurulur, çitin iki yanı birbirine vuramaz, boss içerideyken üs iyileştirmez |
 | 0.8.0 | Konveyör hattı ve tezgâh bandı, üs seviyeleri 4–6 ve çevre değişimleri, Buzul Ayısı ve Ayı Kralı (kullandıkları yeteneklerle), buz ve kral yetenekleri, üs seviyesinde ekonomi yeteneği seçimi, ikinci av bölgesi, ikinci ocak, VIP müşteriler |
 | 0.9.0 | Kayıt sistemi, ekonomi simülasyonu ve denge ayarı |
 | 0.10.0 | Görseller ve animasyonlar: modeller, efektler, kayıtlı (CC0) organik sesler, müzik |

@@ -122,6 +122,8 @@ export class Game {
       onDefeated: (kind, at) => this.bossDefeated(kind, at),
       onCubKilled: (at) => this.bearKilled(at, null),
       onRampage: () => this.rampage(),
+      // Yaşlı Ayı is drawn in by the smell of a meat store: it does not come before the gate depot is built.
+      canArrive: (kind) => kind !== 'elder' || this.progress.depotBuilt,
       announce: (text) => this.hud.announce(text),
       nameCard: (name, title) => this.hud.showNameCard(name, title),
       hideNameCard: () => this.hud.hideNameCard(),
@@ -232,7 +234,8 @@ export class Game {
     this.attack.cooldown = s.get('attackCooldown')
     if (this.cheats.oneHit) this.attack.damage = Number.MAX_SAFE_INTEGER // test panel
     this.player.maxHp = s.get('maxHp')
-    this.player.regenScale = this.bossFight.fighting ? SIEGE.battleRegen : 1
+    // The base heals slowly during a boss fight, and not at all once the boss has broken in: it is no refuge then.
+    this.player.regenScale = this.bossFight.inBase ? 0 : this.bossFight.fighting ? SIEGE.battleRegen : 1
     this.shop.closed = this.bossFight.inBase
 
     this.player.update(dt, this.joystick, s.get('moveSpeed'))
@@ -241,8 +244,12 @@ export class Game {
     this.storm.update(dt)
     this.targets.length = 0
     this.targets.push(...this.herd.bears, ...this.bossFight.bears)
-    this.attack.update(dt, this.player, this.targets, (bear, damage) =>
-      this.bossFight.owns(bear) ? this.bossFight.hit(bear, damage) : this.herd.hit(bear, damage),
+    this.attack.update(
+      dt,
+      this.player,
+      this.targets,
+      (bear, damage) => (this.bossFight.owns(bear) ? this.bossFight.hit(bear, damage) : this.herd.hit(bear, damage)),
+      this.bossFight.boss,
     )
     this.loot.update(dt, this.player, this.stack, s.get('pickupRadius'))
     this.stack.update(dt, this.player)

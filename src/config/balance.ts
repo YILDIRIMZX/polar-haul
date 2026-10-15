@@ -96,8 +96,8 @@ export const BOSSES: Record<BossKind, {
   attackCooldown: number
   meat: number
 }> = {
-  mini: { name: 'Dev Ayı', title: 'Hücumcu', scale: 1.6, color: 0xeadfca, hpMultiplier: 10, damageMultiplier: 2.5, speedMultiplier: 0.75, attackCooldown: 1.6, meat: 8 },
-  elder: { name: 'Yaşlı Ayı', title: 'Sürünün Lideri', scale: 2.0, color: 0xb8b2a6, hpMultiplier: 16, damageMultiplier: 3, speedMultiplier: 0.7, attackCooldown: 1.8, meat: 14 },
+  mini: { name: 'Dev Ayı', title: 'Hücumcu', scale: 1.6, color: 0xeadfca, hpMultiplier: 12, damageMultiplier: 1.8, speedMultiplier: 0.75, attackCooldown: 2, meat: 8 },
+  elder: { name: 'Yaşlı Ayı', title: 'Sürünün Lideri', scale: 2.0, color: 0xb8b2a6, hpMultiplier: 14, damageMultiplier: 2.2, speedMultiplier: 0.7, attackCooldown: 1.8, meat: 14 },
 }
 
 // Which boss comes at which hunt level. Hunt levels 6 and 10 get their bosses in 0.8.0.
@@ -124,17 +124,17 @@ export const BOSS_MOVES = {
   // and roars. Times are seconds from the start of the intro.
   intro: { seconds: 4, entryDistance: 18, runSeconds: 1.5, roarAt: 2.2, returnAt: 3.4, stride: 0.3, zoom: 0.72 },
   // Dev Ayı lowers its head, a red lane appears, then it runs down the lane, even from close by, so standing
-  // next to it is never safe. Hitting the fence or the edge of the field stuns it, and a stunned boss takes
-  // extra damage.
-  charge: { maxDistance: 16, windup: 1, speed: 15, length: 16, width: 3, damage: 1.5, stunSeconds: 2, stunDamage: 1.5, recover: 0.6, cooldown: 5 },
+  // next to it is never safe. Hitting the fence or the edge of the field after a run-up of `stunAfter` stuns
+  // it, and a stunned boss takes extra damage; a short bump does not, so luring it from afar is what pays.
+  charge: { maxDistance: 16, windup: 1, speed: 15, length: 16, width: 3, damage: 2.2, stunAfter: 5, stunSeconds: 2, stunDamage: 1.5, recover: 0.6, cooldown: 5 },
   // Yaşlı Ayı sweeps a wide fan in front of it and throws whoever it hits back. Once angry it sweeps faster
   // and more often.
-  sweep: { radius: 6.5, angle: (140 * Math.PI) / 180, windup: 0.9, angryWindup: 0.45, damage: 2, knockback: 26, recover: 0.5, angryRecover: 0.25, cooldown: 3, angryCooldown: 1.2 },
+  sweep: { radius: 6.5, angle: (140 * Math.PI) / 180, windup: 0.9, angryWindup: 0.6, damage: 1.9, knockback: 26, recover: 0.5, angryRecover: 0.35, cooldown: 3, angryCooldown: 1.6 },
   // Hugging a boss is punished: stay close for a moment and it pounds the ground all around itself, so
   // circling behind it is no longer a safe way to win. `reach` is added to the boss's own radius.
-  stomp: { closeRange: 1.6, triggerSeconds: 0.7, windup: 0.5, angryWindup: 0.35, reach: 2.6, damage: 1.3, knockback: 22, recover: 0.4, cooldown: 2.2, angryCooldown: 1.4 },
+  stomp: { closeRange: 1.6, triggerSeconds: 1, windup: 0.6, angryWindup: 0.45, reach: 2.6, damage: 1, knockback: 22, recover: 0.4, cooldown: 3, angryCooldown: 2.2 },
   // At half health Yaşlı Ayı rears up, swells, roars in slow motion and calls young bears out of the forest.
-  anger: { damage: 1.35, atHealth: 0.5, roarSeconds: 2, roarAt: 0.6, swell: 1.15, slowMotion: 0.3, slowSeconds: 0.8, cubs: 3, cubsFrom: 14, cubScale: 0.8, cubHp: 1.5, color: 0x7a1a0c },
+  anger: { damage: 1.2, atHealth: 0.5, roarSeconds: 2, roarAt: 0.6, swell: 1.15, slowMotion: 0.3, slowSeconds: 0.8, cubs: 3, cubsFrom: 14, cubScale: 0.8, cubHp: 1, cubDamage: 0.5, color: 0x7a1a0c },
 } as const
 
 // Hiding in the base during a boss fight is not free. Healing slows down; the boss throws ice over the fence;
@@ -142,8 +142,8 @@ export const BOSS_MOVES = {
 // without paying and the furnace goes out. Nothing it breaks costs money to fix, so the game can never get
 // stuck: the gate mends itself once the boss is gone, and the furnace is relit by standing at it.
 export const SIEGE = {
-  battleRegen: 0.2, // healing in the base during a boss fight, as a share of the normal rate
-  hideSeconds: 4, // hiding longer than this sends the boss to the gate
+  battleRegen: 0.35, // healing in the base during a boss fight, as a share of the normal rate
+  hideSeconds: 6, // hiding longer than this sends the boss to the gate
   poundEvery: 1.2,
   poundDamage: 12,
   iceEvery: 2.4, // seconds between ice chunks thrown at a player hiding in the base
