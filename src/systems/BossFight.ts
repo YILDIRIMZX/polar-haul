@@ -1,4 +1,4 @@
-import { BoxGeometry, Color, Mesh, MeshLambertMaterial, Vector3, type Camera, type Group, type Scene } from 'three'
+import { Color, Mesh, Vector3, type Camera, type Group, type Scene } from 'three'
 import { audio } from '../audio/Audio.ts'
 import { BEAR, BOSS_FIGHT, BOSS_MOVES, BOSS_SCHEDULE, BOSSES, SIEGE, type BossKind } from '../config/balance.ts'
 import { WORLD } from '../config/world.ts'
@@ -7,8 +7,9 @@ import type { Player } from '../entities/Player.ts'
 import { floatingText } from '../fx/FloatingText.ts'
 import { clawMarks, GroundWarning } from '../fx/GroundWarning.ts'
 import { Shockwave } from '../fx/Shockwave.ts'
+import { iceChunk } from '../looks/effects.ts'
 import { flatDistance, inFan } from '../game/math.ts'
-import { clampToWorld, constrainToFence, getBaseRadius, isInsideBase, keepOutsideBase, pushOutOfObstacles } from '../world/bounds.ts'
+import { clampToWorld, constrainToFence, frontGateZ, isInsideBase, keepOutsideBase, pushOutOfObstacles } from '../world/bounds.ts'
 import type { Gate } from '../world/Gate.ts'
 import type { BearHerd } from './BearHerd.ts'
 import type { HuntLevel } from './HuntLevel.ts'
@@ -19,8 +20,6 @@ const before = new Vector3()
 const focus = new Vector3()
 const glowColor = new Color()
 const goal = new Vector3()
-const iceGeo = new BoxGeometry(0.75, 0.75, 0.75)
-const iceMat = new MeshLambertMaterial({ color: 0xbfe6ff, emissive: 0x5a8fb0, emissiveIntensity: 0.3 })
 
 // A chunk of ice a boss throws over the fence at a player hiding in the base.
 interface Shard {
@@ -315,7 +314,7 @@ export class BossFight {
     const def = BOSSES[this.kind]
     const boss = new Bear({ scale: def.scale, color: def.color })
     // It stops just outside the front gate, where the player walks out to hunt, after running in from the forest.
-    this.home.set(0, 0, -(getBaseRadius() + BOSS_FIGHT.spawnBeyondGate))
+    this.home.set(0, 0, frontGateZ() - BOSS_FIGHT.spawnBeyondGate)
     this.entry.set(this.home.x, 0, this.home.z - BOSS_MOVES.intro.entryDistance)
     clampToWorld(this.entry)
     boss.spawn(this.entry.x, this.entry.z, Math.round(this.hunt.bearHp * def.hpMultiplier))
@@ -428,10 +427,10 @@ export class BossFight {
     goal.copy(engaged ? player.position : this.home)
     // Into the base through the broken gate: line up in front of it first, then walk through.
     if (engaged && player.inBase && !this.inside) {
-      const r = getBaseRadius()
-      const front = -r - boss.radius - 1
+      const gate = frontGateZ()
+      const front = gate - boss.radius - 1
       const lined = Math.abs(boss.position.x) < 1 && boss.position.z > front - 1
-      goal.set(0, 0, lined ? -r + 3 : front)
+      goal.set(0, 0, lined ? gate + 3 : front)
     }
     toTarget.subVectors(goal, boss.position).setY(0)
     const dist = toTarget.length()
@@ -748,9 +747,8 @@ export class BossFight {
   private besiege(dt: number): void {
     const boss = this.boss
     if (!boss || !this.kind) return
-    const r = getBaseRadius()
     const atGate = this.hideTime >= SIEGE.hideSeconds
-    goal.set(0, 0, -r - boss.radius - (atGate ? 0.4 : 4))
+    goal.set(0, 0, frontGateZ() - boss.radius - (atGate ? 0.4 : 4))
     toTarget.subVectors(goal, boss.position).setY(0)
     const dist = toTarget.length()
     if (dist > 0.3) {
@@ -766,7 +764,7 @@ export class BossFight {
     this.poundTimer = SIEGE.poundEvery
     boss.root.rotation.x = 0.3 // throws its weight against the gate
     this.shakeLevel = Math.max(this.shakeLevel, 0.5)
-    this.shockwaves.push(new Shockwave(this.scene, 0, -r, 3, 0xffffff, 0.35))
+    this.shockwaves.push(new Shockwave(this.scene, 0, frontGateZ(), 3, 0xffffff, 0.35))
     audio.play('bonk')
     if (this.gate.pound(SIEGE.poundDamage)) this.events.announce(`${BOSSES[this.kind].name} kapıyı kırdı!`)
   }
@@ -781,8 +779,7 @@ export class BossFight {
     const warning = new GroundWarning(this.scene, { kind: 'circle', radius: SIEGE.iceRadius })
     const to = new Vector3(player.position.x, 0, player.position.z)
     warning.show(to.x, to.z, 0)
-    const mesh = new Mesh(iceGeo, iceMat)
-    mesh.castShadow = true
+    const mesh = iceChunk()
     const from = boss.position.clone().setY(2.5 * boss.scale)
     mesh.position.copy(from)
     this.scene.add(mesh)

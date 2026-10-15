@@ -1,13 +1,14 @@
-import { BoxGeometry, CapsuleGeometry, Group, Mesh, MeshBasicMaterial, MeshLambertMaterial, RingGeometry, Vector3 } from 'three'
+import { Group, Vector3 } from 'three'
 import { BASE_STATS, PLAYER } from '../config/balance.ts'
-import { COLORS, LAYOUT } from '../config/world.ts'
+import { LAYOUT } from '../config/world.ts'
 import { turnTowards } from '../game/math.ts'
 import type { Joystick } from '../input/Joystick.ts'
 import { clampToWorld, constrainToFence, isInsideBase, pushOutOfObstacles } from '../world/bounds.ts'
+import { player as playerLook } from '../looks/creatures.ts'
 
 const PUSH_FADE = 6 // how quickly a knockback dies out
 
-// Placeholder look until a real character model arrives in 0.4.0.
+// The player. Its look comes from looks/creatures.ts.
 export class Player {
   readonly root = new Group()
   readonly velocity = new Vector3()
@@ -15,28 +16,14 @@ export class Player {
   maxHp: number = BASE_STATS.maxHp // kept in step with Stats every frame
   regenScale = 1 // healing in the base is slower during a boss fight
   hp: number = BASE_STATS.maxHp
-  private body = new Group()
+  private body: Group
   private facing = 0
   private punch = 0
 
   constructor() {
-    const torso = new Mesh(new CapsuleGeometry(0.45, 0.8, 4, 12), new MeshLambertMaterial({ color: COLORS.player }))
-    torso.position.y = 0.85
-    torso.castShadow = true
-    // A club held in front shows which way the player faces.
-    const club = new Mesh(new BoxGeometry(0.16, 0.16, 0.9), new MeshLambertMaterial({ color: COLORS.fenceWood }))
-    club.position.set(0.45, 0.9, 0.45)
-    club.castShadow = true
-    this.body.add(torso, club)
-
-    const ring = new Mesh(
-      new RingGeometry(0.75, 0.9, 32),
-      new MeshBasicMaterial({ color: COLORS.playerRing, transparent: true, opacity: 0.85 }),
-    )
-    ring.rotation.x = -Math.PI / 2
-    ring.position.y = 0.03
-
-    this.root.add(this.body, ring)
+    const look = playerLook()
+    this.body = look.body
+    this.root.add(look.body, look.ring)
     this.respawn()
   }
 

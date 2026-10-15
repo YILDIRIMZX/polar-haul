@@ -1,11 +1,7 @@
 import {
-  BoxGeometry,
-  CanvasTexture,
-  Mesh,
+  Group,
   MeshLambertMaterial,
   Sprite,
-  SpriteMaterial,
-  SRGBColorSpace,
   Vector3,
   type Camera,
   type Object3D,
@@ -14,7 +10,7 @@ import {
 import { audio } from '../audio/Audio.ts'
 import { FURNACE } from '../config/balance.ts'
 import { COLORS, LAYOUT } from '../config/world.ts'
-import { createMeat } from '../entities/Meat.ts'
+import { createMeat } from '../looks/meat.ts'
 import type { Player } from '../entities/Player.ts'
 import { Flights } from '../fx/Flights.ts'
 import { HpBar } from '../fx/HpBar.ts'
@@ -22,9 +18,10 @@ import { dashedRing } from '../fx/markers.ts'
 import { flatDistance } from '../game/math.ts'
 import type { Stats } from '../game/Stats.ts'
 import { addObstacle } from '../world/bounds.ts'
+import { warningSign } from '../looks/signs.ts'
+import { furnace as furnaceLook, pallet, PALLET_TOP } from '../looks/stations.ts'
 import type { Stack } from './Stack.ts'
 
-const PALLET_TOP = 0.3
 const PIECE_HEIGHT = 0.26
 const PER_LAYER = 4 // pieces lie 2 × 2 on each layer of the tray and the shelf
 
@@ -47,8 +44,8 @@ export class Furnace {
   private unloadTimer = 0
   private pickupTimer = 0
   private slots: Slot[] = []
-  private body: Mesh
-  private fireMat: MeshLambertMaterial
+  private body: Group
+  private fireMat!: MeshLambertMaterial // set in build()
   private out = new Vector3(LAYOUT.furnace.x, 1.9, LAYOUT.furnace.z)
   lit = true // a boss loose in the base puts the fire out; it is lit again with the repair minigame
   private sign: Sprite
@@ -56,9 +53,8 @@ export class Furnace {
 
   constructor(scene: Scene) {
     this.scene = scene
-    this.fireMat = new MeshLambertMaterial({ color: COLORS.furnaceFire, emissive: COLORS.furnaceFire, emissiveIntensity: 0.2 })
     this.body = this.build()
-    this.sign = signSprite('ATEŞ SÖNDÜ')
+    this.sign = warningSign('ATEŞ SÖNDÜ')
     this.sign.position.set(LAYOUT.furnace.x, 3, LAYOUT.furnace.z)
     scene.add(this.sign)
   }
@@ -178,31 +174,22 @@ export class Furnace {
     }
   }
 
-  private build(): Mesh {
-    const metal = new MeshLambertMaterial({ color: COLORS.machine })
-    const body = new Mesh(new BoxGeometry(2, 1.7, 1.8), metal)
-    body.position.set(LAYOUT.furnace.x, 0.85, LAYOUT.furnace.z)
-    body.castShadow = true
-    // The glowing mouth faces the camera (+z), so the fire is visible while cooking.
-    const mouth = new Mesh(new BoxGeometry(1.2, 0.6, 0.1), this.fireMat)
-    mouth.position.set(0, -0.2, 0.91)
-    const chimney = new Mesh(new BoxGeometry(0.4, 0.8, 0.4), metal)
-    chimney.position.set(0.55, 1.2, -0.45)
-    body.add(mouth, chimney)
-
-    const wood = new MeshLambertMaterial({ color: COLORS.counter })
+  private build(): Group {
+    const look = furnaceLook()
+    this.fireMat = look.fire
+    look.root.position.set(LAYOUT.furnace.x, 0, LAYOUT.furnace.z)
     for (const at of [LAYOUT.rack, LAYOUT.shelf]) {
-      const pallet = new Mesh(new BoxGeometry(1.5, PALLET_TOP, 1.4), wood)
-      pallet.position.set(at.x, PALLET_TOP / 2, at.z)
-      pallet.receiveShadow = true
-      this.scene.add(pallet)
+      const p = pallet()
+      p.position.x = at.x
+      p.position.z = at.z
+      this.scene.add(p)
     }
 
-    this.scene.add(body, dashedRing(LAYOUT.furnaceZone.x, LAYOUT.furnaceZone.z, FURNACE.zoneRadius))
+    this.scene.add(look.root, dashedRing(LAYOUT.furnaceZone.x, LAYOUT.furnaceZone.z, FURNACE.zoneRadius))
     addObstacle(LAYOUT.furnace, 2, 1.8)
     addObstacle(LAYOUT.rack, 1.5, 1.4)
     addObstacle(LAYOUT.shelf, 1.5, 1.4)
-    return body
+    return look.root
   }
 }
 
@@ -220,27 +207,3 @@ function layoutPile(items: Object3D[], at: { x: number; z: number }): void {
   items.forEach((item, i) => item.position.copy(pilePosition(at, i)))
 }
 
-// A red sign floating over the furnace while its fire is out.
-function signSprite(text: string): Sprite {
-  const canvas = document.createElement('canvas')
-  canvas.width = 256
-  canvas.height = 64
-  const c = canvas.getContext('2d')
-  if (!c) throw new Error('2D canvas is not available')
-  c.fillStyle = 'rgba(224, 69, 58, 0.95)'
-  c.beginPath()
-  c.roundRect(4, 4, 248, 56, 16)
-  c.fill()
-  c.fillStyle = '#ffffff'
-  c.font = 'bold 32px system-ui, sans-serif'
-  c.textAlign = 'center'
-  c.textBaseline = 'middle'
-  c.fillText(text, 128, 34)
-  const texture = new CanvasTexture(canvas)
-  texture.colorSpace = SRGBColorSpace
-  const sprite = new Sprite(new SpriteMaterial({ map: texture, depthTest: false }))
-  sprite.scale.set(3.2, 0.8, 1)
-  sprite.renderOrder = 12
-  sprite.visible = false
-  return sprite
-}

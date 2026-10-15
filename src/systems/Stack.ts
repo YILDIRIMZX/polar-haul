@@ -1,7 +1,7 @@
 import { Group, Vector3, type Object3D, type Scene } from 'three'
 import { audio } from '../audio/Audio.ts'
 import { BASE_STATS, STACK } from '../config/balance.ts'
-import { meatKind, type MeatKind } from '../entities/Meat.ts'
+import { meatKind, type MeatKind } from '../looks/meat.ts'
 import type { Player } from '../entities/Player.ts'
 
 interface Incoming {

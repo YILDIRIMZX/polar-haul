@@ -5,12 +5,12 @@ import type { WorkerKind } from '../config/upgrades.ts'
 import { COLORS, LAYOUT } from '../config/world.ts'
 import type { Bear } from '../entities/Bear.ts'
 import type { Fighter } from '../entities/Fighter.ts'
-import { createMeat } from '../entities/Meat.ts'
+import { createMeat } from '../looks/meat.ts'
 import { Worker } from '../entities/Worker.ts'
 import { HpBar } from '../fx/HpBar.ts'
 import { flatDistance } from '../game/math.ts'
 import type { Stats } from '../game/Stats.ts'
-import { getBaseRadius, isInsideBase } from '../world/bounds.ts'
+import { frontGateZ, isInsideBase } from '../world/bounds.ts'
 import type { BearHerd } from './BearHerd.ts'
 import type { Depot } from './Depot.ts'
 import type { Furnace } from './Furnace.ts'
@@ -266,12 +266,12 @@ class Hunter implements Fighter {
   }
 }
 
-// The way out of the base and back through the front gate. From the lodge it goes west of the furnace and
-// then through the wide gap between the furnace's raw tray and the Great Furnace, never between solid things.
-const inner = (): Spot => ({ x: 0, z: -getBaseRadius() + 1.5 })
-const outer = (): Spot => ({ x: 0, z: -getBaseRadius() - 2.5 })
-const WEST: Spot = { x: -7, z: -1.6 }
-const GAP: Spot = { x: -1.8, z: -1.6 }
+// The way out of the base and back through the front gate. From the lodge door it turns onto the path between
+// the depot's pads and the furnace's, follows it east to the road and takes the road to the gate.
+const inner = (): Spot => ({ x: 0, z: frontGateZ() + 1.5 })
+const outer = (): Spot => ({ x: 0, z: frontGateZ() - 2.5 })
+const WEST: Spot = { x: -9.8, z: -2.4 }
+const GAP: Spot = { x: -1.8, z: -2.4 }
 function pathOut(): Spot[] {
   return [LAYOUT.lodgeDoor, WEST, GAP, inner(), outer()]
 }

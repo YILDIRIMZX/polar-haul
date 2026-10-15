@@ -1,8 +1,8 @@
 import { PCFSoftShadowMap, Timer, WebGLRenderer, type Vector3 } from 'three'
 import { audio } from '../audio/Audio.ts'
-import { BASE_LEVELS, BOSSES, FURNACE, SIEGE, type BossKind } from '../config/balance.ts'
+import { BASE_LEVELS, BOSSES, FURNACE, SIEGE, WALLS, type BossKind } from '../config/balance.ts'
 import { MINI_BOSS_CARDS, TRIPLE_STRIKE, type CardDef } from '../config/cards.ts'
-import { CAMERA, COLORS, LAYOUT } from '../config/world.ts'
+import { CAMERA, COLORS, LAYOUT, WALL_OUTLINES } from '../config/world.ts'
 import type { Bear } from '../entities/Bear.ts'
 import type { Fighter } from '../entities/Fighter.ts'
 import { Player } from '../entities/Player.ts'
@@ -13,6 +13,9 @@ import { BearHerd } from '../systems/BearHerd.ts'
 import { BossFight } from '../systems/BossFight.ts'
 import { Construction } from '../systems/Construction.ts'
 import { Depot } from '../systems/Depot.ts'
+import { Dwellings } from '../systems/Dwellings.ts'
+import { Decor } from '../world/Decor.ts'
+import { Towers } from '../systems/Towers.ts'
 import { pickCards } from '../systems/cards.ts'
 import { AutoAttack } from '../systems/combat.ts'
 import { Furnace } from '../systems/Furnace.ts'
@@ -32,7 +35,7 @@ import { BOSS_ICON, EdgeMarker, HOME_ICON } from '../ui/EdgeMarker.ts'
 import { Hud } from '../ui/Hud.ts'
 import { BaseArea } from '../world/BaseArea.ts'
 import { createCamera, placeCamera } from '../world/camera.ts'
-import { createScene } from '../world/scene.ts'
+import { createScene } from '../looks/environment.ts'
 import { Trophies } from '../world/Trophies.ts'
 import { AdminPanel, type AdminTab } from '../ui/AdminPanel.ts' // test panel
 import { RepairGame } from '../ui/RepairGame.ts'
@@ -71,6 +74,8 @@ export class Game {
     waiters: 0,
     cashiers: 0,
     hunters: 0,
+    cabins: 0,
+    stores: 0,
   }
   private player = new Player()
   private playerBar = new HpBar(COLORS.hpPlayer, 1.3)
@@ -87,6 +92,9 @@ export class Game {
   private gate: Gate
   private repair = new RepairGame()
   private construction: Construction
+  private dwellings: Dwellings
+  private decor: Decor
+  private towers: Towers
   private workers: Workers
   private cheats: Cheats = { invincible: false, oneHit: false, fast: false } // test panel
   private admin: AdminPanel | null = null // test panel
@@ -111,7 +119,7 @@ export class Game {
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = PCFSoftShadowMap
 
-    this.base = new BaseArea(this.scene, BASE_LEVELS[0].fenceRadius)
+    this.base = new BaseArea(this.scene, WALL_OUTLINES[1], BASE_LEVELS[0].wall)
     this.scene.add(this.player.root, this.playerBar.root)
     this.stack = new Stack(this.scene)
     this.loot = new Loot(this.scene)
@@ -141,7 +149,11 @@ export class Game {
         return this.depot.build()
       },
       () => (this.progress.lodgeBuilt = true),
+      (level) => (this.progress.stores = Math.max(this.progress.stores, level)),
     )
+    this.dwellings = new Dwellings(this.scene, this.stats, this.progress)
+    this.decor = new Decor(this.scene)
+    this.towers = new Towers(this.scene)
     this.greatFurnace = new GreatFurnace(this.scene, this.progress, this.base)
     this.menu = new CharacterMenu(this.stats, this.wallet, this.progress)
     this.hud = new Hud(() => this.menu.toggle())
@@ -171,6 +183,9 @@ export class Game {
       workers: this.workers,
       gate: this.gate,
       furnace: this.furnace,
+      construction: this.construction,
+      dwellings: this.dwellings,
+      wallName: () => WALLS[this.base.kind].name,
       cheats: this.cheats,
       countKill: () => this.countKill(),
       offerCards: () => this.offerCards('Deneme kartları'),
@@ -259,9 +274,18 @@ export class Game {
     this.greatFurnace.update(dt, this.player, this.wallet, time)
     this.trophies.update(dt, this.progress)
     this.construction.update(dt, this.player, this.wallet, this.progress)
+    this.dwellings.update(dt, this.player, this.wallet)
+    this.decor.update(dt, this.progress)
+    this.towers.update(dt, this.base.kind, this.targets, (bear, damage, by) =>
+      this.bossFight.owns(bear) ? this.bossFight.hit(bear, damage) : this.herd.hit(bear, damage, by),
+    )
     this.depot.update(dt, this.player, this.stack, s)
     this.workers.update(dt, this.herd, this.camera, this.bossFight.threat)
-    this.gate.update(dt, s.get('gateHp'), this.camera)
+    // The kind of wall decides how sturdy the gate is and how much of the blizzard it keeps off.
+    const wall = WALLS[this.base.kind]
+    this.base.update(dt)
+    this.gate.update(dt, s.get('gateHp') * wall.gate, this.camera, this.base.kind)
+    this.storm.relief = wall.stormRelief
     this.updateRepairs(dt)
 
     this.progress.totalEarned = this.wallet.totalEarned

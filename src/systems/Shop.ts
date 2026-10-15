@@ -1,7 +1,7 @@
-import { BoxGeometry, Mesh, MeshLambertMaterial, Vector3, type Object3D, type Scene } from 'three'
+import { Mesh, Vector3, type Object3D, type Scene } from 'three'
 import { audio } from '../audio/Audio.ts'
 import { SHOP } from '../config/balance.ts'
-import { COLORS, LAYOUT } from '../config/world.ts'
+import { LAYOUT } from '../config/world.ts'
 import { Customer } from '../entities/Customer.ts'
 import type { Player } from '../entities/Player.ts'
 import { Flights } from '../fx/Flights.ts'
@@ -11,16 +11,13 @@ import { flatDistance } from '../game/math.ts'
 import type { Stats } from '../game/Stats.ts'
 import { addObstacle } from '../world/bounds.ts'
 import { orderSize, tipFor } from './orders.ts'
+import { cashBundle, counter as counterLook, COUNTER_TOP, till as tillLook, TILL_TOP } from '../looks/stations.ts'
 import type { Progress } from './progression.ts'
 import type { Stack } from './Stack.ts'
 import type { Wallet } from './Wallet.ts'
 
-const COUNTER_TOP = 0.85
-const TILL_TOP = 0.7
 const PIECE_HEIGHT = 0.26
 const PER_LAYER = 4 // cooked pieces lie in a row of 4 on each layer of the counter
-const cashGeo = new BoxGeometry(0.55, 0.14, 0.32)
-const cashMat = new MeshLambertMaterial({ color: COLORS.cash })
 
 // The counter, the queue of customers and the till.
 // At the service spot the player puts the cooked meat they carry onto the counter and hands it to
@@ -242,8 +239,7 @@ export class Shop {
   private layoutCash(): void {
     while (this.cashMeshes.length < this.visibleBundles()) {
       const i = this.cashMeshes.length
-      const m = new Mesh(cashGeo, cashMat)
-      m.castShadow = true
+      const m = cashBundle()
       m.position.set(
         LAYOUT.till.x - 0.3 + (i % 2) * 0.6,
         TILL_TOP + 0.07 + Math.floor(i / 6) * 0.14,
@@ -271,16 +267,12 @@ export class Shop {
   }
 
   private build(): void {
-    const wood = new MeshLambertMaterial({ color: COLORS.counter })
-    const counter = new Mesh(new BoxGeometry(3.2, COUNTER_TOP, 1.0), wood)
-    counter.position.set(LAYOUT.counter.x, COUNTER_TOP / 2, LAYOUT.counter.z)
-    counter.castShadow = true
-    counter.receiveShadow = true
-
-    const till = new Mesh(new BoxGeometry(1.4, TILL_TOP, 1.2), new MeshLambertMaterial({ color: COLORS.machine }))
-    till.position.set(LAYOUT.till.x, TILL_TOP / 2, LAYOUT.till.z)
-    till.castShadow = true
-    till.receiveShadow = true
+    const counter = counterLook()
+    counter.position.x = LAYOUT.counter.x
+    counter.position.z = LAYOUT.counter.z
+    const till = tillLook()
+    till.position.x = LAYOUT.till.x
+    till.position.z = LAYOUT.till.z
 
     this.scene.add(counter, till, dashedRing(LAYOUT.serviceSpot.x, LAYOUT.serviceSpot.z, SHOP.serviceRadius, 10))
     addObstacle(LAYOUT.counter, 3.2, 1.0)

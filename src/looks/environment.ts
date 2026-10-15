@@ -11,10 +11,14 @@ import {
   Object3D,
   PlaneGeometry,
   Scene,
+  Shape,
+  ShapeGeometry,
   SphereGeometry,
+  Vector2,
 } from 'three'
-import { COLORS, LAYOUT, WORLD } from '../config/world.ts'
+import { COLORS, LAYOUT, WORLD, type Outline } from '../config/world.ts'
 
+// LOOKS: the static world around the camp.
 // The static world: sky, ground, snow and the forest edge. The base and its fence are in BaseArea,
 // because they grow with the base level.
 export function createScene(): Scene {
@@ -123,7 +127,7 @@ function addSnowMounds(scene: Scene): void {
     const x = (rand() - 0.5) * WORLD.groundSize * 0.8
     const z = (rand() - 0.5) * WORLD.groundSize * 0.8
     // Clear of the base even at its largest, so a growing fence never swallows a mound.
-    if (Math.hypot(x, z) < WORLD.maxBaseRadius + 3) continue
+    if (Math.hypot(x, z) < WORLD.campClearing) continue
     // Keep mounds off the forest edge, so they never poke through a tree trunk.
     const a = LAYOUT.playArea
     const nearEdgeX = x > a.minX - 10 && x < a.maxX + 10 && (x < a.minX + 1 || x > a.maxX - 1)
@@ -147,4 +151,17 @@ function seededRandom(seed: number): () => number {
     s = (s * 1664525 + 1013904223) % 4294967296
     return s / 4294967296
   }
+}
+
+const campGroundMat = new MeshLambertMaterial({ color: COLORS.baseGround })
+
+// The trodden ground inside the camp's wall, in the wall's own shape, growing with the camp.
+export function campGround(outline: Outline): Mesh {
+  // Drawn flat on x/y, then laid down, which turns y into -z.
+  const shape = new Shape(outline.map((p) => new Vector2(p.x, -p.z)))
+  const ground = new Mesh(new ShapeGeometry(shape), campGroundMat)
+  ground.rotation.x = -Math.PI / 2
+  ground.position.y = 0.01
+  ground.receiveShadow = true
+  return ground
 }

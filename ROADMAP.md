@@ -138,7 +138,7 @@ Yol haritası, README (EN/TR), CHANGELOG, lisans ve resmi olmama uyarısı.
 - [x] Orman sınırı, eve dönüş işareti
 - [x] Geniş Savuruş başta kilitli ($100 + 20 ayı)
 
-### 0.4.0 – 0.10.0 — Mekanikler, sonra görseller
+### 0.4.0 – 0.11.0 — Mekanikler, sonra görseller
 İlk iPhone testinden sonra plan değişti: önce bütün mekanikler belli bir seviyeye gelecek, görseller ve animasyonlar en sona kalacak. Ayrıntılı plan [TASARIM.md](TASARIM.md) dosyasında:
 
 | Sürüm | İçerik |
@@ -150,9 +150,10 @@ Yol haritası, README (EN/TR), CHANGELOG, lisans ve resmi olmama uyarısı.
 | 0.6.1 ✅ | Hatırlanan bosslar: giriş anı, uyarılı saldırılar, Dev Ayı'nın hücumu, Yaşlı Ayı'nın pençesi ve ikinci aşaması, post hatırası, pençe izleri |
 | 0.7.0 ✅ | Sinematik boss girişi, yakınlık cezası, sertleşen Yaşlı Ayı · İnşa alanları ve işçiler: üs seviyesinde çevre değişimi, Kapı Deposu ve Taşıyıcı, Avcı Kulübesi ve avcılar, Garson, Kasiyer |
 | 0.7.1 ✅ | Boss dengesi: her hamle uyarılı, Yaşlı Ayı depodan sonra gelir, çitin iki yanı birbirine vuramaz |
-| 0.8.0 | Konveyörler, üs seviyeleri 4–6 ve çevre değişimleri, Buzul Ayısı ve Ayı Kralı (sunacakları yetenekleri sana karşı kullanırlar), üs seviyesinde ekonomi yetenekleri, ikinci av bölgesi |
-| 0.9.0 | Kayıt sistemi, ekonomi simülasyonu, denge |
-| 0.10.0 | Görseller, animasyonlar, kayıtlı (CC0) sesler ve müzik |
+| 0.8.0 ✅ | Kamptan kaleye: kamp, kazık çit ve kütük sur, ayaklı ambar, çadırdan kulübeye, kışlık erzak, Üs 4 ve gözetleme kuleleri, görünüşler tek yerde |
+| 0.9.0 | Büyük bosslar ve Üs 5–6: Buzul Ayısı ve Ayı Kralı, yetenekler, ekonomi yetenekleri, taş sur, konveyörler, ikinci av bölgesi; test panelinde **Yerleşim modu** (kampı yukarıdan görmek, binaları ve pedleri sürüklemek, kurala uymayanı kırmızı göstermek, koordinatları kopyalamak) |
+| 0.10.0 | Kayıt sistemi, ekonomi simülasyonu, denge |
+| 0.11.0 | Görseller, animasyonlar, kayıtlı (CC0) sesler ve müzik |
 
 ### 1.0.0 — İlk tam sürüm
 İlk harita baştan sona oynanabilir ve iPhone'da günlük kullanımda sorunsuz.

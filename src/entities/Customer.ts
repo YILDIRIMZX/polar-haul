@@ -1,22 +1,15 @@
 import {
   CanvasTexture,
-  CapsuleGeometry,
   Group,
-  Mesh,
-  MeshLambertMaterial,
-  SphereGeometry,
   Sprite,
   SpriteMaterial,
   SRGBColorSpace,
   Vector3,
 } from 'three'
-import { COLORS } from '../config/world.ts'
 import { turnTowards } from '../game/math.ts'
+import { customer as customerLook } from '../looks/creatures.ts'
+import { drawAngryFace } from '../looks/bubbles.ts'
 
-const bodyGeo = new CapsuleGeometry(0.38, 0.7, 4, 10)
-const headGeo = new SphereGeometry(0.28, 12, 8)
-const headMat = new MeshLambertMaterial({ color: COLORS.skin })
-const coatMats = COLORS.coats.map((color) => new MeshLambertMaterial({ color }))
 
 const BUBBLE_W = 128
 const BUBBLE_H = 72
@@ -38,7 +31,7 @@ export class Customer {
   patience: number
   readonly patienceMax: number
   readonly urgent: boolean // pays far more, but leaves without paying when patience runs out
-  private body = new Group()
+  private body: Group
   private bubble: Sprite
   private ctx: CanvasRenderingContext2D
   private texture: CanvasTexture
@@ -51,12 +44,7 @@ export class Customer {
     this.patience = patience
     this.patienceMax = patience
 
-    const coat = new Mesh(bodyGeo, coatMats[Math.floor(Math.random() * coatMats.length)])
-    coat.position.y = 0.75
-    coat.castShadow = true
-    const head = new Mesh(headGeo, headMat)
-    head.position.y = 1.55
-    this.body.add(coat, head)
+    this.body = customerLook()
 
     const canvas = document.createElement('canvas')
     canvas.width = BUBBLE_W
@@ -161,27 +149,3 @@ export class Customer {
   }
 }
 
-// A small round face with slanted brows and a frown.
-function drawAngryFace(c: CanvasRenderingContext2D, x: number, y: number): void {
-  c.fillStyle = '#ff7b5c'
-  c.beginPath()
-  c.arc(x, y, 16, 0, Math.PI * 2)
-  c.fill()
-  c.strokeStyle = '#5a1d12'
-  c.lineWidth = 3
-  c.lineCap = 'round'
-  c.beginPath()
-  c.moveTo(x - 10, y - 9)
-  c.lineTo(x - 3, y - 5)
-  c.moveTo(x + 10, y - 9)
-  c.lineTo(x + 3, y - 5)
-  c.stroke()
-  c.fillStyle = '#5a1d12'
-  c.beginPath()
-  c.arc(x - 5, y, 2, 0, Math.PI * 2)
-  c.arc(x + 5, y, 2, 0, Math.PI * 2)
-  c.fill()
-  c.beginPath()
-  c.arc(x, y + 11, 6, Math.PI * 1.15, Math.PI * 1.85)
-  c.stroke()
-}

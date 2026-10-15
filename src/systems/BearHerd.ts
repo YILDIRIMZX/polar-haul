@@ -6,7 +6,7 @@ import { Bear } from '../entities/Bear.ts'
 import type { Fighter } from '../entities/Fighter.ts'
 import type { Player } from '../entities/Player.ts'
 import { clamp, flatDistance } from '../game/math.ts'
-import { clampToWorld, getBaseRadius, keepOutsideBase } from '../world/bounds.ts'
+import { clampToWorld, keepOutsideBase, wallNorthmost } from '../world/bounds.ts'
 import type { HuntLevel } from './HuntLevel.ts'
 
 const toTarget = new Vector3()
@@ -163,5 +163,5 @@ function randomFieldPoint(): { x: number; z: number } {
 
 // The field's edge nearest the base moves back as the fence grows, so bears never roam inside it.
 export function fieldMaxZ(): number {
-  return Math.min(LAYOUT.bearField.maxZ, -(getBaseRadius() + 3))
+  return Math.min(LAYOUT.bearField.maxZ, wallNorthmost() - 3)
 }

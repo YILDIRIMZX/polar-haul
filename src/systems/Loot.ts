@@ -1,6 +1,6 @@
 import { MathUtils, Vector3, type Group, type Scene } from 'three'
 import { audio } from '../audio/Audio.ts'
-import { createMeat } from '../entities/Meat.ts'
+import { createMeat } from '../looks/meat.ts'
 import type { Player } from '../entities/Player.ts'
 import { flatDistance } from '../game/math.ts'
 import type { Stack } from './Stack.ts'

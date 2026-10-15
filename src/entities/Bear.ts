@@ -1,16 +1,10 @@
-import { BoxGeometry, Group, Mesh, MeshLambertMaterial, Vector3 } from 'three'
+import { Group, MeshLambertMaterial, Vector3 } from 'three'
 import { BEAR } from '../config/balance.ts'
 import { COLORS } from '../config/world.ts'
 import { turnTowards } from '../game/math.ts'
 import { HpBar } from '../fx/HpBar.ts'
 import type { Fighter } from './Fighter.ts'
-
-// Shared by every bear; only the body material is per bear, so each one can flash on its own.
-const bodyGeo = new BoxGeometry(1.5, 1.0, 2.2)
-const headGeo = new BoxGeometry(0.9, 0.8, 0.85)
-const earGeo = new BoxGeometry(0.22, 0.22, 0.12)
-const noseGeo = new BoxGeometry(0.3, 0.22, 0.12)
-const noseMat = new MeshLambertMaterial({ color: COLORS.bearNose })
+import { bear as bearLook } from '../looks/creatures.ts'
 
 // A boss is the same bear, only bigger and in another colour.
 export interface BearLook {
@@ -20,7 +14,7 @@ export interface BearLook {
 
 const NORMAL: BearLook = { scale: 1, color: COLORS.bear }
 
-// Placeholder look until real models arrive in 0.10.0. The head points along +z.
+// One bear of the herd, or a boss. Its look comes from looks/creatures.ts; the head points along +z.
 export class Bear {
   readonly root = new Group()
   readonly hpBar: HpBar
@@ -41,21 +35,10 @@ export class Bear {
 
   constructor(look: BearLook = NORMAL) {
     this.scale = look.scale
-    this.material = new MeshLambertMaterial({ color: look.color })
+    const looks = bearLook(look.color)
+    this.material = looks.skin
     this.hpBar = new HpBar(COLORS.hpBear, 1.6 * look.scale)
-    const body = new Mesh(bodyGeo, this.material)
-    body.position.y = 0.8
-    const head = new Mesh(headGeo, this.material)
-    head.position.set(0, 1.1, 1.35)
-    const nose = new Mesh(noseGeo, noseMat)
-    nose.position.set(0, 1.0, 1.82)
-    const earL = new Mesh(earGeo, this.material)
-    earL.position.set(-0.3, 1.58, 1.2)
-    const earR = new Mesh(earGeo, this.material)
-    earR.position.set(0.3, 1.58, 1.2)
-    body.castShadow = true
-    head.castShadow = true
-    this.root.add(body, head, nose, earL, earR)
+    this.root.add(looks.model)
     this.root.scale.setScalar(look.scale)
     // Turn first, then tip: so a boss rearing up leans back along the way it faces.
     this.root.rotation.order = 'YXZ'

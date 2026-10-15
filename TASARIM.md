@@ -155,19 +155,51 @@ Aynı anda vurulan ayı sayısı menüde **yok**: o bosslardan gelir (bölüm 6)
 
 Seviye atlamak için hem **para** hem **ön koşul** gerekir. Ön koşullar dönüşümlü olarak biri **ekonomiden** (müşteri, ocak), biri **savaştan** (boss) gelir. Oyuncu ne sadece avlanarak ne de sadece satarak üssü büyütebilir; iki yarıyı da ilerletmek zorundadır.
 
-| Üs seviyesi | Fiyat | Ekonomi koşulu | Savaş koşulu | Açılanlar | Çit yarıçapı |
+| Üs seviyesi | Fiyat | Ekonomi koşulu | Savaş koşulu | Açılanlar | Sur |
 |---|---|---|---|---|---|
-| **1** | — | — | — | Ocak, tezgâh, kasa, Karakter menüsü | 12 |
-| **2** | $250 | 25 müşteri | — | **Kapı Deposu**, **Taşıyıcı**, ocak hızı ve raf pedleri, sıra uzunluğu · işçi sınırı 2 | 14 |
-| **3** | $800 | Ocakta 2 yuva | **1. ana boss** (Yaşlı Ayı) | **Garson**, **Kasiyer**, **Avcı Kulübesi** (1 avcı), acil müşteriler · işçi sınırı 4 | 16 |
-| **4** | $2.000 | 60 müşteri | 2 mini boss | **Konveyör**, **Tezgâh bandı**, 2. avcı, ikinci av bölgesi · işçi sınırı 6 | 18 |
-| **5** | $5.000 | Ocakta 3 yuva | **2. ana boss** (Buzul Ayısı) | **İkinci ocak**, 3. avcı, VIP müşteriler · işçi sınırı 8 | 20 |
-| **6** | $12.000 | 150 müşteri | 4 mini boss | 4. avcı, **final boss**'un yolu açılır | 22 |
+| **1** | — | — | — | Ocak, tezgâh, kasa, Karakter menüsü | kar blokları, yuvarlak |
+| **2** | $250 | 25 müşteri | — | **Kapı Deposu**, **Taşıyıcı**, ocak hızı ve raf pedleri, sıra uzunluğu · işçi sınırı 2 | kazık çit, kampı ve depoyu sarar |
+| **3** | $800 | Ocakta 2 yuva | **1. ana boss** (Yaşlı Ayı) | **Garson**, **Kasiyer**, **Avcı Kulübesi** (1 avcı), acil müşteriler · işçi sınırı 4 | kazık çit, batıda avcı avlusu |
+| **4** | $2.000 | 60 müşteri | 2 mini boss | **Konveyör**, **Tezgâh bandı**, 2. avcı, ikinci av bölgesi · işçi sınırı 6 | kütük kale, öne taşan kapı bölümü ve iki kule |
+| **5** | $5.000 | Ocakta 3 yuva | **2. ana boss** (Buzul Ayısı) | **İkinci ocak**, 3. avcı, VIP müşteriler · işçi sınırı 8 | (0.9.0) |
+| **6** | $12.000 | 150 müşteri | 4 mini boss | 4. avcı, **final boss**'un yolu açılır | (0.9.0) taş sur |
 
 ### İlke: hiçbir gelişme rastgele değil
 Üsteki her bina, her sur ve her yükseltme dünyada gerçek bir ihtiyaca cevap verir: önce bir sorun çıkar (et ayıları çekiyor, kış uzuyor, kapı kırılıyor), sonra oyuncu onu çözen yapıyı kurar. Kar ikliminde yaşayan insanların kamptan kaleye nasıl geçtiği ve bunun oyuna uyarlanışı [KUZEY-YERLESIMLERI.md](KUZEY-YERLESIMLERI.md) belgesinde. Kısaca: önce ateş ve barınak; sur sonradan ve kampın **dışına** çekilir; sur malzemesi kademeli güçlenir (kazık → kütük → taş) ve her yeni sur eskisinin **yerine** geçer, üstüne eklenmez.
 
 0.8.0 için verilen kararlar: Üs 1'de çit yok, kar bloklarından bir rüzgâr kesici var; Kapı Deposu ayaklı ambar olur; çadırlar kulübeye hem üs seviyesiyle hem oyuncunun parasıyla, dengeli biçimde döner; kurutma rafı ve buz mahzeni kışlık erzak sağlar ve müşteriler daha büyük siparişler verir; her sur kademesi Kar Fırtınası'nı biraz hafifletir ama fırtına her zaman hissedilir. Ayrıntılar [KUZEY-YERLESIMLERI.md](KUZEY-YERLESIMLERI.md) belgesinin 4. bölümünde.
+
+### Kampın yerleşimi
+
+Her bina, ihtiyacı olan şeyin yanında durur; böylece oyuncu bir binayı nerede arayacağını tahmin edebilir:
+
+| Yön | Ne var | Neden orada |
+|---|---|---|
+| Kuzey, ön kapı | kapı pedleri, Kapı Deposu, avcı kulübesi, buz mahzeni | et ve avcılar bu kapıdan girer; mahzen deponun arkasında, et bir ambardan ötekine gider |
+| Batı | ocak ve pedleri | depodan gelen çiğ et ile tezgâha giden pişmiş etin arasında |
+| Güney, arka kapı | tezgâh, kasa ve pedleri | müşteriler bu kapıdan gelir |
+| Doğu | çadırlar ve kulübeler, ortalarında Büyük Ocak | kampın ateşi, evlerin ortasında |
+| Güneydoğu | kurutma rafı | satılan etin yanında, kasaya yakın |
+
+Kurallar (her yerleşim değişikliğinde kontrol edilir):
+- Ön kapıdan arka kapıya uzanan **yol** (x = −1,6…1,6) boş kalır.
+- İki şeyin arasında en az **0,8 birim** boş zemin kalır: bir yürüme yolu.
+- Hiçbir şey, göründüğü üs seviyesinde ve sonrakilerde surun 0,8 birimden yakınında durmaz.
+
+**Sur bir daire değil.** Sadece ilk kampın kar blokları yuvarlaktır: ateşin etrafına dizilmiş bir rüzgâr kesici. Sonraki her sur, kampın o an olduğu şeyin **etrafına** çekilir; düz duvarlar ve köşelerle, yeni binaya doğru büyüyerek:
+
+| Üs | Sur | Şekli neden böyle |
+|---|---|---|
+| 1 | kar blokları | ateşin etrafında bir halka; kamp henüz bir ateş ve birkaç çadır |
+| 2 | kazık çit | kampı ve ön kapıdaki depoyu saran düz duvarlar; köşeler pahlı, kazık dikmesi kolay |
+| 3 | kazık çit | aynı çit, batıya **avcı avlusu** için bir çıkıntı: kulübe ve önündeki pedler surun içinde kalır |
+| 4 | kütük sur | her yöne biraz daha geniş bir kale; buz mahzeni içeride, ön kapıda öne taşan bir **kapı bölümü**, köşelerinde iki gözetleme kulesi |
+
+Her seviyenin köşe noktaları `src/config/world.ts` dosyasındaki `WALL_OUTLINES` içinde, kuleler `WALL_TOWERS` içinde. İki kapı da surun x = 0'ı kestiği yerdedir ve orada düz bir duvar parçası olmalıdır.
+- Hiçbir ped uzun bir binanın **arkasında** (kameradan uzak tarafında) durmaz; binası henüz yoksa sayılmaz.
+- İşçi yolları (taşıyıcı, garson, avcının kulübe–kapı yolu) pedlerin üstünden geçmez.
+
+Boşluklar ölü kalmamalı: yürüme yollarının arasındaki boş zemin, üs büyüdükçe **süslerle** dolar (kızak, sandıklar, fıçı, kütük yığını, kar yığını, odun). Süsler kuralları değiştirmez; sadece kampın yaşandığını gösterir ve aynı kurallara uyar (yoldan uzak, her şeyden 0,4 birim ötede, ped ve işçi yolu üstünde değil). Nerede durdukları `src/config/decor.ts` dosyasında, nasıl göründükleri [GORUNUM.md](GORUNUM.md) belgesinde.
 
 ### Üs seviyesi neyi değiştirir: inşa alanları
 
@@ -367,9 +399,10 @@ Kural: ilk dakikalarda her 30–60 saniyede bir yeni şey açılmalı. Sonra bu 
 | 0.6.1 ✅ | **Hatırlanan bosslar:** giriş anı ve isim kartı, yerde uyarı alanları, Dev Ayı'nın hücumu ve sersemlemesi, Yaşlı Ayı'nın geniş pençesi ve ikinci aşaması (2 genç ayı), Büyük Ocak önünde post hatırası, kaçan bossun pençe izleri |
 | 0.7.0 ✅ | **Sinematik boss girişi, yakınlık cezası ve sertleşen Yaşlı Ayı · İnşa alanları ve işçiler:** üs seviyesinde çevre değişimi ve inşaat animasyonu, Kapı Deposu ve Taşıyıcı (Üs 2), Avcı Kulübesi ve avcılar, Garson, Kasiyer (Üs 3) |
 | 0.7.1 ✅ | **Boss dengesi:** her hamle uyarılı (Dev Ayı'nın uyarısız pençesi kalktı), Yaşlı Ayı Kapı Deposu kurulunca gelir, yumuşayan sayılar, hız almadan çarpan sersemlemez, menzildeki boss önce vurulur, çitin iki yanı birbirine vuramaz, boss içerideyken üs iyileştirmez |
-| 0.8.0 | Konveyör hattı ve tezgâh bandı, üs seviyeleri 4–6 ve çevre değişimleri, Buzul Ayısı ve Ayı Kralı (kullandıkları yeteneklerle), buz ve kral yetenekleri, üs seviyesinde ekonomi yeteneği seçimi, ikinci av bölgesi, ikinci ocak, VIP müşteriler |
-| 0.9.0 | Kayıt sistemi, ekonomi simülasyonu ve denge ayarı |
-| 0.10.0 | Görseller ve animasyonlar: modeller, efektler, kayıtlı (CC0) organik sesler, müzik |
+| 0.8.0 ✅ | **Kamptan kaleye:** Üs 1 kamp (kar blokları, çadırlar), birbirinin yerine geçen surlar (kazık çit, kütük sur) ve fırtınaya karşı korunma, ayaklı ambar, çadırdan kulübeye, kışlık erzak (kurutma rafı, buz mahzeni) ve büyüyen siparişler, Üs 4 ve gözetleme kuleleri; bütün görünüşler `src/looks/` altında ([GORUNUM.md](GORUNUM.md)) |
+| 0.9.0 | **Büyük bosslar ve üs 5–6:** Buzul Ayısı ve Ayı Kralı (sunacakları yetenekleri sana karşı kullanırlar), buz ve kral yetenekleri, üs seviyesinde ekonomi yeteneği seçimi, ikinci ocak, VIP müşteriler, taş sur ve Arena Kapısı, konveyör hattı ve tezgâh bandı, ikinci av bölgesi; test panelinde **Yerleşim modu**: kamp yukarıdan görünür, binalar ve pedler parmakla sürüklenir, yürüme yolu, sur payı ya da binanın arkasında kalma kuralını bozan şey kırmızı yanar, yeni koordinatlar kopyalanır. Bunun için her binanın yeri ve kapladığı alan tek bir listede toplanır ve kural denetleyicisi oyunun içine taşınır |
+| 0.10.0 | Kayıt sistemi, ekonomi simülasyonu ve denge ayarı |
+| 0.11.0 | Görseller ve animasyonlar: modeller, efektler, kayıtlı (CC0) organik sesler, müzik ([GORUNUM.md](GORUNUM.md) rehberiyle) |
 | 1.0.0 | İlk harita baştan sona, iPhone'da sorunsuz |
 
 ---
@@ -426,8 +459,8 @@ Kullanılan her kütüphane ve dosya [CREDITS.md](CREDITS.md) içinde listelenir
 | Tepsiye dökme, et pişti, tezgâha koyma | Tık dizisi, ding, tok "tak" | ✅ |
 | Müşteri geldi, ödeme, bahşiş, kızgınlık | Kapı zili, yazar kasa, parıltı, homurtu | ✅ |
 | Para toplama, ped dolumu, satın alma, yeni ped | Şıngırtı, yükselen ton, fanfar, pop | ✅ |
-| Ayı öfkelendi | Kükreme | 0.10.0 (kayıtlı ses) |
-| Ocak çalışıyor | Cızırtı döngüsü | 0.10.0 |
+| Ayı öfkelendi | Kükreme | 0.11.0 (kayıtlı ses) |
+| Ocak çalışıyor | Cızırtı döngüsü | 0.11.0 |
 | Acil müşteri gitti | Kızgın "hıh!" + kapı çarpması | 0.7.0 |
 | Boss geliyor, kart seçimi, ödül | Davul, whoosh, fanfar | 0.7.0 |
 | İşçi alındı, bina kuruldu, üs seviyesi | Fanfar, inşaat sesi | 0.5.0–0.6.0 |

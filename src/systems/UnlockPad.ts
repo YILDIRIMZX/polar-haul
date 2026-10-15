@@ -75,6 +75,15 @@ export class UnlockPad {
     return Math.round(p.baseCost * p.costGrowth ** this.level)
   }
 
+  // Test panel: the next level at once, free.
+  buyNow(): void {
+    if (this.maxed) return
+    this.level++
+    this.options.apply(this.level)
+    if (this.maxed && this.options.vanishWhenMaxed) this.hide()
+    else this.draw()
+  }
+
   get maxed(): boolean {
     const max = this.options.pricing.maxLevel
     return max !== undefined && this.level >= max

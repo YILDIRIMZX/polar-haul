@@ -20,6 +20,8 @@ import type { Storm } from '../systems/Storm.ts'
 import type { Wallet } from '../systems/Wallet.ts'
 import type { Workers } from '../systems/Workers.ts'
 import type { Furnace } from '../systems/Furnace.ts'
+import type { Construction } from '../systems/Construction.ts'
+import type { Dwellings } from '../systems/Dwellings.ts'
 import type { Gate } from '../world/Gate.ts'
 import type { WorkerKind } from '../config/upgrades.ts'
 import type { AdminTab } from '../ui/AdminPanel.ts'
@@ -47,6 +49,9 @@ export interface AdminContext {
   workers: Workers
   gate: Gate
   furnace: Furnace
+  construction: Construction
+  dwellings: Dwellings
+  wallName: () => string
   cheats: Cheats
   countKill: () => void // one kill toward the hunt level, without dropping meat
   offerCards: () => boolean // the mini boss card screen; false when pickCards gave no cards
@@ -137,6 +142,38 @@ export function adminTabs(g: AdminContext): AdminTab[] {
           run: () => {
             baseTo(3)
             g.wallet.add(1500)
+          },
+        },
+        {
+          label: 'Üs 4: kütük sur',
+          hint: 'Üs 4\'e çıkar, +$2500: kütük sur, kapı kulesi, gözetleme kuleleri, buz mahzeni alanı',
+          since: '0.8.0',
+          closes: true,
+          run: () => {
+            baseTo(4)
+            g.wallet.add(2500)
+          },
+        },
+        {
+          label: 'Kurutma rafı alanı',
+          hint: 'Üs 2 ve ocakta 2 yuva: rafın inşa alanı açılır, +$400',
+          since: '0.8.0',
+          closes: true,
+          run: () => {
+            baseTo(2)
+            if (g.stats.count('furnaceSlots') < 2) g.stats.add('furnaceSlots', 1)
+            g.wallet.add(400)
+          },
+        },
+        {
+          label: 'Kamp tamamen kurulu',
+          hint: 'Üs 4; bütün binalar, kulübeler ve süsler hazır: yerleşimi bir bakışta görmek için',
+          since: '0.8.0',
+          closes: true,
+          run: () => {
+            baseTo(4)
+            g.construction.finishAll()
+            g.dwellings.allCabins()
           },
         },
         {
@@ -250,6 +287,8 @@ export function adminTabs(g: AdminContext): AdminTab[] {
           ['Kar fırtınası', g.storm.active ? `${Math.ceil(g.storm.remaining)} sn` : 'yok'],
           ['Üs seviyesi', String(g.progress.baseLevel)],
           ['Kapı', g.gate.broken ? 'kırık' : `${Math.ceil(g.gate.hp)}/${g.gate.maxHp}`],
+          ['Sur', g.wallName()],
+          ['Kulübe / kışlık erzak', `${g.progress.cabins} / ${g.progress.stores}`],
           ['Kapı Deposu', g.depot.built ? `${g.depot.count}/${s.count('depotCapacity')}` : 'kurulmadı'],
           ['İşçiler: taşıyıcı / garson / kasiyer / avcı', g.workers.counts],
           ['Hizmet edilen müşteri', String(g.progress.customersServed)],

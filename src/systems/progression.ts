@@ -14,6 +14,8 @@ export interface Progress {
   waiters: number
   cashiers: number
   hunters: number
+  cabins: number // tents turned into cabins
+  stores: number // winter stores: 1 with the drying rack, 2 with the ice cellar too
 }
 
 // What a base level needs besides its price, and how far along the player is.
@@ -24,7 +26,7 @@ export interface Requirement {
   label: string
 }
 
-// The prerequisite for raising the base to `nextLevel` (2 or 3 in this version).
+// The prerequisite for raising the base to `nextLevel` (2, 3 or 4 in this version).
 export function baseRequirement(nextLevel: number, progress: Progress): Requirement {
   // Labels: an icon and how far along the player is. 👥 customers, 🔥 furnace slots, 🐻 bosses.
   if (nextLevel === 2){
@@ -42,6 +44,15 @@ export function baseRequirement(nextLevel: number, progress: Progress): Requirem
     }
     return {met: true,label:''}
   }
-
+  else if (nextLevel === 4){
+    // Only the first missing condition is shown: customers first, then the mini bosses.
+    if (progress.customersServed < 60) {
+      return { met: false, label: `👥 ${progress.customersServed}/60` }
+    }
+    if (progress.miniBossesDefeated < 2) {
+      return { met: false, label: `🐻 ${progress.miniBossesDefeated}/2` }
+    }
+    return {met: true,label:''}
+  }
   return { met: false, label: 'Yakında' }
 }

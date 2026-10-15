@@ -8,6 +8,7 @@ const STORM_FOG = { near: 30, far: 80 } // the fog closes in this far at full st
 // twice as fast and the furnace cooks slower. It hurts, but it never ends the game.
 export class Storm {
   remaining = 0
+  relief = 0 // share of the penalty the camp's wall keeps off; never all of it
   private strength = 0 // 0–1, fades in and out for the screen; the gameplay penalty is all or nothing
   private fog: Fog | null
   private clearFog = { near: 0, far: 0 }
@@ -26,12 +27,12 @@ export class Storm {
 
   // How fast customers lose patience: 1 normally.
   get patienceRate(): number {
-    return this.active ? STORM.patienceRate : 1
+    return this.active ? 1 + (STORM.patienceRate - 1) * (1 - this.relief) : 1
   }
 
   // How fast the furnace cooks: 1 normally.
   get cookRate(): number {
-    return this.active ? STORM.cookRate : 1
+    return this.active ? 1 - (1 - STORM.cookRate) * (1 - this.relief) : 1
   }
 
   start(): void {

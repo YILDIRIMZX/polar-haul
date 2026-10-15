@@ -35,13 +35,29 @@ export const BASE_STATS = {
 
 export type StatId = keyof typeof BASE_STATS
 
+// What the camp is walled with. Each kind replaces the one before it, never stacked on top: a camp of snow
+// blocks against the wind, then a stockade of sharpened stakes when the smell of stored meat draws bears in,
+// then a wall of logs with towers once bosses start breaking gates. See KUZEY-YERLESIMLERI.md.
+export type WallKind = 'snow' | 'stakes' | 'logs'
+
+export const WALLS: Record<WallKind, { name: string; gate: number; stormRelief: number }> = {
+  // gate: how much sturdier the front gate is (× the gateHp stat); stormRelief: share of the blizzard's
+  // penalty the wall keeps off. Never all of it: the blizzard is always felt.
+  snow: { name: 'Kar duvarı', gate: 0.5, stormRelief: 0 },
+  stakes: { name: 'Kazık çit', gate: 1, stormRelief: 0.15 },
+  logs: { name: 'Kütük sur', gate: 2, stormRelief: 0.3 },
+}
+
 // Base levels, raised at the Great Furnace. Level 1 is where the game starts.
 // What each level needs besides cash is decided in systems/progression.ts (baseRequirement).
+// Prices grow by the same factor each level, because the Great Furnace's pad prices them that way.
+// The wall's shape at each level is in world.ts (WALL_OUTLINES); here only what it is made of.
 export const BASE_LEVELS = [
-  { level: 1, price: 0, fenceRadius: 12 },
-  { level: 2, price: 250, fenceRadius: 14 },
-  { level: 3, price: 800, fenceRadius: 16 },
-] as const
+  { level: 1, price: 0, wall: 'snow' },
+  { level: 2, price: 250, wall: 'stakes' },
+  { level: 3, price: 800, wall: 'stakes' },
+  { level: 4, price: 2560, wall: 'logs' },
+] as const satisfies readonly { level: number; price: number; wall: WallKind }[]
 
 // Fixed numbers that no upgrade changes.
 export const PLAYER = {
@@ -191,6 +207,29 @@ export const SHOP = {
   urgentChance: 0.15, // share of new customers who are urgent
   urgentPay: 2.5, // they pay this many times the normal price…
   urgentPatience: 0.6, // …have this share of the normal patience, and leave without paying when it runs out
+} as const
+
+// The camp's dwellings: tents at first, cabins once people stay for good. Every cabin keeps more people in
+// the camp, and word of a lived-in camp draws more survivors to trade: customers come a little more often.
+export const DWELLINGS = {
+  cabinCustomerRate: 0.08, // each cabin cuts the time between customers by this share
+  cabinPrices: [150, 260], // the two tents the player turns into cabins; the others turn at base level 3
+} as const
+
+// Stores for the winter. Surplus meat would spoil; dried or kept in ice it lasts, and with food that keeps,
+// customers buy more at a time to see them through the winter (bigger orders, see systems/orders.ts).
+export const STORES = {
+  dryingRackPrice: 220,
+  iceCellarPrice: 600,
+} as const
+
+// Watchtowers on the log wall: watchmen shoot at bears that come close to the wall, a boss pounding the gate
+// included. Their arrows do not anger a bear: they just bring it down.
+export const TOWERS = {
+  range: 10,
+  damage: 8,
+  cooldown: 1.4,
+  arrowSpeed: 26,
 } as const
 
 // Building sites and the workers. Sites appear when the base level opens them; paying builds the building.
